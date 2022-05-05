@@ -1,10 +1,11 @@
 library(ggplot2)
 library(maps)
 library(tidyr)
-library("mosaic")
-library("gridExtra")
-library("nlstools")
-
+library(magrittr)
+library(mosaic)
+library(gridExtra)
+library(nlstools)
+library(dplyr)
 
 ############## Loading the dataset #####################
 
@@ -13,52 +14,50 @@ File<-"Cores.csv"
 Cores<-read.csv(File, header=T, sep=";", dec=".")
 Cores<-as.data.frame(Cores)
 
+#clean the rows without OC data
 Cores$Corg<-as.numeric(Cores$Corg)
 Cores<-Cores[!is.na(Cores$Corg), ]
 
+
 ###### Sampling sites Map #########
 
+#load a world map
 WM <- map_data("world")
 
-
-ggplot(Cores,aes(Cores$long,Cores$lat))+ggtitle("Sampling sites")+ xlab("Longitude")+ ylab("Latitude")+
+Cores %>% 
+  ggplot() + ggtitle("Sampling sites")+ xlab("Longitude")+ ylab("Latitude")+
   geom_polygon(data = WM, aes(x=long, y = lat, group = group))+
-  geom_point(aes(color = Ecosystem))
+  geom_point(aes(x = long, y = lat,  fill = Ecosystem),pch=21, size=1.5)+
+  coord_sf(xlim = c(-140, 150),ylim = c(-40, 75))+
+  scale_fill_manual(values = c( "blue", "orange","green"))+
+  theme(plot.title = element_text(hjust = 0.5))
 
 
-ggsave("Sampling sites.jpg", units="cm", width = 15, height = 9)
-
-#### subsets per ecosystem
-
-SG <- subset(Cores, Cores[,4]=='Seagrass')
-SM <- subset(Cores, Cores[,4]=='Salt Marsh')
-MG <- subset(Cores, Cores[,4]=='Mangrove')
+ggsave("Sampling sites.jpg", units="cm", width = 20, height = 10)
 
 
-A<-SM #we select the ecosystem data base we will work with
+###
 
-name<-"SM"
-Folder=name
+Folder="Decay" #we create a folder to save the results form this ecosystem
 dir.create(Folder)
 
 #### We select only vegetated or un-vegetated (Bare) cores
 
-unique(A[,5])
+unique(Cores[,5])
 
-
-library(dplyr)
-B = filter(A, A[,5] != "Bare")
-length(unique(B$Core))
+B = filter(Cores, Cores[,5] != "Bare")
+length(unique(Cores$Core))
 
 #Bare <- subset(A, A[,5]=='Bare')
 
 ##### Average and median Corg content per core (full length and top 25 cm)##################
 
-ADT<-B[,c("Core","Depth","Corg")]
+ADT<-B[,c("Core","Ecosystem","Depth","Corg")]
 
 X<-split(ADT, ADT$Core)
 
 CM <- data.frame(ID=character(),
+                 Ecosystem=character(),
                  Av_C=numeric(),
                  SD_C=numeric(),
                  M_C=numeric(),
@@ -68,27 +67,30 @@ CM <- data.frame(ID=character(),
 for(i in 1:length(X)) {
   CM[i,1]<-names(X[i])
   Data<-as.data.frame(X[i])
+  colnames(Data)<-colnames(ADT)
+  CM[i,2]<-Data[1,which(colnames(Data)=="Ecosystem")]
   #Data<-na.omit(Data)
-  CM[i,2]<-mean(Data[,3])
-  CM[i,3]<-sd(Data[,3])
-  CM[i,4]<-median(Data[,3])
-  Data25<-Data %>% filter(Data[,2] <= 25)
-  CM[i,5]<-mean(Data25[,3])
-  CM[i,6]<-sd(Data25[,3])
-                }
+  CM[i,3]<-mean(Data[,which(colnames(Data)=="Corg")])
+  CM[i,4]<-sd(Data[,which(colnames(Data)=="Corg")])
+  CM[i,5]<-median(Data[,which(colnames(Data)=="Corg")])
+  Data25<-Data %>% filter(Data[,which(colnames(Data)=="Depth")] <= 25)
+  CM[i,6]<-mean(Data25[,which(colnames(Data25)=="Corg")])
+  CM[i,7]<-sd(Data25[,which(colnames(Data25)=="Corg")])
+}
 
-write.csv(CM, file.path(Folder,paste(name, "_AvMdC.csv")), sep=";", dec=".")
+write.csv(CM, file.path(Folder, "AvMdC.csv"), sep=";", dec=".")
 
 
 ######### Corg trends with depth ##############
 #### spearman correlation between depth and Corg content, as data no normal nor expected to follow lineal correlation
 #### return DT data.frame (Core ID, rho, p value, trend)
 
-ADT<-B[,c("Core","Depth","Corg")]
+ADT<-B[,c("Core","Ecosystem","Depth","Corg")]
 
 X<-split(ADT, ADT$Core)
 
 DT <- data.frame(ID=character(),
+                 Ecosystem=character(),
                  C_rho=numeric(), 
                  C_p=numeric(),
                  C_Gr=character()) 
@@ -98,10 +100,12 @@ DT <- data.frame(ID=character(),
 for(i in 1:length(X)) {
   DT[i,1]<-names(X[i])
   Data<-as.data.frame(X[i])
+  colnames(Data)<-colnames(ADT)
+  DT[i,2]<-Data[1,which(colnames(Data)=="Ecosystem")]
   #Data<-na.omit(Data)
-  cor<-cor.test(x=Data[,2],y=Data[,3], method = "spearman")
-  DT[i,2]<-cor$estimate
-  DT[i,3]<-cor$p.value
+  cor<-cor.test(x=Data[,which(colnames(Data)=="Depth")],y=Data[,which(colnames(Data)=="Corg")], method = "spearman")
+  DT[i,3]<-cor$estimate
+  DT[i,4]<-cor$p.value
   
 }
 
@@ -120,39 +124,39 @@ DEC<-B[is.element(B$Core, Dec),]
 INC<-B[is.element(B$Core, Inc),]
 
 for (i in 1:nrow(DT)){
-  if (is.element(DT[i,1], Nt)) {DT[i,4]<-"NT"}
-   else if (is.element(DT[i,1], Dec)) {DT[i,4]<-"DEC"}
-              else {DT[i,4]<-"INC"}}
+  if (is.element(DT[i,1], Nt)) {DT[i,5]<-"NT"}
+  else if (is.element(DT[i,1], Dec)) {DT[i,5]<-"DEC"}
+  else {DT[i,5]<-"INC"}}
 
 
-write.csv(DT, file.path(Folder,paste(name, "_DT.csv")), sep=";", dec=".")
+write.csv(DT, file.path(Folder,"DepthTrends.csv"), sep=";", dec=".")
 
 ##### Av Corg and trends
 
-ggplot(CM,aes(V7, Av_25))+
+ggplot(CM,aes(DT$C_Gr, CM$Av_25))+
   geom_boxplot()
-  #geom_dotplot(binaxis='y', stackdir='center', dotsize=0.5)
+#geom_dotplot(binaxis='y', stackdir='center', dotsize=0.5)
 
 shapiro.test(CM$Av_25) #(>0.05 normal, <0.05 no normal)
 
 ## Student's t-test  if normally distributed, wilcox if not
 
-pairwise.wilcox.test(CM$Av_25, CM$V7,
+pairwise.wilcox.test(CM$Av_25, DT$C_Gr,
                      p.adjust.method = "BH") # are significantly different (p < 0.05)
 
+pairwise.wilcox.test(CM$Av_25, DT$Ecosystem,
+                     p.adjust.method = "BH")
 
-
+ggplot(CM,aes(DT$Ecosystem, CM$Av_25))+
+  geom_boxplot()
 
 #### Count cores per group and get the percentages
 
-library(dplyr)
 NGr<-DT %>% group_by(C_Gr) %>% count()
 NGr %>% mutate(proc = ((n * 100)/sum(NGr[,2])))
 
 
 ### plot per grupos. Change size of jpg file when saving!!!!!!
-
-library(ggplot2)
 
 ggplot(NT, aes(Depth, Corg))+xlab("Depth (cm)") + ylab("Organic carbon (g cm-3)")+
   geom_point(aes(Depth, Corg))+
@@ -162,7 +166,7 @@ ggplot(NT, aes(Depth, Corg))+xlab("Depth (cm)") + ylab("Organic carbon (g cm-3)"
   scale_x_reverse()+
   theme_light()
 
-ggsave(path = Folder,filename = 'NTpor.jpg', width =20, height = 100, units='cm')
+ggsave(path = Folder,filename = 'NTpor.jpg', width =20, height = 200, units='cm',limitsize = FALSE)
 
 ggplot(DEC, aes(Depth, Corg))+xlab("Depth (cm)") + ylab("Organic carbon (g cm-3)")+
   geom_point(aes(Depth, Corg))+
@@ -172,7 +176,7 @@ ggplot(DEC, aes(Depth, Corg))+xlab("Depth (cm)") + ylab("Organic carbon (g cm-3)
   scale_x_reverse()+
   theme_light()
 
-ggsave(path = Folder,filename = 'DECpor.jpg', width =20, height = 300, units='cm', limitsize = FALSE)
+ggsave(path = Folder,filename = 'DECpor.jpg', width =20, height = 400, units='cm', limitsize = FALSE)
 
 
 ggplot(INC, aes(Depth, Corg))+xlab("Depth (cm)") + ylab("Organic carbon (g cm-3)")+
@@ -183,7 +187,7 @@ ggplot(INC, aes(Depth, Corg))+xlab("Depth (cm)") + ylab("Organic carbon (g cm-3)
   scale_x_reverse()+
   theme_light()
 
-ggsave(path = Folder,filename = 'INCpor.jpg', width =20, height = 100, units='cm')
+ggsave(path = Folder,filename = 'INCpor.jpg', width =20, height = 200, units='cm',limitsize = FALSE)
 
 
 
@@ -204,27 +208,25 @@ length(unique(TB$Core))
 X<-split(TB, TB$Core)
 
 MaxDepth <- data.frame(ID=character(),
-                  MaxDepth=numeric(),
-                  M=numeric())
+                       MaxDepth=numeric())
 
 for(i in 1:length(X)) {
   MaxDepth[i,1]<-names(X[i])
   Data<-as.data.frame(X[i])
   MaxDepth[i,2]<-max(Data[,13])
-  MaxDepth[i,3]<-max(Data[,18])
   
 }
-
 
 
 #### spearman correlation between time and Corg content
 
 
-ADT<-TB[,c("Core","Age.Pb","Corg")]
+ADT<-TB[,c("Core","Ecosystem","Age.Pb","Corg")]
 
 X<-split(ADT, ADT$Core)
 
 TDT <- data.frame(ID=character(),
+                  Ecosystem=character(),
                   C_rho=numeric(), 
                   C_p=numeric(),
                   C_Gr=character()) 
@@ -234,10 +236,12 @@ TDT <- data.frame(ID=character(),
 for(i in 1:length(X)) {
   TDT[i,1]<-names(X[i])
   Data<-as.data.frame(X[i])
+  colnames(Data)<-colnames(ADT)
+  TDT[i,2]<-Data[1,which(colnames(Data)=="Ecosystem")]
   #Data<-na.omit(Data)
-  cor<-cor.test(x=Data[,2],y=Data[,3], method = "spearman")
-  TDT[i,2]<-cor$estimate
-  TDT[i,3]<-cor$p.value
+  cor<-cor.test(x=Data[,3],y=Data[,4], method = "spearman")
+  TDT[i,3]<-cor$estimate
+  TDT[i,4]<-cor$p.value
   
 }
 
@@ -257,9 +261,9 @@ TDEC<-TB[is.element(TB$Core, Dec),]
 TINC<-TB[is.element(TB$Core, Inc),]
 
 for (i in 1:nrow(TDT)){
-  if (is.element(TDT[i,1], Nt)) {TDT[i,4]<-"NT"}
-  else if (is.element(TDT[i,1], Dec)) {TDT[i,4]<-"DEC"}
-  else {TDT[i,4]<-"INC"}}
+  if (is.element(TDT[i,1], Nt)) {TDT[i,5]<-"NT"}
+  else if (is.element(TDT[i,1], Dec)) {TDT[i,5]<-"DEC"}
+  else {TDT[i,5]<-"INC"}}
 
 
 
@@ -270,9 +274,8 @@ NGr<-TDT %>% group_by(C_Gr) %>% count()
 NGr %>% mutate(proc = ((n * 100)/sum(NGr[,2])))
 
 
-#### plot per groups #####
+#### plot per groups to visual check #####
 
-library(ggplot2)
 
 ggplot(TNT, aes(Age.Pb, Corg))+xlab("Time (years)") + ylab("Organic carbon (g cm-3)")+
   geom_point(aes(Age.Pb, Corg))+
@@ -306,44 +309,52 @@ ggplot(TINC, aes(Age.Pb, Corg))+xlab("Time (years)") + ylab("Organic carbon (g c
 ggsave(path = Folder,filename = 'TINC.jpg', width =20, height = 30, units='cm')
 
 
+################################
+### NLM time-Acumulated Mass ###
+################################
 
-########################################################
-############ Acummulated Mass Decay rates ##############
-########################################################
+#Ajuste de cores que decrecen con la profundidad
 
+Data<-as.data.frame(TDEC[,c("Core","Ecosystem","Age.Pb","Corg","Corg.M")])
 
-### Clymo 1984 segun Mateo 1997 
-########## Ajuste de cores que decrecen con la profundidad 
-
-Data<-as.data.frame(TDEC[,c("Core","Age.Pb","Corg","Corg.M")])
 
 Data$Corg.M<-as.numeric(Data$Corg.M)
 
 SSS<-split(Data, Data$Core)
 
+
 TfitsM_DEC <- data.frame(ID=character(),
-                     P=numeric(), 
-                     k=numeric(),
-                     Res.Normality=numeric(),
-                     Res.Autocorrelation=numeric())
+                         Ecosystem=character(),
+                         P=numeric(), 
+                         k=numeric(),
+                         Res.Normality=numeric(),
+                         Res.Autocorrelation=numeric())
 
 cidr <- getwd()
-nwpath <- "MG/ajustesDEC"
+nwpath <- "Decay/Ajustes"
 dir.create(file.path(cidr, nwpath), recursive = TRUE)
 
 for(i in 1:length(SSS)) {
   TfitsM_DEC[i,1]<-names(SSS[i])
   Pr<-as.data.frame(SSS[i])
-  colnames(Pr)<-list("Core","Age","Corg","Corg.M")
+  colnames(Pr)<-list("Core","Ecosystem","Age","Corg","Corg.M")
+  TfitsM_DEC[i,2]<-Pr[1,which(colnames(Data)=="Ecosystem")]
   
-  Exp1<-nls(Corg.M~(p/k)*(1-(exp(-k*Age))), data=Pr, start = list(p=0.01, k=0.03))
+  skip_to_next <- FALSE
+  
+  tryCatch(Exp1<-nls(Corg.M~(p/k)*(1-(exp(-k*Age))), data=Pr, start = list(p=0.01, k=0.03))
+           , error = function(e) { skip_to_next <<- TRUE})
+  
+  if(skip_to_next) { next }  
+  
   Func<-fitModel(Corg.M~(p/k)*(1-(exp(-k*Age))), data=Pr, start = list(p=0.01, k=0.03))
   
   Coef<-coef(Exp1)
   
   finales<-as.list(coef(Exp1))
-  TfitsM_DEC[i,2]<-as.numeric(finales[1])
-  TfitsM_DEC[i,3]<-as.numeric(finales[2])
+  TfitsM_DEC[i,3]<-as.numeric(finales[1])
+  TfitsM_DEC[i,4]<-as.numeric(finales[2])
+  
   
   fitY1<-as.data.frame(c(1:150))
   fitY1['new_col'] <- NA
@@ -372,6 +383,7 @@ for(i in 1:length(SSS)) {
   
   #test.nlsResiduals(nlsResiduals(Exp1))
   
+  
   mypath <- file.path(cidr,nwpath,paste( name,".RES", ".jpg", sep = ""))
   
   jpeg(file=mypath)
@@ -379,6 +391,7 @@ for(i in 1:length(SSS)) {
   plot(nlsResiduals(Exp1))
   title(main = name)
   dev.off()
+  
   
 }
 
@@ -390,26 +403,24 @@ ggplot(TfitsM_DEC, aes(x=k)) +
   geom_histogram()
 
 
+shapiro.test(TfitsM_DEC$k) #(>0.05 normal, <0.05 no normal)
 
-##############################
-###### Long term decay #######
-##############################
 
-library("mosaic")
-library("ggplot2")
-library("gridExtra")
-library("nlstools")
+#######################
+### long term decay ###
+#######################
+
 
 LTB<-B
 LTB<-LTB[!(is.na(LTB$Age.Pb.C) | LTB$Age.Pb.C==""), ]
 
-### Delet cores with no coherent 210Pb+14C age-depth models
 
+#we delete those cores with not good age-depth models
 LTB<-LTB[!(is.na(LTB$Core) | LTB$Core=="Sg_097"), ]
 LTB<-LTB[!(is.na(LTB$Core) | LTB$Core=="Sg_112"), ]
 LTB<-LTB[!(is.na(LTB$Core) | LTB$Core=="Sg_121"), ]
 
-#### spearman correlation between time and Corg content
+#spearman correlation between time and Corg content
 
 
 ADT<-LTB[,c("Core","Age.Pb.C","Corg")]
@@ -420,6 +431,7 @@ TDT <- data.frame(ID=character(),
                   C_rho=numeric(), 
                   C_p=numeric(),
                   C_Gr=character()) 
+
 
 
 for(i in 1:length(X)) {
@@ -453,13 +465,14 @@ for (i in 1:nrow(TDT)){
   else {TDT[i,4]<-"INC"}}
 
 
+
 #### Count cores per group and get the percentages
 
 library(dplyr)
 NGr<-TDT %>% group_by(C_Gr) %>% count()
 NGr %>% mutate(proc = ((n * 100)/sum(NGr[,2])))
 
-######### ajuste con la profundidad ##########
+######### long term nlm OC acc mass-age ##########
 
 Data<-TDEC[,c("Core","Age.Pb.C","Corg","Corg.M")]
 
@@ -469,13 +482,15 @@ SSS<-split(Data, Data$Core)
 
 
 TfitsM_DEC_long<- data.frame(ID=character(),
-                              Tframe=numeric(),
-                         P=numeric(), 
-                         k=numeric())
+                             Tframe=numeric(),
+                             P=numeric(), 
+                             k=numeric())
 
 cidr <- getwd()
 nwpath <- "SG/ajustesDECLong"
 dir.create(file.path(cidr, nwpath), recursive = TRUE)
+
+
 
 for(i in 1:length(SSS)) {
   TfitsM_DEC_long[i,1]<-names(SSS[i])
@@ -517,7 +532,9 @@ for(i in 1:length(SSS)) {
   pf<-grid.arrange(p1, p2, nrow=1,top=name)
   ggsave(plot=pf,path = nwpath,filename = paste(name, ".jpg"), units="cm", width = 15, height = 10)
   
+  
   #test.nlsResiduals(nlsResiduals(Exp1))
+  
   
   mypath <- file.path(cidr,nwpath,paste( name,".RES", ".jpg", sep = ""))
   
@@ -527,6 +544,7 @@ for(i in 1:length(SSS)) {
   title(main = name)
   dev.off()
   
+  
 }
 
 
@@ -535,8 +553,11 @@ write.csv(TfitsM_DEC_long, file.path(nwpath,"TfitsM_DEC_long.csv"), sep=";", dec
 ggplot(TfitsM_DEC_long, aes(x=k)) + 
   geom_histogram()
 
+#######################
+### summary results ###
+#######################
+## ajustes tras inspeccionar visualemnte....
 
-################### summary results ##########
 
 File<-"Decay150.csv"
 
@@ -548,21 +569,17 @@ R<-as.data.frame(R)
 
 WM <- map_data("world")
 
-SG <- subset(R, R[,4]=='Seagrass')
-M <- subset(R, R[,4]=='Salt Marsh')
-Fr <- subset(R, R[,4]=='Fresh Marsh')
-MG <- subset(R, R[,4]=='Mangrove')
 
-
-ggplot()+ggtitle("Decay rates sampling site")+ xlab("Longitude")+ ylab("Latitude")+
+R %>% 
+  ggplot() + ggtitle("Decay rates sampling site")+ xlab("Longitude")+ ylab("Latitude")+
   geom_polygon(data = WM, aes(x=long, y = lat, group = group))+
-  geom_point(aes(SG$long,SG$lat), color="green",size=3)+
-  geom_point(aes(M$long,M$lat), color="yellow",size=3)+
-  geom_point(aes(Fr$long,Fr$lat), color="orange",size=3)+
-  geom_point(aes(MG$long,MG$lat), color="blue",size=3)
+  geom_point(aes(x = long, y = lat,  fill = Ecosystem),pch=21, size=2)+
+  coord_sf(ylim = c(-40, 50),xlim = c(-90, 140),)+
+  scale_fill_manual(values = c( "yellow","blue", "orange","green"))+
+  theme(plot.title = element_text(hjust = 0.5))
 
 
-ggsave("Decay_map.jpg", units="cm", width = 20, height = 15)
+ggsave("Decay_map.jpg", units="cm", width = 20, height = 10)
 
 #summary
 
@@ -607,9 +624,8 @@ ggplot()+ggtitle("Decay rate by time frame in Posidonia spp. meadows")+ xlab("Ti
 
 plot(P$Tframe,P$k)
 
-#########################################################
-### exponential model to predict k in Posidonia soils ###
-#########################################################
+### exponential model to predict k in Posidonia meadows
+
 
 kchange <- function(Tframe, A, C) (A*exp(C*Tframe))
 
@@ -630,5 +646,6 @@ points(P2$Tframe,P2$k)
 lines(c(1:2100),fitY1, col="blue")
 text(1000, 0.025, cex=1.5,expression(y == 0.0401436 *e**(-0.0027501*x)))
 
-0.0401436*exp(-0.0027501*100)
 
+
+0.0401436*exp(-0.0027501*100)
