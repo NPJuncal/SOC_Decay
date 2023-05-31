@@ -1,0 +1,104 @@
+"","ID","Ecosystem","P","k","Max.Age"
+"1","Mg_010","Mangrove",NA,NA,143.9
+"2","Mg_011","Mangrove",NA,NA,139.8
+"3","Mg_012","Mangrove",NA,NA,105.3
+"4","Mg_015","Mangrove",NA,NA,105.90181007
+"5","Mg_016","Mangrove",NA,NA,370.071527
+"6","Mg_023","Mangrove",NA,NA,890
+"7","Sg_002","Seagrass",NA,NA,779
+"8","Sg_003","Seagrass",NA,NA,571
+"9","Sg_004","Seagrass",NA,NA,779
+"10","Sg_005","Seagrass",NA,NA,936
+"11","Sg_011","Seagrass",NA,NA,178
+"12","Sg_019","Seagrass",NA,NA,602
+"13","Sg_030","Seagrass",0.000209756921091128,0.000296703276981667,4173
+"14","Sg_031","Seagrass",NA,NA,1507
+"15","Sg_032","Seagrass",NA,NA,6866
+"16","Sg_038","Seagrass",NA,NA,1043
+"17","Sg_041","Seagrass",0.0060856226802025,0.00937601291867349,5678
+"18","Sg_042","Seagrass",NA,NA,1823
+"19","Sg_043","Seagrass",NA,NA,1585
+"20","Sg_045","Seagrass",NA,NA,1194
+"21","Sg_057","Seagrass",NA,NA,1840
+"22","Sg_058","Seagrass",NA,NA,5371
+"23","Sg_081","Seagrass",NA,NA,257
+"24","Sg_083","Seagrass",NA,NA,1522
+"25","Sg_084","Seagrass",NA,NA,1514
+"26","Sg_088","Seagrass",NA,NA,1113
+"27","Sg_097","Seagrass",0.0106137375378475,0.0317697399104148,4583
+"28","Sg_109","Seagrass",NA,NA,4231
+"29","Sg_110","Seagrass",NA,NA,1758
+"30","Sg_113","Seagrass",0.000464516265225992,0.000494949711541785,2406
+"31","Sg_115","Seagrass",NA,NA,1690
+"32","Sg_119","Seagrass",NA,NA,852
+"33","Sg_120","Seagrass",NA,NA,2905
+"34","Sg_121","Seagrass",NA,NA,5953
+"35","Sg_123","Seagrass",NA,NA,355
+"36","Sg_170","Seagrass",NA,NA,4853
+"37","Sg_177","Seagrass",NA,NA,900
+"38","Sg_178","Seagrass",NA,NA,857
+"39","Sg_179","Seagrass",NA,NA,1075
+"40","Sg_190","Seagrass",NA,NA,480
+"41","Sg_191","Seagrass",NA,NA,18515
+"42","Sg_193","Seagrass",NA,NA,4102
+"43","Sg_241","Seagrass",NA,NA,1370
+"44","Sg_247","Seagrass",NA,NA,3730
+"45","Sg_252","Seagrass",NA,NA,1782
+"46","Sg_261","Seagrass",NA,NA,1882
+"47","Sg_278","Seagrass",NA,NA,286
+"48","Sg_279","Seagrass",0.000662304525033748,0.000379695299915809,3884
+"49","Sg_291","Seagrass",NA,NA,1207
+"50","Sg_298","Seagrass",NA,NA,1043
+"51","Sg_310","Seagrass",NA,NA,399
+"52","Sg_311","Seagrass",NA,NA,1381
+"53","Sg_312","Seagrass",0.00220497921521267,0.00172730362519828,2146
+"54","Sg_314","Seagrass",0.00486524260196431,0.00261275211193351,2128
+"55","Sg_315","Seagrass",NA,NA,3959
+"56","Sg_316","Seagrass",NA,NA,22
+"57","Sg_317","Seagrass",NA,NA,19
+"58","Sg_321","Seagrass",NA,NA,26
+"59","Sg_323","Seagrass",NA,NA,488
+"60","Sg_332","Seagrass",NA,NA,98
+"61","Sg_476","Seagrass",NA,NA,365
+"62","Sg_477","Seagrass",NA,NA,619
+"63","Sg_478","Seagrass",NA,NA,1043
+"64","Sg_479","Seagrass",0.00063206150821953,0.00113432843250535,2572
+"65","Sg_480","Seagrass",NA,NA,1098
+"66","Sg_481","Seagrass",NA,NA,1368
+"67","Sg_482","Seagrass",NA,NA,1007
+"68","Sg_483","Seagrass",NA,NA,705
+"69","Sg_484","Seagrass",NA,NA,344
+"70","Sg_485","Seagrass",NA,NA,282
+"71","Sg_490","Seagrass",NA,NA,1238
+"72","Sg_491","Seagrass",NA,NA,3742
+"73","Sg_492","Seagrass",NA,NA,1333
+"74","Sg_493","Seagrass",NA,NA,781
+"75","Sg_494","Seagrass",NA,NA,1623
+"76","Sg_495","Seagrass",NA,NA,327
+"77","Sg_496","Seagrass",NA,NA,391
+"78","Sg_497","Seagrass",NA,NA,306
+"79","Sg_498","Seagrass",NA,NA,810
+"80","Sm_010","Tidal Marsh",NA,NA,926
+"81","Sm_022","Tidal Marsh",NA,NA,1156
+"82","Sm_027","Tidal Marsh",NA,NA,848
+"83","Sm_034","Tidal Marsh",NA,NA,637
+"84","Sm_038","Tidal Marsh",NA,NA,1221
+"85","Sm_049","Tidal Marsh",NA,NA,114
+"86","Sm_051","Tidal Marsh",NA,NA,89
+"87","Sm_054","Tidal Marsh",NA,NA,72
+"88","Sm_057","Tidal Marsh",NA,NA,66
+"89","Sm_058","Tidal Marsh",NA,NA,78
+"90","Sm_059","Tidal Marsh",NA,NA,66
+"91","Sm_060","Tidal Marsh",NA,NA,80
+"92","Sm_063","Tidal Marsh",NA,NA,124
+"93","Sm_064","Tidal Marsh",NA,NA,98
+"94","Sm_068","Tidal Marsh",NA,NA,85.8770685
+"95","Sm_069","Tidal Marsh",NA,NA,40.68236183
+"96","Sm_074","Tidal Marsh",NA,NA,95.81683293
+"97","Sm_080","Tidal Marsh",NA,NA,121.12624018
+"98","Sm_081","Tidal Marsh",NA,NA,120.00915523
+"99","Sm_083","Tidal Marsh",NA,NA,195.4100771
+"100","Sm_092","Tidal Marsh",NA,NA,31
+"101","Sm_094","Tidal Marsh",NA,NA,152
+"102","Sm_097","Tidal Marsh",NA,NA,56
+"103","Sm_105","Tidal Marsh",NA,NA,62
