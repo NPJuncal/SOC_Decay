@@ -466,10 +466,9 @@ summary(MaxDepth$MaxDepth)
 # and return a dfs: TDT, TDEC, TINC and TNT. Needs a df with columns: c("Core", "Ecosystem","Min.Depth","Max.Depth", "FAge", "Corg"
 # a max age (MA) and a name for the plots 
 
-tendency<- function (df, MA, fn) {
+tendency<- function (df, pnames) {
   
   ADT <- df[, c("Core", "Ecosystem","Min.Depth","Max.Depth", "FAge", "Corg")]
-  ADT<-subset(ADT, ADT$FAge < MA)
   
   X <- split(ADT, ADT$Core)
   
@@ -538,7 +537,7 @@ tendency<- function (df, MA, fn) {
   
   ggsave(
     path = Folder,
-    filename = paste(fn,'_TNT.jpg'),
+    filename = paste(pnames,'_TNT.jpg'),
     width = 20,
     height = 30,
     units = 'cm'
@@ -554,7 +553,7 @@ tendency<- function (df, MA, fn) {
   
   ggsave(
     path = Folder,
-    filename = paste(fn,'_TDEC.jpg'),
+    filename = paste(pnames,'_TDEC.jpg'),
     width = 20,
     height = 50,
     units = 'cm',
@@ -572,18 +571,20 @@ tendency<- function (df, MA, fn) {
   
   ggsave(
     path = Folder,
-    filename = paste(fn,'_TINC.jpg'),
+    filename = paste(pnames,'_TINC.jpg'),
     width = 20,
     height = 30,
     units = 'cm'
   )
   
-  return(list(TDT, TDEC, TINC, TNT))
+  df_list<-list(TDT, TDEC, TINC, TNT)
+  names(df_list)<-c("Sp_TDT", "TDEC", "TINC", "TNT")
+  return(df_list)
 }
   
-prueba2<-tendency(TAll, MA=150, fn="prueba")
+prueba2<-tendency(TAll, pnames="prueba")
 
-
+TDEC<-prueba2[[2]]
 
 
 
@@ -593,24 +594,25 @@ prueba2<-tendency(TAll, MA=150, fn="prueba")
 
 ### groups and SAR ###
 
-Prueba<-left_join(TDT,SAR, "ID")
+#Prueba<-left_join(TDT,SAR, "ID")
 
-ggplot(Prueba, aes(C_Gr, SAR))+
-  geom_boxplot()+
-  geom_jitter(aes(color=Ecosystem))
+#ggplot(Prueba, aes(C_Gr, SAR))+
+#  geom_boxplot()+
+ # geom_jitter(aes(color=Ecosystem))
 
-ggplot(Prueba, aes(C_Gr, SAR))+
-  geom_boxplot(aes(color=Ecosystem))+
-  geom_jitter(aes(color=Ecosystem))
+#ggplot(Prueba, aes(C_Gr, SAR))+
+ # geom_boxplot(aes(color=Ecosystem))+
+  #geom_jitter(aes(color=Ecosystem))
 
 
-pairwise.wilcox.test(Prueba$SAR, Prueba$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+#pairwise.wilcox.test(Prueba$SAR, Prueba$C_Gr,
+ #                    p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 
 #################################
 ### NLM time-Accumulated Mass ###
 #################################
+
 
 #For those cores that decrease with time
 
@@ -620,70 +622,69 @@ DataA <-
 
 #Estimate organic carbon accumulated mass
 
-estimate_h <- function(df = NULL) {
+estimate_h <- function(df = NULL,
+                       core = "core",
+                       mind = "mind",
+                       maxd = "maxd") {
+  
+  # class of the dataframe or tibble
+  if (!inherits(df, "data.frame")) {
+    stop("The data provided must be a tibble or data.frame")
+  }
+  
+  # name of the columns
+  if (!core %in% colnames(df)) {stop("There must be a variable with 'core'")}
+  if (!mind %in% colnames(df)) {stop("There must be a variable with 'mind'")}
+  if (!maxd %in% colnames(df)) {stop("There must be a variable with 'maxd'")}
+  
+  # class of the columns
+  if (!is.numeric(df[[mind]])) {stop("'mind' data must be class numeric")}
+  if (!is.numeric(df[[maxd]])) {stop("'maxd' data must be class numeric")}
+  
+  #check for NAs in depth columns
+  if (sum(is.na(df[[mind]])) > 0) {stop("Samples minimun depth column has NAs, please check")}
+  if (sum(is.na(df[[maxd]])) > 0) {stop("Samples maximun depth column has NAs, please check")}
+  
+  # create variables with working names with the data in the columns specified by the user
+  df_r <- df
+  df_r$core_r <- df_r[[core]]
+  df_r$mind_r <- df_r[[mind]]
+  df_r$maxd_r <- df_r[[maxd]]
   
   # create individual data frames per each core
+  df_r$core_r <- factor(df_r$core_r, levels = unique(df_r$core_r))
+  x <- split(df_r, df_r$core_r)
   
-  df$Core <- factor(df$Core, levels=unique(df$Core))
-  X<-split(df, df$Core)
-  
-  
-  columns<-c("EMin","EMax","h")
-  Fdf2 = data.frame(matrix(nrow = 0, ncol = length(columns)))
-  colnames(Fdf2) = columns
-  
-  
-  for(i in 1:length(X)) {
-    
-    Data<-as.data.frame(X[i])
-    colnames(Data)<-colnames(df)
-    
-    #check if there is spaces between samples (e.g, first sample ends at 5 cm and next starts at 7)
-    space<- c()
-    
-    for (j in 1:(nrow(Data)-1)) {
-      
-      # if there are no spaces between samples min and maximun depth of samples remain the same
-      if (Data[j,which(colnames(Data)=="Max.Depth")] == Data[j+1,which(colnames(Data)=="Min.Depth")]) {
-        space[j]<-FALSE} else {space[j]<-TRUE}}
-    
-    if (any(space==TRUE)) {
-      # if there are spaces between samples it estimate the medium point between the maximum depth of the sample and the minimum
-      #depth of the next sample and divide that distance between both samples
-      Data <- cbind(Data, EMin=NA, EMax=NA)
-      Data[1,"EMin"]<-0
-      Data[nrow(Data),"EMax"]<-Data[nrow(Data),"Max.Depth"]
-      for (j in 1:(nrow(Data)-1)) {
-        if(space[j]==TRUE) {
-          Data[j,"EMax"]<-Data[j,"Max.Depth"]+((Data[j+1,"Min.Depth"]-Data[j,"Max.Depth"])/2)
-          Data[j+1,"EMin"]<-Data[j,"Max.Depth"]+((Data[j+1,"Min.Depth"]-Data[j,"Max.Depth"])/2)} else {
-            Data[j,"EMax"]<-Data[j,"Max.Depth"]
-            Data[j+1,"EMin"]<-Data[j+1,"Min.Depth"]}}
-      
-    }  else{
-      Data <- cbind(Data, EMin=NA, EMax=NA)
-      Data$EMin<-Data$Min.Depth
-      Data$EMax<-Data$Max.Depth
-      
-    }
-    
-    Data <- cbind(Data, h=NA)
-    
-    #estimation of the thickness of the sample (h) from the new minimun and max depth of the sample
-    
-    Data<- Data |> dplyr::mutate (h = EMax-EMin)
-    
-    temp<-cbind(Data$EMin, Data$EMax, Data$h)
-    colnames(temp)<-colnames(Fdf2)
-    Fdf2<-rbind(Fdf2, temp)
-    
+  estimate_depth <- function(df, j) {
+    df[j + 1, "emin"] <- df[j, "maxd_r"] + ((df[j + 1, "mind_r"] - df[j, "maxd_r"]) / 2)
+    df[j, "emax"] <- df[j, "maxd_r"] + ((df[j + 1, "mind_r"] - df[j, "maxd_r"]) / 2)
+    df[1, "emin"] <- 0
+    df[nrow(df), "emax"] <- df[nrow(df), "maxd_r"]
+    return(df)
   }
-  Fdf<-cbind(df, Fdf2)
   
-  return(Fdf)
+  estimate_height <- function(df) {
+    data <- as.data.frame(df)
+    colnames(data) <- colnames(df_r)
+    data <- estimate_depth(df = data, j = 1:(nrow(data) - 1))
+    data$h <- data$emax - data$emin
+    return(data)
+  }
+  
+  list_h <- lapply(X = x, FUN = estimate_height)
+  
+  df_h <- do.call(rbind, list_h)
+  
+  rownames(df_h) <- NULL
+  
+  return(df_h)
+  
 }
 
-DataA<-estimate_h(DataA)
+DataA<-estimate_h(DataA,
+                  core = "Core",
+                  mind = "Min.Depth",
+                  maxd = "Max.Depth")
 
 
 #estimate carbon density and acc mass per sample
@@ -720,7 +721,8 @@ for (i in 1:length(X)) {
 
 DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
 
-OCModel<-function (df, nwpath) {
+# to fit the model the core has to have more than 3 points
+OCModel<-function (df, MA = 0, nwpath) {
   
   SSS <- split(df, df$Core)
   
@@ -742,6 +744,10 @@ OCModel<-function (df, nwpath) {
     colnames(Pr) <- list("Core", "Ecosystem", "FAge", "Corg", "Corg.M")
     Tfits[i, 2] <- Pr[1, which(colnames(Data) == "Ecosystem")]
     Tfits[i, 5] <- max(Pr$FAge)
+    
+    if (nrow(Pr)<4 | max(Pr$FAge)<MA) {
+      next
+    }
     
     skip_to_next <- FALSE
     
@@ -847,12 +853,12 @@ OCModel<-function (df, nwpath) {
 } #function to estimate production decay models over oc acc mass per core. Needs df with
 # columns: c("Core", "Ecosystem", "FAge", "Corg", "Corg.M") and a path to save outputs
 
-OCModel(DataAM_lt, nwpath="Decay2023/Prueba")
+max_depth<-OCModel(DataAM, nwpath="Decay2023/Max_Depth")
 
-#eliminate outlayers: Sm_004
-#eliminate empty cores (no model): Sg_084,Sg_088;Sg_317, Sg_472, Sg_476, Sg_478, Sg_480, Sg_495, Sg_496, Sg_497 
-#eliminate some cores after visual check, we eliminate: Mg_023, Sg_316, Sg_321, Sg_332, Sm_068, Sm_069, Sm_092, Sm_097, Sm_105
-TfitsM_DEC <- TfitsM_DEC[-c(6,18, 19, 45, 46, 47, 49, 50:53, 55:57, 59, 72, 73, 78, 80, 81 ), ]
+#eliminate outlayers:
+#eliminate empty cores (no model): 
+#eliminate some cores after visual check, we eliminate: 
+max_depth <- max_depth[-c(), ]
 
 
 
@@ -865,6 +871,633 @@ shapiro.test(TfitsM_DEC$k) #(>0.05 normal, <0.05 no normal)
 
 ggplot(TfitsM_DEC, aes(Max.Age, k))+
   geom_point()
+
+
+
+# model first 100 years ---------------------------------------------------
+
+Data_i<-subset(TAll, TAll$FAge < 100)
+Data_t<-tendency(Data_i, pnames="100")
+
+TDEC<-Data_t[[2]]
+
+DataA <-
+  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+
+#carbon stock estimation por sample
+DataA<-estimate_h(DataA,
+                  core = "Core",
+                  mind = "Min.Depth",
+                  maxd = "Max.Depth")
+DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+
+#Acc organic matter
+
+DataAM<- DataA[0,]
+DataAM[1,]=NA  # ad a temporary new row of NA values
+DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+DataAM = DataAM[0,]
+
+X<- split(DataA, DataA$Core)
+
+  for (i in 1:length(X)) {
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(DataA)
+  
+  Data <- cbind(Data, Corg.M=NA)
+  
+  Data[1,"Corg.M"]<-Data[1,"OCg"]
+  
+  for (j in 2:nrow(Data)){
+    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+  }
+  
+  DataAM<-rbind(DataAM,Data)}
+
+#model
+DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+
+fit_100<-OCModel(DataAM, nwpath="Decay2023/100")
+
+#eliminate some cores after visual check, we eliminate: Sg_081, Sg_111, Sg_241, Sg_316, Sg_317, Sg_321, Sg_323, Sg_332, 
+#Sg_497, Sm_004, Sm_68, Sm_069, Sm_092, Sm_97, Sm105
+fit_100[c(13, 17, 27, 38, 39, 40, 41, 42, 47, 49, 61, 62, 67, 69, 70), "k"]<-NA
+
+
+ggplot(fit_100, aes( Ecosystem, k))+
+  geom_boxplot()+
+  geom_jitter()
+
+ggplot(fit_100, aes( Max.Age, k))+
+  geom_point()
+
+
+pairwise.wilcox.test(fit_100$k, fit_100$Ecosystem,
+                    p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+
+
+# model 100-150 years ---------------------------------------------------
+
+Data_i<-subset(TAll, TAll$FAge < 150)
+Data_t<-tendency(Data_i, pnames="100_150")
+
+TDEC<-Data_t[[2]]
+
+DataA <-
+  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+
+#carbon stock estimation por sample
+DataA<-estimate_h(DataA,
+                  core = "Core",
+                  mind = "Min.Depth",
+                  maxd = "Max.Depth")
+DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+
+#Acc organic matter
+
+DataAM<- DataA[0,]
+DataAM[1,]=NA  # ad a temporary new row of NA values
+DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+DataAM = DataAM[0,]
+
+X<- split(DataA, DataA$Core)
+
+for (i in 1:length(X)) {
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(DataA)
+  
+  Data <- cbind(Data, Corg.M=NA)
+  
+  Data[1,"Corg.M"]<-Data[1,"OCg"]
+  
+  for (j in 2:nrow(Data)){
+    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+  }
+  
+  DataAM<-rbind(DataAM,Data)}
+
+#model
+DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+
+fit_150<-OCModel(DataAM, MA= 100, nwpath="Decay2023/150")
+
+
+#eliminate outlayers: 
+
+ggplot(fit_150, aes(x = k)) +
+  geom_histogram()
+
+#eliminate some cores after visual check, we eliminate: Mg_023, Sg_193, Sm_004, Sm_049
+fit_150 <- fit_150[-c(6, 32, 59, 63), ]
+
+#eliminate empty cores (no model)
+fit_150<-fit_150[!is.na(fit_100$P),]
+
+
+ggplot(fit_150, aes( Ecosystem, k))+
+  geom_boxplot()+
+  geom_jitter()
+
+pairwise.wilcox.test(fit_150$k, fit_150$Ecosystem,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+# model 150-300 years ---------------------------------------------------
+
+
+Data_i<-subset(TAll, TAll$FAge < 300)
+Data_t<-tendency(Data_i, pnames="150_300")
+
+TDEC<-Data_t[[2]]
+
+DataA <-
+  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+
+#carbon stock estimation por sample
+DataA<-estimate_h(DataA,
+                  core = "Core",
+                  mind = "Min.Depth",
+                  maxd = "Max.Depth")
+DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+
+#Acc organic matter
+
+DataAM<- DataA[0,]
+DataAM[1,]=NA  # ad a temporary new row of NA values
+DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+DataAM = DataAM[0,]
+
+X<- split(DataA, DataA$Core)
+
+for (i in 1:length(X)) {
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(DataA)
+  
+  Data <- cbind(Data, Corg.M=NA)
+  
+  Data[1,"Corg.M"]<-Data[1,"OCg"]
+  
+  for (j in 2:nrow(Data)){
+    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+  }
+  
+  DataAM<-rbind(DataAM,Data)}
+
+#model
+DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+
+fit_300<-OCModel(DataAM, MA= 150, nwpath="Decay2023/300")
+
+
+#eliminate outlayers: 
+
+ggplot(fit_300, aes(x = k)) +
+  geom_histogram()
+
+#eliminate some cores after visual check, we eliminate: Sg_179, Sg_192, Sg_194, Sg_250, Sg_476, Sg_485, Sg_495, Sg_497
+#Sm_004
+fit_300 <- fit_300[-c( 38, 40, 41, 42, 46, 61, 68, 70, 72, 73), ]
+
+#eliminate empty cores (no model)
+fit_300<-fit_300[!is.na(fit_300$P),]
+
+
+ggplot(fit_300, aes( Ecosystem, k))+
+  geom_boxplot()+
+  geom_jitter()
+
+
+pairwise.wilcox.test(fit_300$k, fit_300$Ecosystem,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+
+# model 300-500 years ---------------------------------------------------
+
+Data_i<-subset(TAll, TAll$FAge < 500)
+Data_t<-tendency(Data_i, pnames="300_500")
+
+TDEC<-Data_t[[2]]
+
+DataA <-
+  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+
+#carbon stock estimation por sample
+DataA<-estimate_h(DataA,
+                  core = "Core",
+                  mind = "Min.Depth",
+                  maxd = "Max.Depth")
+DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+
+#Acc organic matter
+
+DataAM<- DataA[0,]
+DataAM[1,]=NA  # ad a temporary new row of NA values
+DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+DataAM = DataAM[0,]
+
+X<- split(DataA, DataA$Core)
+
+for (i in 1:length(X)) {
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(DataA)
+  
+  Data <- cbind(Data, Corg.M=NA)
+  
+  Data[1,"Corg.M"]<-Data[1,"OCg"]
+  
+  for (j in 2:nrow(Data)){
+    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+  }
+  
+  DataAM<-rbind(DataAM,Data)}
+
+#model
+DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+
+fit_500<-OCModel(DataAM, MA= 300, nwpath="Decay2023/500")
+
+
+#eliminate outlayers: 
+
+ggplot(fit_500, aes(x = k)) +
+  geom_histogram()
+
+#eliminate some cores after visual check, we eliminate: Sg_041, Sg_193, Sg_250, Sg_310, Sg_312, Sg_314, Sg_476, Sg_479, 
+#Sg_480, Sg_495, Sg_497, Sm_004
+fit_500 <- fit_500[-c(15, 42, 47, 51, 53, 54, 61, 64, 65, 73, 75, 76 ), ]
+
+#eliminate empty cores (no model)
+fit_500<-fit_500[!is.na(fit_500$P),]
+
+
+ggplot(fit_500, aes( Ecosystem, k))+
+  geom_boxplot()+
+  geom_jitter()
+
+pairwise.wilcox.test(fit_500$k, fit_500$Ecosystem,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+# model 500-1000 years ---------------------------------------------------
+
+
+Data_i<-subset(TAll, TAll$FAge < 1000)
+Data_t<-tendency(Data_i, pnames="500_1000")
+
+TDEC<-Data_t[[2]]
+
+DataA <-
+  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+
+#carbon stock estimation por sample
+DataA<-estimate_h(DataA,
+                  core = "Core",
+                  mind = "Min.Depth",
+                  maxd = "Max.Depth")
+DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+
+#Acc organic matter
+
+DataAM<- DataA[0,]
+DataAM[1,]=NA  # ad a temporary new row of NA values
+DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+DataAM = DataAM[0,]
+
+X<- split(DataA, DataA$Core)
+
+for (i in 1:length(X)) {
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(DataA)
+  
+  Data <- cbind(Data, Corg.M=NA)
+  
+  Data[1,"Corg.M"]<-Data[1,"OCg"]
+  
+  for (j in 2:nrow(Data)){
+    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+  }
+  
+  DataAM<-rbind(DataAM,Data)}
+
+#model
+DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+
+fit_1000<-OCModel(DataAM, MA= 500, nwpath="Decay2023/1000")
+
+
+#eliminate outlayers: 
+
+ggplot(fit_1000, aes(x = k)) +
+  geom_histogram()
+
+#eliminate some cores after visual check, we eliminate: Sg_019, Sg_041, Sg_111, Sg_117, Sg_195, Sg_279, Sg_312, Sg_314, 
+#Sg_490, Sm_004, Sm_010
+fit_1000 <- fit_1000[-c( 12, 15, 27, 32, 45, 50, 55, 56, 73, 80, 81), ]
+
+#eliminate empty cores (no model)
+fit_1000<-fit_1000[!is.na(fit_1000$P),]
+
+
+ggplot(fit_1000, aes( Ecosystem, k))+
+  geom_boxplot()+
+  geom_jitter()
+
+
+pairwise.wilcox.test(fit_1000$k, fit_1000$Ecosystem,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+# model 1000-1500 years ---------------------------------------------------
+
+
+Data_i<-subset(TAll, TAll$FAge < 1500)
+Data_t<-tendency(Data_i, pnames="1000_1500")
+
+TDEC<-Data_t[[2]]
+
+DataA <-
+  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+
+#carbon stock estimation por sample
+DataA<-estimate_h(DataA,
+                  core = "Core",
+                  mind = "Min.Depth",
+                  maxd = "Max.Depth")
+DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+
+#Acc organic matter
+
+DataAM<- DataA[0,]
+DataAM[1,]=NA  # ad a temporary new row of NA values
+DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+DataAM = DataAM[0,]
+
+X<- split(DataA, DataA$Core)
+
+for (i in 1:length(X)) {
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(DataA)
+  
+  Data <- cbind(Data, Corg.M=NA)
+  
+  Data[1,"Corg.M"]<-Data[1,"OCg"]
+  
+  for (j in 2:nrow(Data)){
+    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+  }
+  
+  DataAM<-rbind(DataAM,Data)}
+
+#model
+DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+
+fit_1500<-OCModel(DataAM, MA= 1000, nwpath="Decay2023/1500")
+
+
+#eliminate outlayers: 
+
+ggplot(fit_1500, aes(x = k)) +
+  geom_histogram()
+
+#eliminate some cores after visual check, we eliminate: Sg_041, Sg_097, Sg_112, Sg_121, Sg_170, Sg_195, Sg_311, Sg_312, 
+#Sg_314, Sg_490, Sm_004, Sm_022
+fit_1500 <- fit_1500[-c( 15, 25, 28, 35, 37, 45, 54, 55, 56, 73, 81, 83), ]
+
+#eliminate empty cores (no model)
+fit_1500<-fit_1500[!is.na(fit_1500$P),]
+
+
+ggplot(fit_1500, aes( Ecosystem, k))+
+  geom_boxplot()+
+  geom_jitter()
+
+pairwise.wilcox.test(fit_1500$k, fit_1500$Ecosystem,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+
+# model 1500-2000 years ---------------------------------------------------
+
+
+Data_i<-subset(TAll, TAll$FAge < 2000)
+Data_t<-tendency(Data_i, pnames="1500_2000")
+
+TDEC<-Data_t[[2]]
+
+DataA <-
+  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+
+#carbon stock estimation por sample
+DataA<-estimate_h(DataA,
+                  core = "Core",
+                  mind = "Min.Depth",
+                  maxd = "Max.Depth")
+DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+
+#Acc organic matter
+
+DataAM<- DataA[0,]
+DataAM[1,]=NA  # ad a temporary new row of NA values
+DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+DataAM = DataAM[0,]
+
+X<- split(DataA, DataA$Core)
+
+for (i in 1:length(X)) {
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(DataA)
+  
+  Data <- cbind(Data, Corg.M=NA)
+  
+  Data[1,"Corg.M"]<-Data[1,"OCg"]
+  
+  for (j in 2:nrow(Data)){
+    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+  }
+  
+  DataAM<-rbind(DataAM,Data)}
+
+#model
+DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+
+fit_2000<-OCModel(DataAM, MA= 1500, nwpath="Decay2023/2000")
+
+
+#eliminate outlayers: 
+
+ggplot(fit_2000, aes(x = k)) +
+  geom_histogram()
+
+#eliminate some cores after visual check, we eliminate: Sg_041, Sg_170, Sg_191, Sg_312, Sg_314
+fit_2000 <- fit_2000[-c( 15, 35, 40, 54, 55), ]
+
+#eliminate empty cores (no model)
+fit_2000<-fit_2000[!is.na(fit_2000$P),]
+
+
+ggplot(fit_2000, aes( Ecosystem, k))+
+  geom_boxplot()+
+  geom_jitter()
+
+
+pairwise.wilcox.test(fit_2000$k, fit_2000$Ecosystem,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+# model > 2000 years ---------------------------------------------------
+
+
+Data_i<-TAll
+Data_t<-tendency(Data_i, pnames=">2000")
+
+TDEC<-Data_t[[2]]
+
+DataA <-
+  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+
+#carbon stock estimation por sample
+DataA<-estimate_h(DataA,
+                  core = "Core",
+                  mind = "Min.Depth",
+                  maxd = "Max.Depth")
+DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+
+#Acc organic matter
+
+DataAM<- DataA[0,]
+DataAM[1,]=NA  # ad a temporary new row of NA values
+DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+DataAM = DataAM[0,]
+
+X<- split(DataA, DataA$Core)
+
+for (i in 1:length(X)) {
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(DataA)
+  
+  Data <- cbind(Data, Corg.M=NA)
+  
+  Data[1,"Corg.M"]<-Data[1,"OCg"]
+  
+  for (j in 2:nrow(Data)){
+    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+  }
+  
+  DataAM<-rbind(DataAM,Data)}
+
+#model
+DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+
+fit_m2000<-OCModel(DataAM, MA= 2000, nwpath="Decay2023/more_2000")
+
+
+#eliminate outlayers: 
+
+ggplot(fit_m2000, aes(x = k)) +
+  geom_histogram()
+
+#eliminate some cores after visual check, we eliminate: Sg_041, Sg_097, Sg_314
+fit_m2000 <- fit_m2000[-c( 17, 27, 54), ]
+
+#eliminate empty cores (no model)
+fit_m2000<-fit_m2000[!is.na(fit_m2000$P),]
+
+
+ggplot(fit_m2000, aes( Ecosystem, k))+
+  geom_boxplot()+
+  geom_jitter()
+
+
+
+# Final table and plots -------------------------------------------------------
+
+k_table <-merge(fit_100[,c(1,4)], fit_150[,c(1,4)], by = "ID", all = TRUE)
+k_table <-merge(k_table, fit_300[,c(1,4)], by = "ID", all = TRUE)
+k_table <-merge(k_table, fit_500[,c(1,4)], by = "ID", all = TRUE)
+k_table <-merge(k_table, fit_1000[,c(1,4)], by = "ID", all = TRUE)
+k_table <-merge(k_table, fit_1500[,c(1,4)], by = "ID", all = TRUE)
+k_table <-merge(k_table, fit_2000[,c(1,4)], by = "ID", all = TRUE)
+k_table <-merge(k_table, fit_m2000[,c(1,4, 5)], by = "ID", all = TRUE)
+
+colnames(k_table)<-c("ID", "k_100", "k_150", "k_300", "k_500", "k_1000","k_1500", "k_2000", "k_m2000", "Max_Age")
+k_table$k_100<-as.numeric(k_table$k_100)
+k_table$k_300<-as.numeric(k_table$k_300)
+
+k_table[c(1:6),"Ecosystem"]<-"Mangrove"
+k_table[c(7:89),"Ecosystem"]<-"Seagrass"
+k_table[c(90:114),"Ecosystem"]<-"Tidal Marsh"
+
+
+k_table_Mg<-subset(k_table, Ecosystem=='Mangrove')
+k_table_Sg<-subset(k_table, Ecosystem=='Seagrass')
+k_table_Sm<-subset(k_table, Ecosystem=='Tidal Marsh')
+
+# load decay rates from review
+
+File <- "Data/k_rev.csv"
+
+k_rev <- read.csv(File,
+                  header = T,
+                  sep = ";",
+                  dec = ".")
+k_rev <- as.data.frame(k_rev)
+k_rev<- k_rev [-c(1,6),]
+
+
+
+std <- function(x) sd(x)/sqrt(length(x))
+
+ggplot(k_table_Sg, aes( Max_Age, k_m2000))+ ggtitle("Decay rate by time frame") + xlab("Time frame (years)") + ylab("Decay rate (yr-1)") +
+  geom_point(color='green4')+
+  geom_point(aes(100, mean(na.omit(k_table_Sg$k_100))), color='green4')+
+  geom_errorbar(aes(100, ymin=mean(na.omit(k_table_Sg$k_100))-std(na.omit(k_table_Sg$k_100)), ymax=mean(na.omit(k_table_Sg$k_100))+std(na.omit(k_table_Sg$k_100))), color='green4')+
+  geom_point(aes(100, mean(na.omit(k_table_Mg$k_100))), color='blue')+
+  geom_errorbar(aes(100, ymin=mean(na.omit(k_table_Mg$k_100))-std(na.omit(k_table_Mg$k_100)), ymax=mean(na.omit(k_table_Mg$k_100))+std(na.omit(k_table_Mg$k_100))), color='blue')+
+  geom_point(aes(100, mean(na.omit(k_table_Sm$k_100))), color='orange')+
+  geom_errorbar(aes(100, ymin=mean(na.omit(k_table_Sm$k_100))-std(na.omit(k_table_Sm$k_100)), ymax=mean(na.omit(k_table_Sm$k_100))+std(na.omit(k_table_Sm$k_100))), color='orange')+
+  
+  geom_point(aes(150, mean(na.omit(k_table_Sg$k_150))), color='green4')+
+  geom_errorbar(aes(150, ymin=mean(na.omit(k_table_Sg$k_150))-std(na.omit(k_table_Sg$k_150)), ymax=mean(na.omit(k_table_Sg$k_150))+std(na.omit(k_table_Sg$k_150))), color='green4')+
+  geom_point(aes(150, mean(na.omit(k_table_Mg$k_150))), color='blue')+
+  geom_errorbar(aes(150, ymin=mean(na.omit(k_table_Mg$k_150))-std(na.omit(k_table_Mg$k_150)), ymax=mean(na.omit(k_table_Mg$k_150))+std(na.omit(k_table_Mg$k_150))), color='blue')+  
+  geom_point(aes(150, mean(na.omit(k_table_Sm$k_150))), color='orange')+
+  geom_errorbar(aes(150, ymin=mean(na.omit(k_table_Sm$k_150))-std(na.omit(k_table_Sm$k_150)), ymax=mean(na.omit(k_table_Sm$k_150))+std(na.omit(k_table_Sm$k_150))), color='orange')+  
+  
+  geom_point(aes(300, mean(na.omit(k_table_Sg$k_300))), color='green4')+
+  geom_errorbar(aes(300, ymin=mean(na.omit(k_table_Sg$k_300))-std(na.omit(k_table_Sg$k_300)), ymax=mean(na.omit(k_table_Sg$k_300))+std(na.omit(k_table_Sg$k_300))), color='green4')+
+  geom_point(aes(300, mean(na.omit(k_table_Mg$k_300))), color='blue')+
+  geom_errorbar(aes(300, ymin=mean(na.omit(k_table_Mg$k_300))-std(na.omit(k_table_Mg$k_300)), ymax=mean(na.omit(k_table_Mg$k_300))+std(na.omit(k_table_Mg$k_300))), color='blue')+
+  geom_point(aes(300, mean(na.omit(k_table_Sm$k_300))), color='orange')+
+  geom_errorbar(aes(300, ymin=mean(na.omit(k_table_Sm$k_300))-std(na.omit(k_table_Sm$k_300)), ymax=mean(na.omit(k_table_Sm$k_300))+std(na.omit(k_table_Sm$k_300))), color='orange')+
+  
+  geom_point(aes(500, mean(na.omit(k_table_Sg$k_500))), color='green4')+
+  geom_errorbar(aes(500, ymin=mean(na.omit(k_table_Sg$k_500))-std(na.omit(k_table_Sg$k_500)), ymax=mean(na.omit(k_table_Sg$k_500))+std(na.omit(k_table_Sg$k_500))), color='green4')+
+  geom_point(aes(500, mean(na.omit(k_table_Mg$k_500))), color='blue')+
+  geom_errorbar(aes(500, ymin=mean(na.omit(k_table_Mg$k_500))-std(na.omit(k_table_Mg$k_500)), ymax=mean(na.omit(k_table_Mg$k_500))+std(na.omit(k_table_Mg$k_500))), color='blue')+
+  geom_point(aes(500, mean(na.omit(k_table_Sm$k_500))), color='orange')+
+  geom_errorbar(aes(500, ymin=mean(na.omit(k_table_Sm$k_500))-std(na.omit(k_table_Sm$k_500)), ymax=mean(na.omit(k_table_Sm$k_500))+std(na.omit(k_table_Sm$k_500))), color='orange')+
+  
+  geom_point(aes(1000, mean(na.omit(k_table_Sg$k_1000))), color='green4')+
+  geom_errorbar(aes(1000, ymin=mean(na.omit(k_table_Sg$k_1000))-std(na.omit(k_table_Sg$k_1000)), ymax=mean(na.omit(k_table_Sg$k_1000))+std(na.omit(k_table_Sg$k_1000))), color='green4')+
+  geom_point(aes(1000, mean(na.omit(k_table_Mg$k_1000))), color='blue')+
+  geom_errorbar(aes(1000, ymin=mean(na.omit(k_table_Mg$k_1000))-std(na.omit(k_table_Mg$k_1000)), ymax=mean(na.omit(k_table_Mg$k_1000))+std(na.omit(k_table_Mg$k_1000))), color='blue')+
+  geom_point(aes(1000, mean(na.omit(k_table_Sm$k_1000))), color='orange')+
+  geom_errorbar(aes(1000, ymin=mean(na.omit(k_table_Sm$k_1000))-std(na.omit(k_table_Sm$k_1000)), ymax=mean(na.omit(k_table_Sm$k_1000))+std(na.omit(k_table_Sm$k_1000))), color='orange')+
+  
+  geom_point(aes(1500, mean(na.omit(k_table_Sg$k_1500))), color='green4')+
+  geom_errorbar(aes(1500, ymin=mean(na.omit(k_table_Sg$k_1500))-std(na.omit(k_table_Sg$k_1500)), ymax=mean(na.omit(k_table_Sg$k_1500))+std(na.omit(k_table_Sg$k_1500))), color='green4')+
+  geom_point(aes(1500, mean(na.omit(k_table_Mg$k_1500))), color='blue')+
+  geom_errorbar(aes(1500, ymin=mean(na.omit(k_table_Mg$k_1500))-std(na.omit(k_table_Mg$k_1500)), ymax=mean(na.omit(k_table_Mg$k_1500))+std(na.omit(k_table_Mg$k_1500))), color='blue')+
+  geom_point(aes(1500, mean(na.omit(k_table_Sm$k_1500))), color='orange')+
+  geom_errorbar(aes(1500, ymin=mean(na.omit(k_table_Sm$k_1500))-std(na.omit(k_table_Sm$k_1500)), ymax=mean(na.omit(k_table_Sm$k_1500))+std(na.omit(k_table_Sm$k_1500))), color='orange')+
+  
+  geom_point(aes(2000, mean(na.omit(k_table_Sg$k_2000))), color='green4')+
+  geom_errorbar(aes(2000, ymin=mean(na.omit(k_table_Sg$k_2000))-std(na.omit(k_table_Sg$k_2000)), ymax=mean(na.omit(k_table_Sg$k_2000))+std(na.omit(k_table_Sg$k_2000))), color='green4')+
+  geom_point(aes(2000, mean(na.omit(k_table_Mg$k_2000))), color='blue')+
+  geom_errorbar(aes(2000, ymin=mean(na.omit(k_table_Mg$k_2000))-std(na.omit(k_table_Mg$k_2000)), ymax=mean(na.omit(k_table_Mg$k_2000))+std(na.omit(k_table_Mg$k_2000))), color='blue')+
+  geom_point(aes(2000, mean(na.omit(k_table_Sm$k_2000))), color='orange')+
+  geom_errorbar(aes(2000, ymin=mean(na.omit(k_table_Sm$k_2000))-std(na.omit(k_table_Sm$k_2000)), ymax=mean(na.omit(k_table_Sm$k_2000))+std(na.omit(k_table_Sm$k_2000))), color='orange')+
+
+  geom_point(data= k_rev,mapping = aes(k_rev$Max_Age, k_rev$k), color='green', shape= 17)
+
+
+
 
 # results distribution
 
@@ -921,6 +1554,9 @@ ggsave(path = Folder,
        width = 20,
        height = 10
 )
+
+
+
 
 # Comparison between dating methods  (same core, dif dating method)-------------------------------------
 

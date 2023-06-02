@@ -2,7 +2,7 @@
 "1","Mg_010","Mangrove",NA,NA,143.9
 "2","Mg_011","Mangrove",NA,NA,139.8
 "3","Mg_012","Mangrove",NA,NA,105.3
-"4","Mg_015","Mangrove",NA,NA,105.90181007
+"4","Mg_015","Mangrove",NA,NA,105.9018101
 "5","Mg_016","Mangrove",NA,NA,370.071527
 "6","Mg_023","Mangrove",NA,NA,890
 "7","Sg_002","Seagrass",NA,NA,779
@@ -51,18 +51,18 @@
 "50","Sg_298","Seagrass",NA,NA,1043
 "51","Sg_310","Seagrass",NA,NA,399
 "52","Sg_311","Seagrass",NA,NA,1381
-"53","Sg_312","Seagrass",0.00220497921521267,0.00172730362519828,2146
-"54","Sg_314","Seagrass",0.00486524260196431,0.00261275211193351,2128
+"53","Sg_312","Seagrass",0.00220687457964793,0.00172925404995947,2146
+"54","Sg_314","Seagrass",0.00486552724404863,0.00261288041672007,2128
 "55","Sg_315","Seagrass",NA,NA,3959
-"56","Sg_316","Seagrass",NA,NA,22
-"57","Sg_317","Seagrass",NA,NA,19
+"56","Sg_316","Seagrass",NA,NA,23
+"57","Sg_317","Seagrass",NA,NA,19.5
 "58","Sg_321","Seagrass",NA,NA,26
 "59","Sg_323","Seagrass",NA,NA,488
 "60","Sg_332","Seagrass",NA,NA,98
 "61","Sg_476","Seagrass",NA,NA,365
 "62","Sg_477","Seagrass",NA,NA,619
 "63","Sg_478","Seagrass",NA,NA,1043
-"64","Sg_479","Seagrass",0.00063206150821953,0.00113432843250535,2572
+"64","Sg_479","Seagrass",0.000629975633838486,0.00112938388976453,2572
 "65","Sg_480","Seagrass",NA,NA,1098
 "66","Sg_481","Seagrass",NA,NA,1368
 "67","Sg_482","Seagrass",NA,NA,1007
@@ -77,28 +77,27 @@
 "76","Sg_495","Seagrass",NA,NA,327
 "77","Sg_496","Seagrass",NA,NA,391
 "78","Sg_497","Seagrass",NA,NA,306
-"79","Sg_498","Seagrass",NA,NA,810
-"80","Sm_010","Tidal Marsh",NA,NA,926
-"81","Sm_022","Tidal Marsh",NA,NA,1156
-"82","Sm_027","Tidal Marsh",NA,NA,848
-"83","Sm_034","Tidal Marsh",NA,NA,637
-"84","Sm_038","Tidal Marsh",NA,NA,1221
-"85","Sm_049","Tidal Marsh",NA,NA,114
-"86","Sm_051","Tidal Marsh",NA,NA,89
-"87","Sm_054","Tidal Marsh",NA,NA,72
-"88","Sm_057","Tidal Marsh",NA,NA,66
-"89","Sm_058","Tidal Marsh",NA,NA,78
-"90","Sm_059","Tidal Marsh",NA,NA,66
-"91","Sm_060","Tidal Marsh",NA,NA,80
-"92","Sm_063","Tidal Marsh",NA,NA,124
-"93","Sm_064","Tidal Marsh",NA,NA,98
-"94","Sm_068","Tidal Marsh",NA,NA,85.8770685
-"95","Sm_069","Tidal Marsh",NA,NA,40.68236183
-"96","Sm_074","Tidal Marsh",NA,NA,95.81683293
-"97","Sm_080","Tidal Marsh",NA,NA,121.12624018
-"98","Sm_081","Tidal Marsh",NA,NA,120.00915523
-"99","Sm_083","Tidal Marsh",NA,NA,195.4100771
-"100","Sm_092","Tidal Marsh",NA,NA,31
-"101","Sm_094","Tidal Marsh",NA,NA,152
-"102","Sm_097","Tidal Marsh",NA,NA,56
-"103","Sm_105","Tidal Marsh",NA,NA,62
+"79","Sm_010","Tidal Marsh",NA,NA,926
+"80","Sm_022","Tidal Marsh",NA,NA,1156
+"81","Sm_027","Tidal Marsh",NA,NA,848
+"82","Sm_034","Tidal Marsh",NA,NA,637
+"83","Sm_038","Tidal Marsh",NA,NA,1221
+"84","Sm_049","Tidal Marsh",NA,NA,114
+"85","Sm_051","Tidal Marsh",NA,NA,89
+"86","Sm_054","Tidal Marsh",NA,NA,72
+"87","Sm_057","Tidal Marsh",NA,NA,66
+"88","Sm_058","Tidal Marsh",NA,NA,78
+"89","Sm_059","Tidal Marsh",NA,NA,66
+"90","Sm_060","Tidal Marsh",NA,NA,80
+"91","Sm_063","Tidal Marsh",NA,NA,124
+"92","Sm_064","Tidal Marsh",NA,NA,98
+"93","Sm_068","Tidal Marsh",NA,NA,85.8770685
+"94","Sm_069","Tidal Marsh",NA,NA,40.68236183
+"95","Sm_074","Tidal Marsh",NA,NA,95.81683293
+"96","Sm_080","Tidal Marsh",NA,NA,121.1262402
+"97","Sm_081","Tidal Marsh",NA,NA,120.0091552
+"98","Sm_083","Tidal Marsh",NA,NA,195.4100771
+"99","Sm_092","Tidal Marsh",NA,NA,31
+"100","Sm_094","Tidal Marsh",NA,NA,152
+"101","Sm_097","Tidal Marsh",NA,NA,56
+"102","Sm_105","Tidal Marsh",NA,NA,62
