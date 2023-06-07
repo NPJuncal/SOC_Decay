@@ -8,6 +8,9 @@ library(mosaic)
 library(gridExtra)
 library(nlstools)
 library(dplyr)
+library(MASS) 
+library(reshape2) 
+library(reshape) 
 
 ############## Loading the dataset #####################
 
@@ -1425,8 +1428,33 @@ k_table[c(90:114),"Ecosystem"]<-"Tidal Marsh"
 
 
 k_table_Mg<-subset(k_table, Ecosystem=='Mangrove')
+k_table_Mg<-sapply(k_table_Mg,FUN=as.numeric)
 k_table_Sg<-subset(k_table, Ecosystem=='Seagrass')
+k_table_Sg<-sapply(k_table_Sg,FUN=as.numeric)
 k_table_Sm<-subset(k_table, Ecosystem=='Tidal Marsh')
+k_table_Sm<-sapply(k_table_Sm,FUN=as.numeric)
+
+std <- function(x) sd(x, na.rm=TRUE)/sqrt(length(x))
+cnt <- function(x) sum(!is.na(x))   
+
+sum_table<-as.data.frame(colMeans(k_table_Mg[,c(2:8)], na.rm = TRUE))
+sum_table[,2]<-as.data.frame(apply(k_table_Mg[,c(2:8)], FUN=std, MARGIN = 2))
+sum_table[,3]<-as.data.frame(apply(k_table_Mg[,c(2:8)], FUN=cnt, MARGIN = 2))
+
+sum_table[,4]<-colMeans(k_table_Sg[,c(2:8)], na.rm = TRUE)
+sum_table[,5]<-as.data.frame(apply(k_table_Sg[,c(2:8)], FUN=std, MARGIN = 2))
+sum_table[,6]<-as.data.frame(apply(k_table_Sg[,c(2:8)], FUN=cnt, MARGIN = 2))
+
+sum_table[,7]<-colMeans(k_table_Sm[,c(2:8)], na.rm = TRUE)
+sum_table[,8]<-as.data.frame(apply(k_table_Sm[,c(2:8)], FUN=std, MARGIN = 2))
+sum_table[,9]<-as.data.frame(apply(k_table_Sm[,c(2:8)], FUN=cnt, MARGIN = 2))
+
+sum_table[,10]<-colMeans(k_table[,c(2:8)], na.rm = TRUE)
+sum_table[,11]<-as.data.frame(apply(k_table[,c(2:8)], FUN=std, MARGIN = 2))
+sum_table[,12]<-as.data.frame(apply(k_table[,c(2:8)], FUN=cnt, MARGIN = 2))
+
+colnames(sum_table)<-c("Mean Mangrove", "SE Mangrove", "n Mangrove","Mean Seagrass", "SE Seagrass", "n Seagrass",
+                    "Mean Tidal Marsh", "SE Tidal Marsh", "n Tidal Marsh", "Mean All", "SE All", "n All")
 
 # load decay rates from review
 
@@ -1439,7 +1467,88 @@ k_rev <- read.csv(File,
 k_rev <- as.data.frame(k_rev)
 k_rev<- k_rev [-c(1,6),]
 
+# boxplot by timeframe figure
 
+mk_table<-melt(k_table[,-c(9,10)], id = c("ID","Ecosystem")) 
+
+mk_table$variable <- as.character(mk_table$variable)
+mk_table$variable[mk_table$variable == 'k_100'] <- '0-100 yr'
+mk_table$variable[mk_table$variable == 'k_150'] <- '100-150 yr'
+mk_table$variable[mk_table$variable == 'k_300'] <- '150-300 yr'
+mk_table$variable[mk_table$variable == 'k_500'] <- '300-500 yr'
+mk_table$variable[mk_table$variable == 'k_1000'] <- '500-1000 yr'
+mk_table$variable[mk_table$variable == 'k_1500'] <- '1000-1500 yr'
+mk_table$variable[mk_table$variable == 'k_2000'] <- '1500-2000 yr'
+
+ggplot(transform(mk_table,
+                 variable=factor(variable,levels=c('0-100 yr','100-150 yr','150-300 yr', '300-500 yr', '500-1000 yr', '1000-1500 yr', '1500-2000 yr'))),
+       aes( Ecosystem, value))+ ggtitle("Decay rates by ecosystem and time frame")+ ylab("Decay rate (yr-1)") +
+  geom_boxplot()+
+  geom_jitter(aes(color=Ecosystem))+
+  facet_wrap(~variable)+
+  scale_color_manual(values=c('blue', 'green4', "orange"))+
+  theme(legend.position = c(1, 0),
+        legend.justification = c(1, 0), 
+        axis.title.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text.x=element_blank(),)
+
+
+#fitting table
+
+f_table<-as.data.frame(colMeans(k_table[,c(2:8)], na.rm = TRUE))
+f_table[,2]<-c(100, 150, 300, 500, 1000, 1500, 2000)
+f_table[c(8:12),1]<-na.omit(k_table[,9])
+f_table[c(8:12),2]<-na.omit(k_table[,10])
+f_table[c(13:16), c(1,2)]<-k_rev[,c(2:3)]
+
+
+# fit function k-timeframe
+
+### exponential model to predict k in Posidonia meadows
+
+
+kchange <- function(Tframe, A, C)
+  (A * exp(C * Tframe))
+
+model1 <-
+  nls(
+    f_table[,1] ~ kchange(f_table[,2], myA, myC),
+    data = f_table,
+    start = list(myA = 0.04, myC = -0.00201)
+  )
+
+
+plot(f_table[,1], f_table[,2])
+
+summary(model1)
+plot(nlsResiduals(model1))
+
+fitY1 <- kchange(c(1:2100), 0.0401436, -0.0027)
+
+P1 <- P[c(1:5, 7:8), ]
+P2 <- P[-c(1:8), ]
+
+plot(P$Tframe,
+     P$k,
+     main = expression(paste(
+       italic("Posidonia spp."),
+       " organic carbon decay rate by time frame"
+     )),
+     xlab = "Time frame (yr)",
+     ylab = "Decay rate (yr-1)")
+points(P1$Tframe, P1$k, pch = 16)
+points(P2$Tframe, P2$k)
+lines(c(1:2100), fitY1, col = "blue")
+text(1000, 0.025, cex = 1.5, expression(y == 0.0401436 * e ** (-0.0027501 *
+                                                                 x)))
+
+
+
+
+
+
+# k vs time frame fitting figure
 
 std <- function(x) sd(x)/sqrt(length(x))
 
@@ -1503,7 +1612,9 @@ ggplot(k_table_Sg, aes( Max_Age, k_m2000))+ ggtitle("Decay rate by time frame") 
 
 #get coordinates from B dataframe
 
-CoordR<-subset(B, B$Core %in% TfitsM_DEC$ID==TRUE)
+mapa<-k_table[rowSums(is.na(k_table)) != ncol(k_table)-2,]
+
+CoordR<-subset(B, B$Core %in% mapa$ID==TRUE)
 
 CoordR %>%
   ggplot() + ggtitle("Estimated k distribution") + xlab("Longitude") + ylab("Latitude") +
@@ -1518,42 +1629,14 @@ CoordR %>%
 
 
 ggsave(path = Folder,
-       filename =  "Estimated k (less_150) map.jpg",
+       filename =  "Estimated k all map.jpg",
        units = "cm",
        width = 20,
        height = 10
 )
 
-# only those between 100 and 150 time frame
-
-TfitsM_DEC_100_150<-subset(TfitsM_DEC,TfitsM_DEC$Max.Age > 100 )
-
-ggplot(TfitsM_DEC_100_150, aes(x = k)) +
-  geom_histogram()
-
-shapiro.test(TfitsM_DEC_100_150$k) #(>0.05 normal, <0.05 no normal)
 
 
-
-CoordR<-subset(B, B$Core %in% TfitsM_DEC_100_150$ID==TRUE)
-
-CoordR %>%
-  ggplot() + ggtitle("Estimated k (100-150 years) distribution") + xlab("Longitude") + ylab("Latitude") +
-  geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
-  #geom_point(aes(x = long, y = lat))+
-  geom_point(aes(x = Long, y = Lat,  fill = Ecosystem),
-             pch = 21,
-             size = 2) +
-  coord_sf(xlim = c(-140, 150), ylim = c(-40, 75)) +
-  scale_fill_manual(values = c( "blue", "green","orange")) +
-  theme(plot.title = element_text(hjust = 0.5))
-
-ggsave(path = Folder,
-       filename =  "Estimated k.Pb (100-150) map.jpg",
-       units = "cm",
-       width = 20,
-       height = 10
-)
 
 
 
