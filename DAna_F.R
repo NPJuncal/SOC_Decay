@@ -14,7 +14,7 @@ library(reshape)
 
 ############## Loading the dataset #####################
 
-File <- "DAta/Cores.csv"
+File <- "Data/Cores.csv"
 
 Cores <- read.csv(File,
                   header = T,
@@ -36,9 +36,12 @@ dir.create(Folder)
 
 unique(Cores[, 5])
 
-B = filter(Cores, Cores$V.vs.B != "Bare")
+B <- subset(Cores, Cores$V.vs.B != "Bare")
 #Bare <- subset(A, A[,5]=='Bare')
 length(unique(B$Core))
+SingleCore<-B[!duplicated(B$Core),]
+
+table(SingleCore$Ecosystem)
 
 
 B$Corg <- as.numeric(B$Corg)
@@ -272,21 +275,44 @@ write.csv(DT,
 
 ##### Av Corg and trends
 
-ggplot(CM, aes(DT$C_Gr, CM$Av_Mud)) +
+ggplot(CM, aes(DT$C_Gr, CM$Av_C)) +
   geom_boxplot() +
   geom_jitter()
 
+names(SingleCore)[names(SingleCore) == 'Core'] <- 'ID'
+DT<-merge(DT, SingleCore[,c(1, 3, 7, 6, 8, 11, 12)], by = 'ID', all.x=T, all.y=F)
+
+library(janitor)
+counts<-tabyl(DT, Specie, C_Gr)
+counts<-counts %>% mutate(percent = counts[,2]*100/((counts[,2])+(counts[,3])+(counts[,4])))
+
+counts[c(2,8,13,14,15,18:22),6]<-"Persistent"
+counts[c(4:7, 17, 23:25),6]<-"Opportunistic"
+counts[c(9:12, 16),6]<-"Colonising"
+
+ggplot(counts,aes(V6, percent))+
+  geom_boxplot()+
+  geom_jitter()
+
+
+counts<-tabyl(DT, Life.form, C_Gr)
+counts<-counts %>% mutate(percent = counts[,2]*100/((counts[,2])+(counts[,3])+(counts[,4])))
 
 #geom_dotplot(binaxis='y', stackdir='center', dotsize=0.5)
 
-shapiro.test(CM$Av_Mud) #(>0.05 normal, <0.05 no normal)
+shapiro.test(CM$Av_C_25) #(>0.05 normal, <0.05 no normal)
 
 ## Student's t-test  if normally distributed, wilcox if not
 
-pairwise.wilcox.test(CM$Av_Mud, DT$C_Gr,
+pairwise.wilcox.test(CM$Av_Mud, DT2$C_Gr,
                      p.adjust.method = "BH") # are significantly different (p < 0.05)
 
-ggplot(CM, aes(DT$Ecosystem, CM$Av_Mud)) +
+DT2<-DT
+DT2$C_Gr <- recode(DT2$C_Gr, DEC = 'DEC',
+                  INC  = 'N',
+                  NT = 'N')
+
+ggplot(CM, aes(DT2$C_Gr, CM$Av_Mud)) +
   geom_boxplot()
 
 #### Count cores per group and get the percentages
@@ -589,8 +615,23 @@ prueba2<-tendency(TAll, pnames="prueba")
 
 TDEC<-prueba2[[2]]
 
+tendAll<-prueba2[[1]]
 
+#### Count cores per group and get the percentages
 
+NGr <- tendAll %>% group_by(C_Gr) %>% count()
+NGr %>% mutate(proc = ((n * 100) / sum(NGr[, 2])))
+
+tendAll %>% group_by(Ecosystem, C_Gr) %>% count()
+NGrSg <- subset(tendAll, Ecosystem == "Seagrass") %>% group_by(C_Gr) %>% count()
+NGrSg %>% mutate(proc = ((n * 100) / sum(NGrSg[, 2])))
+
+NGrSm <-
+  subset(tendAll, Ecosystem == "Tidal Marsh") %>% group_by(C_Gr) %>% count()
+NGrSm %>% mutate(proc = ((n * 100) / sum(NGrSm[, 2])))
+
+NGrMg <- subset(tendAll, Ecosystem == "Mangrove") %>% group_by(C_Gr) %>% count()
+NGrMg %>% mutate(proc = ((n * 100) / sum(NGrMg[, 2])))
 
 
 
@@ -1422,10 +1463,22 @@ colnames(k_table)<-c("ID", "k_100", "k_150", "k_300", "k_500", "k_1000","k_1500"
 k_table$k_100<-as.numeric(k_table$k_100)
 k_table$k_300<-as.numeric(k_table$k_300)
 
-k_table[c(1:6),"Ecosystem"]<-"Mangrove"
-k_table[c(7:89),"Ecosystem"]<-"Seagrass"
-k_table[c(90:114),"Ecosystem"]<-"Tidal Marsh"
+names(SingleCore)[names(SingleCore) == 'Core'] <- 'ID'
 
+k_table<-merge(k_table, SingleCore[,c(1, 3, 7, 6, 8, 11, 12)], by = 'ID', all.x=T, all.y=F)
+
+
+#normal distribution and significant differences among ecosystems
+
+shapiro.test(k_table$k_100) #normal if pvalue > than 0.05
+
+apply(k_table[,c(2:8)], FUN=shapiro.test, MARGIN = 2)
+
+pairwise.wilcox.test(k_table$k_1000, k_table$Ecosystem,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+
+# summary table (manuscript Table 1)
 
 k_table_Mg<-subset(k_table, Ecosystem=='Mangrove')
 k_table_Mg<-sapply(k_table_Mg,FUN=as.numeric)
@@ -1455,6 +1508,14 @@ sum_table[,12]<-as.data.frame(apply(k_table[,c(2:8)], FUN=cnt, MARGIN = 2))
 
 colnames(sum_table)<-c("Mean Mangrove", "SE Mangrove", "n Mangrove","Mean Seagrass", "SE Seagrass", "n Seagrass",
                     "Mean Tidal Marsh", "SE Tidal Marsh", "n Tidal Marsh", "Mean All", "SE All", "n All")
+
+
+write.csv(sum_table,
+          file.path(Folder, "Summar decay.csv"),
+          sep = ";",
+          dec = ".")
+
+
 
 # load decay rates from review
 
