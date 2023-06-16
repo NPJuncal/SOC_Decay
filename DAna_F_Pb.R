@@ -1,6 +1,6 @@
 
 
-#Only Pb Cores!!!
+#Only cores with Pb, if there is 14C with 14C, if not only Pb 
 
 
 Folder = "Decay2023_Pb"
@@ -805,7 +805,7 @@ ggplot(fit_1500Pb, aes(x = k)) +
 fit_1500Pb <- fit_1500Pb[-c(13, 17, 19, 20, 23, 25, 31, 39, 40, 46, 48 ), ]
 
 #eliminate empty cores (no model)
-fit_1500Pb<-fit_1500Pb[!is.na(fit_1500$P),]
+fit_1500Pb<-fit_1500Pb[!is.na(fit_1500Pb$P),]
 
 
 ggplot(fit_1500Pb, aes( Ecosystem, k))+
@@ -971,27 +971,12 @@ k_tablePb<-merge(k_tablePb, SingleCore[,c(1, 3, 7, 6, 8, 11, 12)], by = 'ID', al
 k_tablePb<-merge(k_tablePb, SAR[,c(1,5)], by = 'ID', all.x=T, all.y=F)
 
 
-ggplot(temp, aes(k_150, Bioregions))+
-  geom_boxplot()+
-  geom_jitter(aes(color=temp$Specie))
-
-
-ggplot(temp, aes(k_100, Specie))+
-  geom_boxplot()+
-  geom_jitter(aes(color=temp$Bioregions))
-
 
 #normal distribution and significant differences among ecosystems
 
 shapiro.test(k_tablePb$k_100) #normal if pvalue > than 0.05
 
 apply(k_tablePb[,c(2:8)], FUN=shapiro.test, MARGIN = 2)
-
-
-temp<-subset(k_tablePb_Sg, !is.na(k_100))
-
-pairwise.wilcox.test(temp$k_100, temp$Bioregions,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 
 # summary table (manuscript Table 1)
@@ -1073,56 +1058,73 @@ ggplot(transform(mk_tablePb,
         axis.text.x=element_blank(),)
 
 
+mk_tablePb2<-subset(mk_tablePb, mk_tablePb$variable == "100-150 yr" | mk_tablePb$variable == "500-1000 yr")
+
+ggplot(transform(mk_tablePb2,
+                 variable=factor(variable,levels=c('100-150 yr',"500-1000 yr"))),
+       aes(Ecosystem, value))+ ggtitle("Decay rates by ecosystem and time frame")+ ylab("Decay rate (yr-1)") +
+  geom_boxplot()+
+  geom_jitter(aes(color=Ecosystem))+
+  facet_wrap(~variable)+
+  scale_color_manual(values=c('blue', 'green4', "orange"))+
+  theme(#legend.position = c(1, 0),
+        #legend.justification = c(1, 0), 
+        axis.title.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text.x=element_blank(),)
+
+
 #fitting table
 
 f_table<-as.data.frame(colMeans(k_tablePb[,c(2:8)], na.rm = TRUE))
-f_table[,2]<-c(100, 150, 300, 500, 1000, 1500, 2000)
-f_table[c(8:12),1]<-na.omit(k_tablePb[,9])
-f_table[c(8:12),2]<-na.omit(k_tablePb[,10])
-f_table[c(13:16), c(1,2)]<-k_rev[,c(2:3)]
+f_table[,2]<-c(50, 125, 225, 400, 750, 1250, 1750)
+f_table[c(8:11),1]<-na.omit(k_tablePb[,9])
+f_table[c(8:11),2]<-na.omit(k_tablePb[,10])
+f_table[c(12:15), c(1,2)]<-k_rev[,c(2:3)]
 
+f_table<-f_table[-9,]
 
 # fit function k-timeframe
 
 ### exponential model to predict k in Posidonia meadows
 
+colnames(f_table)<-c("k","timeframe")
 
 kchange <- function(Tframe, A, C)
   (A * exp(C * Tframe))
 
 model1 <-
   nls(
-    f_table[,1] ~ kchange(f_table[,2], myA, myC),
+    k ~ kchange(timeframe, myA, myC),
     data = f_table,
-    start = list(myA = 0.04, myC = -0.00201)
+    start = list(myA = 0.02, myC = 0.0003)
+  )
+
+# model 2 without 1500-2000 fittings
+model2 <-
+  nls(
+    k ~ kchange(timeframe, myA, myC),
+    data = f_table[-7,],
+    start = list(myA = 0.02, myC = 0.0003)
   )
 
 
-plot(f_table[,1], f_table[,2])
 
 summary(model1)
 plot(nlsResiduals(model1))
 
-fitY1 <- kchange(c(1:2100), 0.0401436, -0.0027)
+fitY1 <- kchange(c(1:2100), 0.027, -0.0018)
 
-P1 <- P[c(1:5, 7:8), ]
-P2 <- P[-c(1:8), ]
-
-plot(P$Tframe,
-     P$k,
-     main = expression(paste(
-       italic("Posidonia spp."),
-       " organic carbon decay rate by time frame"
-     )),
-     xlab = "Time frame (yr)",
-     ylab = "Decay rate (yr-1)")
-points(P1$Tframe, P1$k, pch = 16)
-points(P2$Tframe, P2$k)
-lines(c(1:2100), fitY1, col = "blue")
-text(1000, 0.025, cex = 1.5, expression(y == 0.0401436 * e ** (-0.0027501 *
-                                                                 x)))
+fitY1 <- as.data.frame(c(1:5000))
+fitY1['new_col'] <- NA
+fitY1[, 2] <- kchange(c(1:5000), 0.027, -0.0018)
+colnames(fitY1) <- list("timeframe", "predict")
 
 
+fitY2 <- as.data.frame(c(1:5000))
+fitY2['new_col'] <- NA
+fitY2[, 2] <- kchange(c(1:5000), 0.028, -0.0019)
+colnames(fitY2) <- list("timeframe", "predict")
 
 
 # correlation decay rate (150) and SAR ------------------------------------
@@ -1158,87 +1160,86 @@ ggplot(k_tablePb[,-c(51,100)],aes(k_100, SAR))+
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # k vs time frame fitting figure
 
 std <- function(x) sd(x)/sqrt(length(x))
 
-ggplot(k_tablePb_Sg, aes( Max_Age, k_m2000))+ ggtitle("Decay rate by time frame") + xlab("Time frame (years)") + ylab("Decay rate (yr-1)") +
+fit_figPb<-ggplot(k_tablePb_Sg, aes( Max_Age, k_m2000))+ ggtitle("Decay rate by time frame") + xlab("Time frame (years)") + ylab("Decay rate (yr-1)") +
   geom_point(color='green4')+
-  geom_point(aes(100, mean(na.omit(k_tablePb_Sg$k_100))), color='green4')+
-  geom_errorbar(aes(100, ymin=mean(na.omit(k_tablePb_Sg$k_100))-std(na.omit(k_tablePb_Sg$k_100)), ymax=mean(na.omit(k_tablePb_Sg$k_100))+std(na.omit(k_tablePb_Sg$k_100))), color='green4')+
-  geom_point(aes(100, mean(na.omit(k_tablePb_Mg$k_100))), color='blue')+
-  geom_errorbar(aes(100, ymin=mean(na.omit(k_tablePb_Mg$k_100))-std(na.omit(k_tablePb_Mg$k_100)), ymax=mean(na.omit(k_tablePb_Mg$k_100))+std(na.omit(k_tablePb_Mg$k_100))), color='blue')+
-  geom_point(aes(100, mean(na.omit(k_tablePb_Sm$k_100))), color='orange')+
-  geom_errorbar(aes(100, ymin=mean(na.omit(k_tablePb_Sm$k_100))-std(na.omit(k_tablePb_Sm$k_100)), ymax=mean(na.omit(k_tablePb_Sm$k_100))+std(na.omit(k_tablePb_Sm$k_100))), color='orange')+
+  geom_point(aes(50, mean(na.omit(k_tablePb_Sg$k_100))), color='green4')+
+  geom_errorbar(aes(50, ymin=mean(na.omit(k_tablePb_Sg$k_100))-std(na.omit(k_tablePb_Sg$k_100)), ymax=mean(na.omit(k_tablePb_Sg$k_100))+std(na.omit(k_tablePb_Sg$k_100))), color='green4')+
+  geom_point(aes(50, mean(na.omit(k_tablePb_Mg$k_100))), color='blue')+
+  geom_errorbar(aes(50, ymin=mean(na.omit(k_tablePb_Mg$k_100))-std(na.omit(k_tablePb_Mg$k_100)), ymax=mean(na.omit(k_tablePb_Mg$k_100))+std(na.omit(k_tablePb_Mg$k_100))), color='blue')+
+  geom_point(aes(50, mean(na.omit(k_tablePb_Sm$k_100))), color='orange')+
+  geom_errorbar(aes(50, ymin=mean(na.omit(k_tablePb_Sm$k_100))-std(na.omit(k_tablePb_Sm$k_100)), ymax=mean(na.omit(k_tablePb_Sm$k_100))+std(na.omit(k_tablePb_Sm$k_100))), color='orange')+
   
-  geom_point(aes(150, mean(na.omit(k_tablePb_Sg$k_150))), color='green4')+
-  geom_errorbar(aes(150, ymin=mean(na.omit(k_tablePb_Sg$k_150))-std(na.omit(k_tablePb_Sg$k_150)), ymax=mean(na.omit(k_tablePb_Sg$k_150))+std(na.omit(k_tablePb_Sg$k_150))), color='green4')+
-  geom_point(aes(150, mean(na.omit(k_tablePb_Mg$k_150))), color='blue')+
-  geom_errorbar(aes(150, ymin=mean(na.omit(k_tablePb_Mg$k_150))-std(na.omit(k_tablePb_Mg$k_150)), ymax=mean(na.omit(k_tablePb_Mg$k_150))+std(na.omit(k_tablePb_Mg$k_150))), color='blue')+  
-  geom_point(aes(150, mean(na.omit(k_tablePb_Sm$k_150))), color='orange')+
-  geom_errorbar(aes(150, ymin=mean(na.omit(k_tablePb_Sm$k_150))-std(na.omit(k_tablePb_Sm$k_150)), ymax=mean(na.omit(k_tablePb_Sm$k_150))+std(na.omit(k_tablePb_Sm$k_150))), color='orange')+  
+  geom_point(aes(125, mean(na.omit(k_tablePb_Sg$k_150))), color='green4')+
+  geom_errorbar(aes(125, ymin=mean(na.omit(k_tablePb_Sg$k_150))-std(na.omit(k_tablePb_Sg$k_150)), ymax=mean(na.omit(k_tablePb_Sg$k_150))+std(na.omit(k_tablePb_Sg$k_150))), color='green4')+
+  geom_point(aes(125, mean(na.omit(k_tablePb_Mg$k_150))), color='blue')+
+  geom_errorbar(aes(125, ymin=mean(na.omit(k_tablePb_Mg$k_150))-std(na.omit(k_tablePb_Mg$k_150)), ymax=mean(na.omit(k_tablePb_Mg$k_150))+std(na.omit(k_tablePb_Mg$k_150))), color='blue')+  
+  geom_point(aes(125, mean(na.omit(k_tablePb_Sm$k_150))), color='orange')+
+  geom_errorbar(aes(125, ymin=mean(na.omit(k_tablePb_Sm$k_150))-std(na.omit(k_tablePb_Sm$k_150)), ymax=mean(na.omit(k_tablePb_Sm$k_150))+std(na.omit(k_tablePb_Sm$k_150))), color='orange')+  
   
-  geom_point(aes(300, mean(na.omit(k_tablePb_Sg$k_300))), color='green4')+
-  geom_errorbar(aes(300, ymin=mean(na.omit(k_tablePb_Sg$k_300))-std(na.omit(k_tablePb_Sg$k_300)), ymax=mean(na.omit(k_tablePb_Sg$k_300))+std(na.omit(k_tablePb_Sg$k_300))), color='green4')+
-  geom_point(aes(300, mean(na.omit(k_tablePb_Mg$k_300))), color='blue')+
-  geom_errorbar(aes(300, ymin=mean(na.omit(k_tablePb_Mg$k_300))-std(na.omit(k_tablePb_Mg$k_300)), ymax=mean(na.omit(k_tablePb_Mg$k_300))+std(na.omit(k_tablePb_Mg$k_300))), color='blue')+
-  geom_point(aes(300, mean(na.omit(k_tablePb_Sm$k_300))), color='orange')+
-  geom_errorbar(aes(300, ymin=mean(na.omit(k_tablePb_Sm$k_300))-std(na.omit(k_tablePb_Sm$k_300)), ymax=mean(na.omit(k_tablePb_Sm$k_300))+std(na.omit(k_tablePb_Sm$k_300))), color='orange')+
+  geom_point(aes(175, mean(na.omit(k_tablePb_Sg$k_300))), color='green4')+
+  geom_errorbar(aes(175, ymin=mean(na.omit(k_tablePb_Sg$k_300))-std(na.omit(k_tablePb_Sg$k_300)), ymax=mean(na.omit(k_tablePb_Sg$k_300))+std(na.omit(k_tablePb_Sg$k_300))), color='green4')+
+  geom_point(aes(175, mean(na.omit(k_tablePb_Mg$k_300))), color='blue')+
+  geom_errorbar(aes(175, ymin=mean(na.omit(k_tablePb_Mg$k_300))-std(na.omit(k_tablePb_Mg$k_300)), ymax=mean(na.omit(k_tablePb_Mg$k_300))+std(na.omit(k_tablePb_Mg$k_300))), color='blue')+
+  geom_point(aes(175, mean(na.omit(k_tablePb_Sm$k_300))), color='orange')+
+  geom_errorbar(aes(175, ymin=mean(na.omit(k_tablePb_Sm$k_300))-std(na.omit(k_tablePb_Sm$k_300)), ymax=mean(na.omit(k_tablePb_Sm$k_300))+std(na.omit(k_tablePb_Sm$k_300))), color='orange')+
   
-  geom_point(aes(500, mean(na.omit(k_tablePb_Sg$k_500))), color='green4')+
-  geom_errorbar(aes(500, ymin=mean(na.omit(k_tablePb_Sg$k_500))-std(na.omit(k_tablePb_Sg$k_500)), ymax=mean(na.omit(k_tablePb_Sg$k_500))+std(na.omit(k_tablePb_Sg$k_500))), color='green4')+
-  geom_point(aes(500, mean(na.omit(k_tablePb_Mg$k_500))), color='blue')+
-  geom_errorbar(aes(500, ymin=mean(na.omit(k_tablePb_Mg$k_500))-std(na.omit(k_tablePb_Mg$k_500)), ymax=mean(na.omit(k_tablePb_Mg$k_500))+std(na.omit(k_tablePb_Mg$k_500))), color='blue')+
-  geom_point(aes(500, mean(na.omit(k_tablePb_Sm$k_500))), color='orange')+
-  geom_errorbar(aes(500, ymin=mean(na.omit(k_tablePb_Sm$k_500))-std(na.omit(k_tablePb_Sm$k_500)), ymax=mean(na.omit(k_tablePb_Sm$k_500))+std(na.omit(k_tablePb_Sm$k_500))), color='orange')+
+  geom_point(aes(400, mean(na.omit(k_tablePb_Sg$k_500))), color='green4')+
+  geom_errorbar(aes(400, ymin=mean(na.omit(k_tablePb_Sg$k_500))-std(na.omit(k_tablePb_Sg$k_500)), ymax=mean(na.omit(k_tablePb_Sg$k_500))+std(na.omit(k_tablePb_Sg$k_500))), color='green4')+
+  geom_point(aes(400, mean(na.omit(k_tablePb_Mg$k_500))), color='blue')+
+  geom_errorbar(aes(400, ymin=mean(na.omit(k_tablePb_Mg$k_500))-std(na.omit(k_tablePb_Mg$k_500)), ymax=mean(na.omit(k_tablePb_Mg$k_500))+std(na.omit(k_tablePb_Mg$k_500))), color='blue')+
+  geom_point(aes(400, mean(na.omit(k_tablePb_Sm$k_500))), color='orange')+
+  geom_errorbar(aes(400, ymin=mean(na.omit(k_tablePb_Sm$k_500))-std(na.omit(k_tablePb_Sm$k_500)), ymax=mean(na.omit(k_tablePb_Sm$k_500))+std(na.omit(k_tablePb_Sm$k_500))), color='orange')+
   
-  geom_point(aes(1000, mean(na.omit(k_tablePb_Sg$k_1000))), color='green4')+
-  geom_errorbar(aes(1000, ymin=mean(na.omit(k_tablePb_Sg$k_1000))-std(na.omit(k_tablePb_Sg$k_1000)), ymax=mean(na.omit(k_tablePb_Sg$k_1000))+std(na.omit(k_tablePb_Sg$k_1000))), color='green4')+
-  geom_point(aes(1000, mean(na.omit(k_tablePb_Mg$k_1000))), color='blue')+
-  geom_errorbar(aes(1000, ymin=mean(na.omit(k_tablePb_Mg$k_1000))-std(na.omit(k_tablePb_Mg$k_1000)), ymax=mean(na.omit(k_tablePb_Mg$k_1000))+std(na.omit(k_tablePb_Mg$k_1000))), color='blue')+
-  geom_point(aes(1000, mean(na.omit(k_tablePb_Sm$k_1000))), color='orange')+
-  geom_errorbar(aes(1000, ymin=mean(na.omit(k_tablePb_Sm$k_1000))-std(na.omit(k_tablePb_Sm$k_1000)), ymax=mean(na.omit(k_tablePb_Sm$k_1000))+std(na.omit(k_tablePb_Sm$k_1000))), color='orange')+
+  geom_point(aes(750, mean(na.omit(k_tablePb_Sg$k_1000))), color='green4')+
+  geom_errorbar(aes(750, ymin=mean(na.omit(k_tablePb_Sg$k_1000))-std(na.omit(k_tablePb_Sg$k_1000)), ymax=mean(na.omit(k_tablePb_Sg$k_1000))+std(na.omit(k_tablePb_Sg$k_1000))), color='green4')+
+  geom_point(aes(750, mean(na.omit(k_tablePb_Mg$k_1000))), color='blue')+
+  geom_errorbar(aes(750, ymin=mean(na.omit(k_tablePb_Mg$k_1000))-std(na.omit(k_tablePb_Mg$k_1000)), ymax=mean(na.omit(k_tablePb_Mg$k_1000))+std(na.omit(k_tablePb_Mg$k_1000))), color='blue')+
+  geom_point(aes(750, mean(na.omit(k_tablePb_Sm$k_1000))), color='orange')+
+  geom_errorbar(aes(750, ymin=mean(na.omit(k_tablePb_Sm$k_1000))-std(na.omit(k_tablePb_Sm$k_1000)), ymax=mean(na.omit(k_tablePb_Sm$k_1000))+std(na.omit(k_tablePb_Sm$k_1000))), color='orange')+
   
-  geom_point(aes(1500, mean(na.omit(k_tablePb_Sg$k_1500))), color='green4')+
-  geom_errorbar(aes(1500, ymin=mean(na.omit(k_tablePb_Sg$k_1500))-std(na.omit(k_tablePb_Sg$k_1500)), ymax=mean(na.omit(k_tablePb_Sg$k_1500))+std(na.omit(k_tablePb_Sg$k_1500))), color='green4')+
-  geom_point(aes(1500, mean(na.omit(k_tablePb_Mg$k_1500))), color='blue')+
-  geom_errorbar(aes(1500, ymin=mean(na.omit(k_tablePb_Mg$k_1500))-std(na.omit(k_tablePb_Mg$k_1500)), ymax=mean(na.omit(k_tablePb_Mg$k_1500))+std(na.omit(k_tablePb_Mg$k_1500))), color='blue')+
-  geom_point(aes(1500, mean(na.omit(k_tablePb_Sm$k_1500))), color='orange')+
-  geom_errorbar(aes(1500, ymin=mean(na.omit(k_tablePb_Sm$k_1500))-std(na.omit(k_tablePb_Sm$k_1500)), ymax=mean(na.omit(k_tablePb_Sm$k_1500))+std(na.omit(k_tablePb_Sm$k_1500))), color='orange')+
+  geom_point(aes(1250, mean(na.omit(k_tablePb_Sg$k_1500))), color='green4')+
+  geom_errorbar(aes(1250, ymin=mean(na.omit(k_tablePb_Sg$k_1500))-std(na.omit(k_tablePb_Sg$k_1500)), ymax=mean(na.omit(k_tablePb_Sg$k_1500))+std(na.omit(k_tablePb_Sg$k_1500))), color='green4')+
+  geom_point(aes(1250, mean(na.omit(k_tablePb_Mg$k_1500))), color='blue')+
+  geom_errorbar(aes(1250, ymin=mean(na.omit(k_tablePb_Mg$k_1500))-std(na.omit(k_tablePb_Mg$k_1500)), ymax=mean(na.omit(k_tablePb_Mg$k_1500))+std(na.omit(k_tablePb_Mg$k_1500))), color='blue')+
+  geom_point(aes(1250, mean(na.omit(k_tablePb_Sm$k_1500))), color='orange')+
+  geom_errorbar(aes(1250, ymin=mean(na.omit(k_tablePb_Sm$k_1500))-std(na.omit(k_tablePb_Sm$k_1500)), ymax=mean(na.omit(k_tablePb_Sm$k_1500))+std(na.omit(k_tablePb_Sm$k_1500))), color='orange')+
   
-  geom_point(aes(2000, mean(na.omit(k_tablePb_Sg$k_2000))), color='green4')+
-  geom_errorbar(aes(2000, ymin=mean(na.omit(k_tablePb_Sg$k_2000))-std(na.omit(k_tablePb_Sg$k_2000)), ymax=mean(na.omit(k_tablePb_Sg$k_2000))+std(na.omit(k_tablePb_Sg$k_2000))), color='green4')+
-  geom_point(aes(2000, mean(na.omit(k_tablePb_Mg$k_2000))), color='blue')+
-  geom_errorbar(aes(2000, ymin=mean(na.omit(k_tablePb_Mg$k_2000))-std(na.omit(k_tablePb_Mg$k_2000)), ymax=mean(na.omit(k_tablePb_Mg$k_2000))+std(na.omit(k_tablePb_Mg$k_2000))), color='blue')+
-  geom_point(aes(2000, mean(na.omit(k_tablePb_Sm$k_2000))), color='orange')+
-  geom_errorbar(aes(2000, ymin=mean(na.omit(k_tablePb_Sm$k_2000))-std(na.omit(k_tablePb_Sm$k_2000)), ymax=mean(na.omit(k_tablePb_Sm$k_2000))+std(na.omit(k_tablePb_Sm$k_2000))), color='orange')+
+  geom_point(aes(1750, mean(na.omit(k_tablePb_Sg$k_2000))), color='green4')+
+  geom_errorbar(aes(1750, ymin=mean(na.omit(k_tablePb_Sg$k_2000))-std(na.omit(k_tablePb_Sg$k_2000)), ymax=mean(na.omit(k_tablePb_Sg$k_2000))+std(na.omit(k_tablePb_Sg$k_2000))), color='green4')+
+  geom_point(aes(1750, mean(na.omit(k_tablePb_Mg$k_2000))), color='blue')+
+  geom_errorbar(aes(1750, ymin=mean(na.omit(k_tablePb_Mg$k_2000))-std(na.omit(k_tablePb_Mg$k_2000)), ymax=mean(na.omit(k_tablePb_Mg$k_2000))+std(na.omit(k_tablePb_Mg$k_2000))), color='blue')+
+  geom_point(aes(1750, mean(na.omit(k_tablePb_Sm$k_2000))), color='orange')+
+  geom_errorbar(aes(1750, ymin=mean(na.omit(k_tablePb_Sm$k_2000))-std(na.omit(k_tablePb_Sm$k_2000)), ymax=mean(na.omit(k_tablePb_Sm$k_2000))+std(na.omit(k_tablePb_Sm$k_2000))), color='orange')+
   
-  geom_point(data= k_rev,mapping = aes(k_rev$Max_Age, k_rev$k), color='green', shape= 17)
+  geom_point(data= k_rev,mapping = aes(k_rev$Max_Age, k_rev$k), color='green', shape= 17)+
+  
+  geom_line(data= fitY1, mapping = aes(timeframe, predict), color='black')+
+  
+  xlim(0,4000)+
+  
+  annotate("text", x=1500, y=0.02, label= expression(y == 0.027 * e ** (-0.0018 * 
+                                                                              x)))
 
+ggsave(
+  plot = fit_figPb,
+  path = Folder,
+  filename = "fit_plot.jpg",
+  units = "cm",
+  width = 12,
+  height = 7
+)
 
 
 
 # results distribution
 
 #get coordinates from B dataframe
+
+WM <- map_data("world")
 
 mapa<-k_tablePb[rowSums(is.na(k_tablePb)) != ncol(k_tablePb)-2,]
 

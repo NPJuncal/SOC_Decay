@@ -446,10 +446,20 @@ for (i in 1:length(X)) {
 length(unique(C$Core))
 
 
-# df with core with any model
 
-TAll = filter(C, !is.na(Age) | !is.na(Age.Pb) | !is.na(Age.C))
+TAll = filter(C, !is.na(Age) | !is.na(Age.Pb) | !is.na(Age.C))# df with core with any model
 length(unique(TAll$Core))
+
+TPb = subset(C, !is.na(Age) | !is.na(Age.Pb) )# df with core with Pb model
+length(unique(TPb$Core))
+
+TC = filter(C, !is.na(Age.C))# df with core with C model
+length(unique(TC$Core))
+
+
+TPbandC = filter(C, !is.na(Age) | !is.na(Age.Pb))# df with core with C and Pb model
+TPbandC = filter(TPbandC, !is.na(Age.C))
+length(unique(TPbandC$Core))
 
 
 #### Homogenize Age
@@ -1466,6 +1476,17 @@ k_table$k_300<-as.numeric(k_table$k_300)
 names(SingleCore)[names(SingleCore) == 'Core'] <- 'ID'
 
 k_table<-merge(k_table, SingleCore[,c(1, 3, 7, 6, 8, 11, 12)], by = 'ID', all.x=T, all.y=F)
+k_table<-merge(k_table, SAR[,c(1,5)], by = 'ID', all.x=T, all.y=F)
+
+
+ggplot(temp, aes(k_150, Bioregions))+
+  geom_boxplot()+
+  geom_jitter(aes(color=temp$Specie))
+
+
+ggplot(temp, aes(k_100, Specie))+
+  geom_boxplot()+
+  geom_jitter(aes(color=temp$Bioregions))
 
 
 #normal distribution and significant differences among ecosystems
@@ -1474,7 +1495,10 @@ shapiro.test(k_table$k_100) #normal if pvalue > than 0.05
 
 apply(k_table[,c(2:8)], FUN=shapiro.test, MARGIN = 2)
 
-pairwise.wilcox.test(k_table$k_1000, k_table$Ecosystem,
+
+temp<-subset(k_table_Sg, !is.na(k_100))
+
+pairwise.wilcox.test(temp$k_100, temp$Bioregions,
                      p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 
@@ -1603,6 +1627,55 @@ points(P2$Tframe, P2$k)
 lines(c(1:2100), fitY1, col = "blue")
 text(1000, 0.025, cex = 1.5, expression(y == 0.0401436 * e ** (-0.0027501 *
                                                                  x)))
+
+
+
+
+# correlation decay rate (150) and SAR ------------------------------------
+
+
+plot(k_table_Sg$k_100, k_table_Sg$SAR)
+
+ggplot(k_table_Sg,aes(k_100, SAR))+
+  geom_point(aes(color=Bioregions))
+
+cor.test(k_table$k_100, k_table$SAR, method=c("pearson"))
+
+#check for outlayers (https://www.r-bloggers.com/2016/12/outlier-detection-and-treatment-with-r/)
+
+# visual check
+boxplot(k_100 ~ Ecosystem, data=k_table, main="Decay 150yr by Ecosystem")  # clear pattern is noticeable.
+boxplot(SAR ~ Ecosystem, data=k_table, main="SAR by Ecosystem")  # this may not be significant, as day of week variable is a subset of the month var.
+
+#Cook’s Distance
+mod <- lm(SAR ~ k_100, data=k_table)
+cooksd <- cooks.distance(mod)
+
+plot(cooksd, pch="*", cex=2, main="Influential Obs by Cooks distance")  # plot cook's distance
+abline(h = 4*mean(cooksd, na.rm=T), col="red")  # add cutoff line
+text(x=1:length(cooksd)+1, y=cooksd, labels=ifelse(cooksd>4*mean(cooksd, na.rm=T),names(cooksd),""), col="red")  # add labels
+
+# one outlayer: 100
+
+cor.test(k_table[,-c(51,100)]$k_100, k_table[,-c(51,100)]$SAR, method=c("pearson"))
+
+ggplot(k_table[,-c(51,100)],aes(k_100, SAR))+
+  geom_point(aes(color=Ecosystem))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1891,157 +1964,131 @@ ggplot(TfitsM_DEC, aes(k,k.Pb))+
 
 #  Comparison between dating methods  (all cores) -------------------------
 
-Data <-
-  as.data.frame(TAll[, c("Core", "Ecosystem","Age", "Age.Pb", "Age.C", "Corg", "Corg.M")])
+# model first 150 years Pb210 ---------------------------------------------------
 
+TPbandC$FAge<-TPbandC$Age.Pb
+Data_i<-subset(TPbandC, TPbandC$FAge < 150)
+Data_t<-tendency(Data_i, pnames="150Pb")
 
-Data$Corg.M <- as.numeric(Data$Corg.M)
+TDEC<-Data_t[[2]]
 
-SAll <- split(Data, Data$Core)
+DataA <-
+  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
 
+#carbon stock estimation por sample
+DataA<-estimate_h(DataA,
+                  core = "Core",
+                  mind = "Min.Depth",
+                  maxd = "Max.Depth")
+DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
 
-TfitsM_All <- data.frame(
-  ID = character(),
-  Ecosystem = character(),
-  P = numeric(),
-  k = numeric(),
-  P.Pb = numeric(),
-  k.Pb = numeric(),
-  P.C = numeric(),
-  k.C = numeric()
-)
+#Acc organic matter
 
+DataAM<- DataA[0,]
+DataAM[1,]=NA  # ad a temporary new row of NA values
+DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+DataAM = DataAM[0,]
 
-for (i in 1:length(SAll)) {
-  TfitsM_All[i, 1] <- names(SAll[i])
-  Pr <- as.data.frame(SAll[i])
-  colnames(Pr) <- list("Core", "Ecosystem","Age", "Age.Pb", "Age.C", "Corg", "Corg.M")
-  TfitsM_All[i, 2] <- Pr[1, which(colnames(Pr) == "Ecosystem")]
+X<- split(DataA, DataA$Core)
+
+for (i in 1:length(X)) {
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(DataA)
   
-  Pr1 <- Pr %>% filter(Age < 150)
-  Pr2 <- Pr %>% filter(Age.Pb < 150)
-  Pr3 <- Pr %>% filter(Age.C < 150)
+  Data <- cbind(Data, Corg.M=NA)
   
-  if ((count(!is.na(Pr1$Age)))>5) {
-    
-    cor <- cor.test(x = Pr1[,which(colnames(Pr1) == "Age")], y = Pr1[, which(colnames(Pr1) == "Corg")], method = "spearman")
-    
-    if (cor$p.value < 0.5 & cor$estimate < 0) {
-      
-      skip_to_next <- FALSE
-      
-      tryCatch(
-        Exp1 <-
-          nls(
-            Corg.M ~ (p / k) * (1 - (exp(-k * Age))),
-            data = Pr1,
-            start = list(p = 0.01, k = 0.03)
-          )
-        ,
-        error = function(e) {
-          skip_to_next <<- TRUE
-        }
-      )
-      
-      if (skip_to_next) {
-        next
-      }
-      
-      Func <-
-        fitModel(Corg.M ~ (p / k) * (1 - (exp(-k * Age))),
-                 data = Pr1,
-                 start = list(p = 0.01, k = 0.03))
-      
-      Coef <- coef(Exp1)
-      
-      finales <- as.list(coef(Exp1))
-      TfitsM_All[i, 3] <- as.numeric(finales[1])
-      TfitsM_All[i, 4] <- as.numeric(finales[2])
-      
-      
-      
-    } }
+  Data[1,"Corg.M"]<-Data[1,"OCg"]
   
-  else { if (count(!is.na(Pr2$Age.Pb))>5) {
-    cor <- cor.test(x = Pr2[,which(colnames(Pr2) == "Age.Pb")], y = Pr2[, which(colnames(Pr2) == "Corg")], method = "spearman")
-      if (cor$p.value < 0.5 & cor$estimate < 0) {
-        
-        skip_to_next <- FALSE
-        
-        tryCatch(
-          Exp1 <-
-            nls(
-              Corg.M ~ (p / k) * (1 - (exp(-k * Age.Pb))),
-              data = Pr2,
-              start = list(p = 0.01, k = 0.03)
-            )
-          ,
-          error = function(e) {
-            skip_to_next <<- TRUE
-          }
-        )
-        
-        if (skip_to_next) {
-          next
-        }
-        
-        Func <-
-          fitModel(Corg.M ~ (p / k) * (1 - (exp(-k * Age.Pb))),
-                   data = Pr2,
-                   start = list(p = 0.01, k = 0.03))
-        
-        Coef <- coef(Exp1)
-        
-        finales <- as.list(coef(Exp1))
-        TfitsM_All[i, 5] <- as.numeric(finales[1])
-        TfitsM_All[i, 6] <- as.numeric(finales[2])
-        
-      }}
-    
-    else { if (count(!is.na(Pr3$Age.C))>5) {
-        cor <- cor.test(x = Pr3[,which(colnames(Pr3) == "Age.C")], y = Pr3[, which(colnames(Pr3) == "Corg")], method = "spearman")
-        
-        if (cor$p.value < 0.5 & cor$estimate < 0) {
-          
-          skip_to_next <- FALSE
-          
-          tryCatch(
-            Exp1 <-
-              nls(
-                Corg.M ~ (p / k) * (1 - (exp(-k * Age.C))),
-                data = Pr3,
-                start = list(p = 0.01, k = 0.03)
-              )
-            ,
-            error = function(e) {
-              skip_to_next <<- TRUE
-            }
-          )
-          
-          if (skip_to_next) {
-            next
-          }
-          
-          Func <-
-            fitModel(Corg.M ~ (p / k) * (1 - (exp(-k * Age.C))),
-                     data = Pr3,
-                     start = list(p = 0.01, k = 0.03))
-          
-          Coef <- coef(Exp1)
-          
-          finales <- as.list(coef(Exp1))
-          TfitsM_All[i, 7] <- as.numeric(finales[1])
-          TfitsM_All[i, 8] <- as.numeric(finales[2])
-        
-      } }}}}
+  for (j in 2:nrow(Data)){
+    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+  }
+  
+  DataAM<-rbind(DataAM,Data)}
+
+#model
+DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+
+fit_150Pb<-OCModel(DataAM, nwpath="Decay2023/150_Pb")
+
+#eliminate some cores after visual check, we eliminate: Sg_316, Sg_317, Sg_321, Sm_004, Sm_022
+fit_150Pb[c(26:28, 30,32), "k"]<-NA
 
 
-ggplot(TfitsM_All,aes(Ecosystem, k))+
-  #geom_boxplot()+
-  geom_jitter()+
-  geom_jitter(aes(Ecosystem, k.Pb), color="red")+
-  geom_jitter(aes(Ecosystem, k.C), color="blue")+
-  ylim(-0.1,0.15)
+
+
+
+
+
+
+
+# model first 100 years C14 ---------------------------------------------------
+
+TPbandC$FAge<-TPbandC$Age.C
+Data_i<-subset(TPbandC, TPbandC$FAge < 150)
+Data_t<-tendency(Data_i, pnames="150_C")
+
+TDEC<-Data_t[[2]]
+
+DataA <-
+  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+
+#carbon stock estimation por sample
+DataA<-estimate_h(DataA,
+                  core = "Core",
+                  mind = "Min.Depth",
+                  maxd = "Max.Depth")
+DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+
+#Acc organic matter
+
+DataAM<- DataA[0,]
+DataAM[1,]=NA  # ad a temporary new row of NA values
+DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+DataAM = DataAM[0,]
+
+X<- split(DataA, DataA$Core)
+
+for (i in 1:length(X)) {
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(DataA)
+  
+  Data <- cbind(Data, Corg.M=NA)
+  
+  Data[1,"Corg.M"]<-Data[1,"OCg"]
+  
+  for (j in 2:nrow(Data)){
+    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+  }
+  
+  DataAM<-rbind(DataAM,Data)}
+
+#model
+DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+
+fit_150_C<-OCModel(DataAM, nwpath="Decay2023/150_C")
+
+#eliminate some cores after visual check, we eliminate: Sg_323
+fit_150_C[c(22), "k"]<-NA
+
+
+# comp 150 Pb vs C ---------------------------------------------------
+
+PbvsC<-merge(fit_150Pb, fit_150_C, by = 'ID', all.x=T, all.y=F)
+
+mPbvsC<-melt(PbvsC[,c(1,2,4,8)], id = c("ID","Ecosystem.x"))
+
+mPbvsC$variable <- as.character(mPbvsC$variable)
+mPbvsC$variable[mPbvsC$variable == 'k.x'] <- 'Modelo Pb'
+mPbvsC$variable[mPbvsC$variable == 'k.y'] <- 'Modelo C'
+
+
+ggplot(mPbvsC, aes(variable, value))+ ylab("Decay rate 150 yr (yr-1)")+
+  geom_boxplot()+
+  geom_jitter(aes(color=Ecosystem.x))
+
+pairwise.wilcox.test(mPbvsC$value, mPbvsC$variable,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
 
 
 #  Comparison between ecosystems  (all cores) -------------------------
@@ -2486,281 +2533,6 @@ ggsave(path = Folder,
 
 
 
-LTB <- B
-LTB <- LTB[!(is.na(LTB$Age.Pb.C) | LTB$Age.Pb.C == ""),]
-
-
-#we delete those cores with not good age-depth models
-LTB <- LTB[!(is.na(LTB$Core) | LTB$Core == "Sg_097"),]
-LTB <- LTB[!(is.na(LTB$Core) | LTB$Core == "Sg_112"),]
-LTB <- LTB[!(is.na(LTB$Core) | LTB$Core == "Sg_121"),]
-
-#spearman correlation between time and Corg content
-
-
-ADT <- LTB[, c("Core", "Age.Pb.C", "Corg")]
-
-X <- split(ADT, ADT$Core)
-
-TDT <- data.frame(
-  ID = character(),
-  C_rho = numeric(),
-  C_p = numeric(),
-  C_Gr = character()
-)
-
-
-
-for (i in 1:length(X)) {
-  TDT[i, 1] <- names(X[i])
-  Data <- as.data.frame(X[i])
-  #Data<-na.omit(Data)
-  cor <- cor.test(x = Data[, 2], y = Data[, 3], method = "spearman")
-  TDT[i, 2] <- cor$estimate
-  TDT[i, 3] <- cor$p.value
-  
-}
-
-
-##### from spearman correlations we discriminate 3 groups: NT, no trend with depth; DEC, decrease with depth; INC, increase with depth
-#lower keys: IDs, capital keys: data frame with core data
-# return data frames per group (NT,DEC and INC) and add trend tipe to DT
-
-
-Nt <- TDT$ID[TDT$C_p > 0.5]
-T <- TDT[!(TDT$C_p > 0.5), ]
-Dec <- T$ID[T$C_rho < 0]
-Inc <- T$ID[T$C_rho > 0]
-
-TNT <- LTB[is.element(LTB$Core, Nt), ]
-TDEC <- LTB[is.element(LTB$Core, Dec), ]
-TINC <- LTB[is.element(LTB$Core, Inc), ]
-
-for (i in 1:nrow(TDT)) {
-  if (is.element(TDT[i, 1], Nt)) {
-    TDT[i, 4] <- "NT"
-  }
-  else if (is.element(TDT[i, 1], Dec)) {
-    TDT[i, 4] <- "DEC"
-  }
-  else {
-    TDT[i, 4] <- "INC"
-  }
-}
-
-
-
-#### Count cores per group and get the percentages
-
-library(dplyr)
-NGr <- TDT %>% group_by(C_Gr) %>% count()
-NGr %>% mutate(proc = ((n * 100) / sum(NGr[, 2])))
-
-######### long term nlm OC acc mass-age ##########
-
-Data <- TDEC[, c("Core", "Age.Pb.C", "Corg", "Corg.M")]
-
-Data$M <- as.numeric(Data$Corg.M)
-
-SSS <- split(Data, Data$Core)
-
-
-TfitsM_DEC_long <- data.frame(
-  ID = character(),
-  Tframe = numeric(),
-  P = numeric(),
-  k = numeric()
-)
-
-cidr <- getwd()
-nwpath <- "SG/ajustesDECLong"
-dir.create(file.path(cidr, nwpath), recursive = TRUE)
-
-
-
-for (i in 1:length(SSS)) {
-  TfitsM_DEC_long[i, 1] <- names(SSS[i])
-  Pr <- as.data.frame(SSS[i])
-  colnames(Pr) <- list("Core", "Age", "Corg", "Corg.M")
-  TfitsM_DEC_long[i, 2] <- max(Pr$Age)
-  
-  Exp1 <-
-    nls(Corg.M ~ (p / k) * (1 - (exp(-k * Age))),
-        data = Pr,
-        start = list(p = 0.01, k = 0.03))
-  Func <-
-    fitModel(Corg.M ~ (p / k) * (1 - (exp(-k * Age))),
-             data = Pr,
-             start = list(p = 0.01, k = 0.03))
-  
-  Coef <- coef(Exp1)
-  
-  finales <- as.list(coef(Exp1))
-  TfitsM_DEC_long[i, 3] <- as.numeric(finales[1])
-  TfitsM_DEC_long[i, 4] <- as.numeric(finales[2])
-  
-  
-  fitY1 <- as.data.frame(c(1:max(Pr$Age)))
-  fitY1['new_col'] <- NA
-  fitY1[, 2] <- Func(c(1:max(Pr$Age)), Coef[1], Coef[2])
-  colnames(fitY1) <- list("Age", "Predict")
-  
-  p1 <-
-    ggplot(Pr, aes(Age, Corg)) + xlab("Age (years)") + ylab("Corg (g cm-3)") +
-    geom_point() +
-    geom_line() +
-    coord_flip() +
-    scale_x_reverse()
-  
-  p2 <-
-    ggplot(fitY1, aes(Age, Predict)) + xlab("Age (years)") + ylab("Corg Aumulated mass (g cm-3)") +
-    geom_line(color = "blue") +
-    geom_point(data = Pr, aes(Age, Corg.M)) +
-    coord_flip() +
-    scale_x_reverse() +
-    annotate(
-      "text",
-      x = 60,
-      y = 0.01,
-      label = "M=(p/k)*(1-exp(-k*Age)",
-      hjust = "left"
-    ) +
-    annotate(
-      "text",
-      x = 100,
-      y = 0.01,
-      label = paste("p=", Coef[1]),
-      hjust = "left"
-    ) +
-    annotate(
-      "text",
-      x = 150,
-      y = 0.01,
-      label = paste("k=", Coef[2]),
-      hjust = "left"
-    )
-  
-  name <- names(SSS[i])
-  pf <- grid.arrange(p1, p2, nrow = 1, top = name)
-  ggsave(
-    plot = pf,
-    path = nwpath,
-    filename = paste(name, ".jpg"),
-    units = "cm",
-    width = 15,
-    height = 10
-  )
-  
-  
-  #test.nlsResiduals(nlsResiduals(Exp1))
-  
-  
-  mypath <-
-    file.path(cidr, nwpath, paste(name, ".RES", ".jpg", sep = ""))
-  
-  jpeg(file = mypath)
-  
-  plot(nlsResiduals(Exp1))
-  title(main = name)
-  dev.off()
-  
-  
-}
-
-
-write.csv(
-  TfitsM_DEC_long,
-  file.path(nwpath, "TfitsM_DEC_long.csv"),
-  sep = ";",
-  dec = "."
-)
-
-ggplot(TfitsM_DEC_long, aes(x = k)) +
-  geom_histogram()
-
-#######################
-### summary results ###
-#######################
-## ajustes tras inspeccionar visualemnte....
-
-
-File <- "Decay150.csv"
-
-R <- read.csv(File,
-              header = T,
-              sep = ";",
-              dec = ".")
-R <- as.data.frame(R)
-
-# map
-
-
-WM <- map_data("world")
-
-
-R %>%
-  ggplot() + ggtitle("Decay rates sampling site") + xlab("Longitude") + ylab("Latitude") +
-  geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
-  geom_point(aes(x = long, y = lat,  fill = Ecosystem),
-             pch = 21,
-             size = 2) +
-  coord_sf(ylim = c(-40, 50), xlim = c(-90, 140), ) +
-  scale_fill_manual(values = c("yellow", "blue", "orange", "green")) +
-  theme(plot.title = element_text(hjust = 0.5))
-
-
-ggsave("Decay_map.jpg",
-       units = "cm",
-       width = 20,
-       height = 10)
-
-#summary
-
-summary(R$k)
-
-ggplot(R, aes(x = k)) +
-  geom_histogram()
-
-
-ggplot(R, aes(Tipo, k)) +
-  geom_boxplot() +
-  geom_dotplot(binaxis = 'y',
-               stackdir = 'center',
-               dotsize = 0.5)
-
-shapiro.test(R$k) #(>0.05 normal, <0.05 no normal)
-
-## Student's t-test  if normally distributed, wilcox if not
-
-pairwise.wilcox.test(R$k, R$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-
-
-library(reshape2)
-
-R2 <- dcast(R, k ~ Ecosystem)
-
-t.test(R[c(19:30), 3], R[c(31:34), 3])
-
-### plots ###
-
-File <- "DecayS.csv"
-
-P <- read.csv(File,
-              header = T,
-              sep = ";",
-              dec = ".")
-P <- as.data.frame(P)
-
-P1 <- P[c(1:8), ]
-P2 <- P[-c(1:8), ]
-
-
-ggplot() + ggtitle("Decay rate by time frame in Posidonia spp. meadows") + xlab("Time frame (years)") + ylab("Decay rate (yr-1)") +
-  geom_point(aes(P1$Tframe, P1$k), size = 3, shape = 16) +
-  geom_point(aes(P2$Tframe, P2$k), size = 4, shape = 17)
-
-plot(P$Tframe, P$k)
 
 ### exponential model to predict k in Posidonia meadows
 
