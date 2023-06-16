@@ -1266,6 +1266,39 @@ ggsave(path = Folder,
 
 
 
+# age at 100 cm -----------------------------------------------------------
+
+
+extract_depth_by_age<- function (df, AGE = 100) {
+  
+  core <- df[1,"Core"]
+  c_length <- max(df[,"Max.Depth"])
+  age_depth <- df[which.min(abs(AGE-df$Max.Depth)),"FAge"]
+  
+  output <- data.frame(core = core, Length= c_length, age_depth = age_depth)
+  
+  return(output)
+  
+}
+
+x<-split(TPb, TPb$Core)
+
+core_100_age_l <- lapply(X = x,  extract_depth_by_age, AGE = 100) # return a list
+core_100_age <- as.data.frame(do.call(rbind, core_100_age_l)) # from list to dataframe
+
+core_100_age <- subset(core_100_age, core_100_age$Length > 90)
+
+mean(core_100_age$age_depth)
+std(core_100_age$age_depth)
+
+
+# from time to decay rate
+
+0.027 * exp(-0.0018 * 1953.206)
+
+0.027 * exp(-0.0018 * 1504.5)
+0.027 * exp(-0.0018 * 2401.9)
+
 
 
 
