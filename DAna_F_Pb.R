@@ -969,6 +969,7 @@ names(SingleCore)[names(SingleCore) == 'Core'] <- 'ID'
 
 k_tablePb<-merge(k_tablePb, SingleCore[,c(1, 3, 7, 6, 8, 11, 12)], by = 'ID', all.x=T, all.y=F)
 k_tablePb<-merge(k_tablePb, SAR[,c(1,5)], by = 'ID', all.x=T, all.y=F)
+k_tablePb<-merge(k_tablePb, CM[,c(1,9,11)], by = 'ID', all.x=T, all.y=F)
 
 
 
@@ -977,6 +978,22 @@ k_tablePb<-merge(k_tablePb, SAR[,c(1,5)], by = 'ID', all.x=T, all.y=F)
 shapiro.test(k_tablePb$k_100) #normal if pvalue > than 0.05
 
 apply(k_tablePb[,c(2:8)], FUN=shapiro.test, MARGIN = 2)
+
+
+# differences among species
+
+pairwise.wilcox.test(k_tablePb$k_100, k_tablePb$Specie,
+                     p.adjust.method = "BH")
+
+
+
+
+
+
+
+
+
+
 
 
 # summary table (manuscript Table 1)
@@ -1027,11 +1044,12 @@ k_rev <- read.csv(File,
                   sep = ";",
                   dec = ".")
 k_rev <- as.data.frame(k_rev)
-k_rev<- k_rev [-c(1,6),]
+k_revS<- k_rev [-c(1,6,8,9),]
+k_revM<- k_rev [c(8,9),]
 
 # boxplot by timeframe figure
 
-mk_tablePb<-melt(k_tablePb[,c(1:8, 11)], id = c("ID","Ecosystem")) 
+mk_tablePb<-melt(k_tablePb[,c(1:8, 11, 12)], id = c("ID","Ecosystem", "Specie")) 
 
 mk_tablePb$variable <- as.character(mk_tablePb$variable)
 mk_tablePb$variable[mk_tablePb$variable == 'k_100'] <- '0-100 yr'
@@ -1060,7 +1078,7 @@ ggplot(transform(mk_tablePb,
 
 mk_tablePb2<-subset(mk_tablePb, mk_tablePb$variable == "100-150 yr" | mk_tablePb$variable == "500-1000 yr")
 
-ggplot(transform(mk_tablePb2,
+box_150_1000<-ggplot(transform(mk_tablePb2,
                  variable=factor(variable,levels=c('100-150 yr',"500-1000 yr"))),
        aes(Ecosystem, value))+ ggtitle("Decay rates by ecosystem and time frame")+ ylab("Decay rate (yr-1)") +
   geom_boxplot()+
@@ -1074,13 +1092,44 @@ ggplot(transform(mk_tablePb2,
         axis.text.x=element_blank(),)
 
 
+
+ggsave(
+  plot = box_150_1000,
+  path = Folder,
+  filename = "box_150_1000.jpg",
+  units = "cm",
+  width = 12,
+  height = 7
+)
+
+
+ggplot(transform(mk_tablePb2,
+                 variable=factor(variable,levels=c('100-150 yr',"500-1000 yr"))),
+       aes(Ecosystem, value))+ ggtitle("Decay rates by ecosystem and time frame")+ ylab("Decay rate (yr-1)") +
+  geom_boxplot()+
+  geom_jitter(aes(color=Specie))+
+  facet_wrap(~variable)+
+  #scale_color_manual(values=c('blue', 'green4', "orange"))+
+  theme(#legend.position = c(1, 0),
+    #legend.justification = c(1, 0), 
+    axis.title.x = element_blank(),
+    axis.ticks.x=element_blank(),
+    axis.text.x=element_blank(),)
+
+
+
+
+
+
+
 #fitting table
 
 f_table<-as.data.frame(colMeans(k_tablePb[,c(2:8)], na.rm = TRUE))
 f_table[,2]<-c(50, 125, 225, 400, 750, 1250, 1750)
 f_table[c(8:11),1]<-na.omit(k_tablePb[,9])
 f_table[c(8:11),2]<-na.omit(k_tablePb[,10])
-f_table[c(12:15), c(1,2)]<-k_rev[,c(2:3)]
+f_table[c(12:16), c(1,2)]<-k_revS[,c(2:3)]
+f_table[c(17:18), c(1,2)]<-k_revM[,c(2:3)]
 
 f_table<-f_table[-9,]
 
@@ -1113,11 +1162,11 @@ model2 <-
 summary(model1)
 plot(nlsResiduals(model1))
 
-fitY1 <- kchange(c(1:2100), 0.027, -0.0018)
+fitY1 <- kchange(c(1:2100), 0.0249, -0.002)
 
 fitY1 <- as.data.frame(c(1:5000))
 fitY1['new_col'] <- NA
-fitY1[, 2] <- kchange(c(1:5000), 0.027, -0.0018)
+fitY1[, 2] <- kchange(c(1:5000), 0.0249, -0.002)
 colnames(fitY1) <- list("timeframe", "predict")
 
 
@@ -1130,12 +1179,27 @@ colnames(fitY2) <- list("timeframe", "predict")
 # correlation decay rate (150) and SAR ------------------------------------
 
 
-plot(k_tablePb_Sg$k_100, k_tablePb_Sg$SAR)
+plot(k_tablePb_Sg$k_100, k_tablePb_Sg$Av_Mud_25)
 
-ggplot(k_tablePb_Sg,aes(k_100, SAR))+
+ggplot(k_tablePb,aes(k_1000, SAR))+
   geom_point(aes(color=Bioregions))
 
-cor.test(k_tablePb$k_100, k_tablePb$SAR, method=c("pearson"))
+cor.test(k_tablePb$k_150, k_tablePb$SAR, method=c("pearson"))
+
+ggplot(k_tablePb, aes(k_150, SAR))+
+  geom_point(aes(color=Ecosystem))
+
+shapiro.test(k_tablePb$k_150)
+shapiro.test(k_tablePb$Av_Mud_25)
+
+plot(k_tablePb$k_1000, k_tablePb$Av_Mud_25)
+cor.test(k_tablePb$k_1000, k_tablePb$Av_Mud_25, method=c("spearman"))
+
+plot(k_tablePb_Sg$k_150, k_tablePb_Sg$Av_Mud_25)
+
+ggplot(k_tablePb, aes(k_150, Av_Mud_25))+
+  geom_point(aes(color=Ecosystem))
+
 
 #check for outlayers (https://www.r-bloggers.com/2016/12/outlier-detection-and-treatment-with-r/)
 
@@ -1215,13 +1279,14 @@ fit_figPb<-ggplot(k_tablePb_Sg, aes( Max_Age, k_m2000))+ ggtitle("Decay rate by 
   geom_point(aes(1750, mean(na.omit(k_tablePb_Sm$k_2000))), color='orange')+
   geom_errorbar(aes(1750, ymin=mean(na.omit(k_tablePb_Sm$k_2000))-std(na.omit(k_tablePb_Sm$k_2000)), ymax=mean(na.omit(k_tablePb_Sm$k_2000))+std(na.omit(k_tablePb_Sm$k_2000))), color='orange')+
   
-  geom_point(data= k_rev,mapping = aes(k_rev$Max_Age, k_rev$k), color='green', shape= 17)+
+  geom_point(data= k_revS,mapping = aes(k_revS$Max_Age, k_revS$k), color='green', shape= 17)+
+  geom_point(data= k_revM,mapping = aes(k_revM$Max_Age, k_revM$k), color='orange4', shape= 17)+
   
   geom_line(data= fitY1, mapping = aes(timeframe, predict), color='black')+
   
   xlim(0,4000)+
   
-  annotate("text", x=1500, y=0.02, label= expression(y == 0.027 * e ** (-0.0018 * 
+  annotate("text", x=1500, y=0.02, label= expression(y == 0.025 * e ** (-0.002 * 
                                                                               x)))
 
 ggsave(
@@ -1294,10 +1359,10 @@ std(core_100_age$age_depth)
 
 # from time to decay rate
 
-0.027 * exp(-0.0018 * 1953.206)
+0.025 * exp(-0.002 * 1953.206)
 
-0.027 * exp(-0.0018 * 1504.5)
-0.027 * exp(-0.0018 * 2401.9)
+0.025 * exp(-0.002 * 1504.5)
+0.025 * exp(-0.002 * 2401.9)
 
 
 
