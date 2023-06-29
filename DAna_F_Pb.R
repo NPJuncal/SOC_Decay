@@ -988,6 +988,116 @@ pairwise.wilcox.test(k_tablePb$k_100, k_tablePb$Specie,
 
 
 
+# correlation decay rate (150) and SAR ------------------------------------
+
+
+plot(k_tablePb_Sg$k_100, k_tablePb_Sg$Av_Mud_25)
+
+ggplot(k_tablePb,aes(k_1000, SAR))+
+  geom_point(aes(color=Bioregions))
+
+cor.test(k_tablePb$k_150, k_tablePb$SAR, method=c("pearson"))
+
+ggplot(k_tablePb, aes(k_150, SAR))+
+  geom_point(aes(color=Ecosystem))
+
+shapiro.test(k_tablePb$k_150)
+shapiro.test(k_tablePb$Av_Mud_25)
+
+plot(k_tablePb$k_1000, k_tablePb$Av_Mud_25)
+cor.test(k_tablePb$k_1000, k_tablePb$Av_Mud_25, method=c("spearman"))
+
+plot(k_tablePb_Sg$k_150, k_tablePb_Sg$Av_Mud_25)
+
+ggplot(k_tablePb, aes(k_150, Av_Mud_25))+
+  geom_point(aes(color=Ecosystem))
+
+
+# Mud distribution of fitted cores vs mud distribution global
+
+library(moments)#skewness
+
+
+# whole core collection
+histogram(CM$Av_Mud_25, breaks = 10)
+mean(CM$Av_Mud_25, na.rm=TRUE)
+std(CM$Av_Mud_25)
+nrow(CM[complete.cases(CM[,"Av_Mud_25"]),])
+skewness(CM$Av_Mud_25, na.rm = TRUE)
+
+P1<-ggplot(CM, aes(x=Av_Mud_25))+ ylab("Whole core collection")+
+  geom_histogram(aes(y = after_stat(count / sum(count))), binwidth = 10)+
+  scale_y_continuous(labels = scales::percent)+
+  annotate("text", x=60, y=0.18, label= "27.2±0.95 (mean±SE)")+
+  annotate("text", x=60, y=0.15, label= "skewness=1.1")+
+  annotate("text", x=60, y=0.12, label= "n=248")+
+  theme(axis.title.x=element_blank())
+
+# cores fitted to last 100-150 yr model
+Mud150<-k_tablePb[complete.cases(k_tablePb[,"k_150"]),]
+
+histogram(Mud150$Av_Mud_25, breaks = 10)
+mean(Mud150$Av_Mud_25, na.rm=TRUE)
+std(Mud150$Av_Mud_25)
+nrow(Mud150[complete.cases(Mud150[,"Av_Mud_25"]),])
+skewness(Mud150$Av_Mud_25, na.rm = TRUE)
+
+P2<-ggplot(Mud150, aes(x=Av_Mud_25))+ ylab("Cores 100-150 yr model") + 
+  geom_histogram(aes(y = after_stat(count / sum(count))), binwidth = 10)+
+  scale_y_continuous(labels = scales::percent)+
+  annotate("text", x=60, y=0.25, label= "23.5±4.8 (mean±SE)")+
+  annotate("text", x=60, y=0.2, label= "skewness=1.3")+
+  annotate("text", x=60, y=0.16, label= "n=21")+
+  theme(axis.title.x=element_blank())
+
+# cores fitted to last 500-1000 yr model
+Mud1000<-k_tablePb[complete.cases(k_tablePb[,"k_1000"]),]
+
+histogram(Mud1000$Av_Mud_25, breaks = 10)
+mean(Mud1000$Av_Mud_25, na.rm=TRUE)
+std(Mud1000$Av_Mud_25)
+nrow(Mud1000[complete.cases(Mud1000[,"Av_Mud_25"]),])
+skewness(Mud1000$Av_Mud_25, na.rm = TRUE)
+
+P3<-ggplot(Mud1000, aes(x=Av_Mud_25))+ ylab("Cores 500-1000 yr model") + xlab("Mud (<0.063 mm) concentration (%)") +
+  geom_histogram(aes(y = after_stat(count / sum(count))), binwidth = 10)+
+  scale_y_continuous(labels = scales::percent)+
+  annotate("text", x=60, y=0.2, label= "30.9±6.4 (mean±SE)")+
+  annotate("text", x=60, y=0.17, label= "skewness=1")+
+  annotate("text", x=60, y=0.14, label= "n=22")
+
+
+gridExtra::grid.arrange(P1, P2, P3, ncol = 1)
+
+
+#only for seagrass
+
+CM_Sg<-subset(CM, Ecosystem == "Seagrass")
+
+mean(CM_Sg$Av_Mud_25, na.rm=TRUE)
+std(CM_Sg$Av_Mud_25)
+
+
+#check for outlayers (https://www.r-bloggers.com/2016/12/outlier-detection-and-treatment-with-r/)
+
+# visual check
+boxplot(k_100 ~ Ecosystem, data=k_tablePb, main="Decay 150yr by Ecosystem")  # clear pattern is noticeable.
+boxplot(SAR ~ Ecosystem, data=k_tablePb, main="SAR by Ecosystem")  # this may not be significant, as day of week variable is a subset of the month var.
+
+#Cook’s Distance
+mod <- lm(SAR ~ k_100, data=k_tablePb)
+cooksd <- cooks.distance(mod)
+
+plot(cooksd, pch="*", cex=2, main="Influential Obs by Cooks distance")  # plot cook's distance
+abline(h = 4*mean(cooksd, na.rm=T), col="red")  # add cutoff line
+text(x=1:length(cooksd)+1, y=cooksd, labels=ifelse(cooksd>4*mean(cooksd, na.rm=T),names(cooksd),""), col="red")  # add labels
+
+# one outlayer: 100
+
+cor.test(k_tablePb[,-c(51,100)]$k_100, k_tablePb[,-c(51,100)]$SAR, method=c("pearson"))
+
+ggplot(k_tablePb[,-c(51,100)],aes(k_100, SAR))+
+  geom_point(aes(color=Ecosystem))
 
 
 
@@ -1135,7 +1245,7 @@ f_table<-f_table[-9,]
 
 # fit function k-timeframe
 
-### exponential model to predict k in Posidonia meadows
+### exponential model to predict k 
 
 colnames(f_table)<-c("k","timeframe")
 
@@ -1176,55 +1286,12 @@ fitY2[, 2] <- kchange(c(1:5000), 0.028, -0.0019)
 colnames(fitY2) <- list("timeframe", "predict")
 
 
-# correlation decay rate (150) and SAR ------------------------------------
-
-
-plot(k_tablePb_Sg$k_100, k_tablePb_Sg$Av_Mud_25)
-
-ggplot(k_tablePb,aes(k_1000, SAR))+
-  geom_point(aes(color=Bioregions))
-
-cor.test(k_tablePb$k_150, k_tablePb$SAR, method=c("pearson"))
-
-ggplot(k_tablePb, aes(k_150, SAR))+
-  geom_point(aes(color=Ecosystem))
-
-shapiro.test(k_tablePb$k_150)
-shapiro.test(k_tablePb$Av_Mud_25)
-
-plot(k_tablePb$k_1000, k_tablePb$Av_Mud_25)
-cor.test(k_tablePb$k_1000, k_tablePb$Av_Mud_25, method=c("spearman"))
-
-plot(k_tablePb_Sg$k_150, k_tablePb_Sg$Av_Mud_25)
-
-ggplot(k_tablePb, aes(k_150, Av_Mud_25))+
-  geom_point(aes(color=Ecosystem))
-
-
-#check for outlayers (https://www.r-bloggers.com/2016/12/outlier-detection-and-treatment-with-r/)
-
-# visual check
-boxplot(k_100 ~ Ecosystem, data=k_tablePb, main="Decay 150yr by Ecosystem")  # clear pattern is noticeable.
-boxplot(SAR ~ Ecosystem, data=k_tablePb, main="SAR by Ecosystem")  # this may not be significant, as day of week variable is a subset of the month var.
-
-#Cook’s Distance
-mod <- lm(SAR ~ k_100, data=k_tablePb)
-cooksd <- cooks.distance(mod)
-
-plot(cooksd, pch="*", cex=2, main="Influential Obs by Cooks distance")  # plot cook's distance
-abline(h = 4*mean(cooksd, na.rm=T), col="red")  # add cutoff line
-text(x=1:length(cooksd)+1, y=cooksd, labels=ifelse(cooksd>4*mean(cooksd, na.rm=T),names(cooksd),""), col="red")  # add labels
-
-# one outlayer: 100
-
-cor.test(k_tablePb[,-c(51,100)]$k_100, k_tablePb[,-c(51,100)]$SAR, method=c("pearson"))
-
-ggplot(k_tablePb[,-c(51,100)],aes(k_100, SAR))+
-  geom_point(aes(color=Ecosystem))
 
 
 
-# k vs time frame fitting figure
+
+# k vs time frame fitting figure ------------------------------------------
+
 
 std <- function(x) sd(x)/sqrt(length(x))
 
