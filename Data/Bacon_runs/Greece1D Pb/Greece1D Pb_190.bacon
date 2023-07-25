@@ -1,0 +1,19 @@
+## Ran on Fri Jul 21 23:06:44 2023 
+
+Cal 0 : ConstCal;
+Cal 1 :  IntCal20 ,  0 ;
+Cal 2 :  Marine20 ;
+Cal 3 :  SHCal20 ,  0 ;
+
+##   id.   age    std   depth  delta.R  delta.STD     t.a   t.b   cc
+Det 0 : NA , -68, 1e+05, 0,  0,  0,  3,  4,  0;
+Det 1 : Greece1D 1.278 , -68, 1, 56.6,  0,  0,  3,  4,  0;
+Det 2 : Greece1D 2.556 , -66, 1, 108.2,  0,  0,  3,  4,  0;
+Det 3 : Greece1D 5.112 , -54, 3, 209.4,  0,  0,  3,  4,  0;
+Det 4 : Greece1D 11.502 , -36, 6, 436.4,  0,  0,  3,  4,  0;
+Det 5 : Greece1D 16.614 , -22, 8, 610.8,  0,  0,  3,  4,  0;
+Det 6 : Greece1D 20.448 , -11, 10, 756.6,  0,  0,  3,  4,  0;
+Det 7 : NA , -11, 1e+08, 3785.46,  0,  0,  3,  4,  0;
+
+##		 K   MinAge   MaxAge   th0   th0p   w.a   w.b   alpha  beta  dmin  dmax seed
+Bacon 0: FixT, 190,  -73,  1e+06,  -69,  -69,  5,  5,  1.5,  15, 0, 3800, 138545;

@@ -36,7 +36,8 @@ dir.create(Folder)
 
 unique(Cores[, 5])
 
-B <- subset(Cores, Cores$V.vs.B != "Bare")
+B <- subset(Cores, Cores$V.vs.B == "Vegetated" | Cores$V.vs.B == "vegetated")
+unique(B[, 5])
 #Bare <- subset(A, A[,5]=='Bare')
 length(unique(B$Core))
 SingleCore<-B[!duplicated(B$Core),]
@@ -49,11 +50,6 @@ B$Mud <- as.numeric(B$Mud)
 B$DBD <- as.numeric(B$DBD)
 
 ###### Sampling sites Map #########
-
-
-B$Long <- as.numeric(B$Long)
-B$Lat <- as.numeric(B$Lat)
-
 
 #load a world map
 WM <- map_data("world")
@@ -77,10 +73,9 @@ ggsave(path = Folder,
 
 
 
-
 ##### Average and median OC content per core (full length and top 25 cm)##################
 
-ADT <- B[, c("Core", "Ecosystem", "Max.Depth", "Corg", "Mud")]
+ADT <- B[, c("Core", "Ecosystem", "Max.Depth", "Corg", "Mud", "d13C")]
 
 X <- split(ADT, ADT$Core)
 
@@ -93,11 +88,18 @@ CM <- data.frame(
   Av_Mud = numeric(),
   SE_Mud = numeric(),
   M_Mud = numeric(),
+  Av_13C = numeric(),
+  SE_13C = numeric(),
+  M_13C = numeric(),
   Av_C_25 = numeric(),
   SE_C_25 = numeric(),
+  M_C_25 = numeric(),
   Av_Mud_25 = numeric(),
   SE_Mud_25 = numeric(),
-  M_Mud_25 = numeric()
+  M_Mud_25 = numeric(),
+  Av_13C_25 = numeric(),
+  SE_13C_25 = numeric(),
+  M_13C_25 = numeric()
 )
 
 std <- function(x) sd(x, na.rm=TRUE)/sqrt(length(x))
@@ -114,12 +116,21 @@ for (i in 1:length(X)) {
   CM[i, 6] <- mean(Data[, which(colnames(Data) == "Mud")], na.rm=TRUE)
   CM[i, 7] <- std(Data[, which(colnames(Data) == "Mud")])
   CM[i, 8] <- median(Data[, which(colnames(Data) == "Mud")], na.rm=TRUE)
+  CM[i, 9] <- mean(Data[, which(colnames(Data) == "d13C")], na.rm=TRUE)
+  CM[i, 10] <- std(Data[, which(colnames(Data) == "d13C")])
+  CM[i, 11] <- median(Data[, which(colnames(Data) == "d13C")], na.rm=TRUE)
+  
   Data25 <-
     Data %>% filter(Data[, which(colnames(Data) == "Max.Depth")] <= 25)
-  CM[i, 9] <- mean(Data25[, which(colnames(Data25) == "Corg")], na.rm=TRUE)
-  CM[i, 10] <- std(Data25[, which(colnames(Data25) == "Corg")])
-  CM[i, 11] <- mean(Data25[, which(colnames(Data25) == "Mud")], na.rm=TRUE)
-  CM[i, 12] <- std(Data25[, which(colnames(Data25) == "Mud")])
+  CM[i, 12] <- mean(Data25[, which(colnames(Data25) == "Corg")], na.rm=TRUE)
+  CM[i, 13] <- std(Data25[, which(colnames(Data25) == "Corg")])
+  CM[i, 14] <- median(Data25[, which(colnames(Data) == "Corg")], na.rm=TRUE)
+  CM[i, 15] <- mean(Data25[, which(colnames(Data25) == "Mud")], na.rm=TRUE)
+  CM[i, 16] <- std(Data25[, which(colnames(Data25) == "Mud")])
+  CM[i, 17] <- median(Data[, which(colnames(Data) == "Mud")], na.rm=TRUE)
+  CM[i, 18] <- mean(Data25[, which(colnames(Data25) == "d13C")], na.rm=TRUE)
+  CM[i, 19] <- std(Data25[, which(colnames(Data25) == "d13C")])
+  CM[i, 20] <- median(Data[, which(colnames(Data) == "d13C")], na.rm=TRUE)
 }
 
 
@@ -127,10 +138,16 @@ ggplot(CM, aes(Ecosystem, Av_Mud_25)) +
   geom_boxplot() +
   geom_jitter()
 
+ggplot(CM, aes(Ecosystem, Av_13C_25)) +
+  geom_boxplot() +
+  geom_jitter()
+
+
 ggplot(CM, aes(Av_C, Av_C_25))+
   geom_point()
 ggplot(CM, aes(Av_Mud, Av_Mud_25))+
   geom_point()
+
 
 ggplot(CM, aes(Av_Mud, Av_C))+
   geom_point()
@@ -143,6 +160,9 @@ pairwise.wilcox.test(CM$Av_C_25, CM$Ecosystem,
                      p.adjust.method = "BH") # are significantly different (p < 0.05)
 pairwise.wilcox.test(CM$Av_Mud_25, CM$Ecosystem,
                      p.adjust.method = "BH") # are significantly different (p < 0.05)
+CM_nMg<-subset(CM, !Ecosystem=="Mangrove")
+pairwise.wilcox.test(CM_nMg$Av_13C_25, CM_nMg$Ecosystem,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 write.csv(CM,
           file.path(Folder, "AvMdC.csv"),
@@ -150,9 +170,10 @@ write.csv(CM,
           dec = ".")
 
 
+
 # Sediment accretion rate -------------------------------------------------
 
-File <- "Data/Acc_Mass-Age.csv"
+File <- "Data/Acc_Mass-Age_F.csv"
 
 Dates <- read.csv(File,
                   header = T,
@@ -160,10 +181,11 @@ Dates <- read.csv(File,
                   dec = ".")
 Dates <- as.data.frame(Dates)
 
-#SAR 
+# estimates SAR last 150 years 
 
 SAR <- data.frame(
   ID = character(),
+  Ecosystem = character(),
   SAR_Age = numeric(),
   SAR_Pb = numeric(),
   SAR_C = numeric())
@@ -174,22 +196,28 @@ for (i in 1:length(X)) {
   SAR[i, 1] <- names(X[i])
   Data <- as.data.frame(X[i])
   colnames(Data) <- colnames(Dates)
+  Eco <- substr(Data[1,"Core"], 1, 2)
+  
+  if (Eco == "Mg") { SAR[i, 2] <- "Mangrove"}
+  if (Eco == "Sg") { SAR[i, 2] <- "Seagrass"}
+  if (Eco == "Sm") { SAR[i, 2] <- "Tidal Marsh"}
+
   
   #correlation depth-age to predict depth at 150 yr old
   DataAge <- Data[!is.na(Data$Age),]
   DataAge<- DataAge[c(1:(length(which(DataAge$Age <=150)))),]
   
-  if (nrow(DataAge)>2) {SAR[i, 2] <- max(DataAge$Depth)/max(DataAge$Age)}
+  if (nrow(DataAge)>2) {SAR[i, 3] <- max(DataAge$Depth)/max(DataAge$Age)}
   
   DataPb <- Data[!is.na(Data$Age.Pb),]
   DataPb<- DataPb[c(1:(length(which(DataPb$Age.Pb <=150)))),]
   
-  if (nrow(DataPb)>2) {SAR[i, 3] <- max(DataPb$Depth)/max(DataPb$Age.Pb)}
+  if (nrow(DataPb)>2) {SAR[i, 4] <- max(DataPb$Depth)/max(DataPb$Age.Pb)}
   
   DataC <- Data[!is.na(Data$Age.C),]
   DataC<- DataC[c(1:(length(which(DataC$Age.C <=150)))),]
   
-  if (nrow(DataC)>2) {SAR[i, 4] <- max(DataC$Depth)/max(DataC$Age.C)}
+  if (nrow(DataC)>2) {SAR[i, 5] <- max(DataC$Depth)/max(DataC$Age.C)}
   
 }
 
@@ -207,6 +235,12 @@ for (i in 1:nrow(SAR)) {
    else {if (is.na(SAR[i,"SAR_C"]) == FALSE) {SAR[i,"SAR"]<-SAR[i,"SAR_C"]}}}}
 
 
+ggplot(SAR, aes(Ecosystem, SAR)) +
+  geom_boxplot() +
+  geom_jitter()
+
+pairwise.wilcox.test(SAR$SAR, SAR$Ecosystem,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 # Corg trends with depth --------------------------------------------------
 
@@ -304,31 +338,121 @@ shapiro.test(CM$Av_C_25) #(>0.05 normal, <0.05 no normal)
 
 ## Student's t-test  if normally distributed, wilcox if not
 
-pairwise.wilcox.test(CM$Av_Mud, DT2$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 DT2<-DT
 DT2$C_Gr <- recode(DT2$C_Gr, DEC = 'DEC',
                   INC  = 'N',
                   NT = 'N')
 
-ggplot(CM, aes(DT2$C_Gr, CM$Av_Mud)) +
-  geom_boxplot()
+ggplot(CM, aes(DT2$C_Gr, CM$Av_C_25)) +
+  geom_boxplot()+
+  geom_jitter()
+
+pairwise.wilcox.test(CM$Av_C_25, DT2$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+DT2<-cbind(CM, DT2)
+DT2<-DT2[,c(1:20, 25)]
+
+#Seagrass meadows
+    DT2Sg<-subset(DT2, Ecosystem=="Seagrass")
+    #organic carbon  
+    
+    SC<-ggplot(DT2Sg, aes(C_Gr, Av_C_25)) + ggtitle("Seagrass")+
+        geom_boxplot()+
+        geom_jitter(color="green4")+
+        theme(plot.title = element_text(hjust = 0.5),
+              axis.title.x = element_blank(), 
+              axis.title.y = element_blank())
+              
+      
+      pairwise.wilcox.test(DT2Sg$Av_C_25, DT2Sg$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05)
+    #mud  
+      SM<-ggplot(DT2Sg, aes(C_Gr, Av_Mud_25)) + 
+        geom_boxplot()+
+        geom_jitter(color="green4")+
+        theme(axis.title.x = element_blank(), 
+              axis.title.y = element_blank())
+        
+      
+      pairwise.wilcox.test(DT2Sg$Av_Mud_25, DT2Sg$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05)  
+      
+     
+      
+      
+       
+#Tidal marshes      
+      #organic carbon  
+      TMC<-ggplot(DT2Sm, aes(C_Gr, Av_C_25)) + ggtitle("Tidal Marsh")+
+        geom_boxplot()+
+        geom_jitter(color="orange")+
+        theme(plot.title = element_text(hjust = 0.5),
+              axis.title.x = element_blank(), 
+              axis.title.y = element_blank())
+      
+      pairwise.wilcox.test(DT2Sm$Av_C_25, DT2Sm$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05)
+      #mud  
+      TMM<-ggplot(DT2Sm, aes(C_Gr, Av_Mud_25)) +
+        geom_boxplot()+
+        geom_jitter(color="orange")+
+        theme(axis.title.x = element_blank(), 
+              axis.title.y = element_blank())
+      
+      pairwise.wilcox.test(DT2Sm$Av_Mud_25, DT2Sm$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05)  
+      
+#Mangroves        
+    DT2Mg<-subset(DT2, Ecosystem=="Mangrove")
+    #organic carbon  
+    MGC<-ggplot(DT2Mg, aes(C_Gr, Av_C_25)) + ylab("OC% (Top 25cm)") + ggtitle("Mangrove")+
+      geom_boxplot()+
+      geom_jitter(color="blue")+
+      theme(plot.title = element_text(hjust = 0.5),
+            axis.title.x = element_blank())
+    
+    pairwise.wilcox.test(DT2Mg$Av_C_25, DT2Mg$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)
+    #mud  
+    TGM<-ggplot(DT2Mg, aes(C_Gr, Av_Mud_25)) + ylab("Mud% (Top 25cm)") +
+      geom_boxplot()+
+      geom_jitter(color="blue")+
+      theme(axis.title.x = element_blank())
+    
+    pairwise.wilcox.test(DT2Mg$Av_Mud_25, DT2Mg$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05) 
+
+
+    
+todos_CM<-grid.arrange(MGC, SC, TMC, TGM, SM, TMM, ncol=3)
+    
+ggsave( plot = todos_CM,
+      path = Folder,
+       filename =  "C_Mud_Gr.jpg",
+       units = "cm",
+       width = 20,
+       height = 10
+)    
+
+
+
 
 #### Count cores per group and get the percentages
 
 NGr <- DT %>% group_by(C_Gr) %>% count()
 NGr %>% mutate(proc = ((n * 100) / sum(NGr[, 2])))
 
-DT %>% group_by(Ecosystem, C_Gr) %>% count()
-NGrSg <- subset(DT, Ecosystem == "Seagrass") %>% group_by(C_Gr) %>% count()
+DT %>% group_by(Ecosystem.x, C_Gr) %>% count()
+NGrSg <- subset(DT, Ecosystem.x == "Seagrass") %>% group_by(C_Gr) %>% count()
 NGrSg %>% mutate(proc = ((n * 100) / sum(NGrSg[, 2])))
 
 NGrSm <-
-  subset(DT, Ecosystem == "Salt Marsh") %>% group_by(C_Gr) %>% count()
+  subset(DT, Ecosystem.x == "Tidal Marsh") %>% group_by(C_Gr) %>% count()
 NGrSm %>% mutate(proc = ((n * 100) / sum(NGrSm[, 2])))
 
-NGrMg <- subset(DT, Ecosystem == "Mangrove") %>% group_by(C_Gr) %>% count()
+NGrMg <- subset(DT, Ecosystem.x == "Mangrove") %>% group_by(C_Gr) %>% count()
 NGrMg %>% mutate(proc = ((n * 100) / sum(NGrMg[, 2])))
 
 ### plot per grupos. Change size of jpg file when saving!!!!!!
@@ -413,7 +537,7 @@ SUM<-SUM[,-c(15:19)]
 
 ### chronological models estimation
 
-File <- "Data/Acc_Mass-Age.csv"
+File <- "Data/Acc_Mass-Age_F.csv"
 
 Dates <- read.csv(File,
                   header = T,

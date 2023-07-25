@@ -583,7 +583,7 @@ tendency<- function (df, pnames) {
   return(df_list)
 }
 
-ten_gr<-tendency(TPb, pnames="prueba")
+ten_gr<-tendency(TPb, pnames="Max_depth")
 
 TDEC<-ten_gr[[2]]
 

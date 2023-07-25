@@ -1,4 +1,4 @@
-setwd("C:/Users/npjun/Dropbox/Seagrasses/Degradacion anaerobia_OSCAR/R")
+setwd("C:/Users/npjun/Dropbox/Seagrasses/Degradacion anaerobia_OSCAR/SOC_Decay/Data")
 
 library(rbacon)
 library(ggplot2)
@@ -9,7 +9,10 @@ library(dplyr)
 
 File<-"Dates.csv"
 
-Dates<-read.csv(File, header=T, sep=";", dec=".")
+Dates <- read.csv(File,
+                  header = T,
+                  sep = ";",
+                  dec = ".")
 Dates<-as.data.frame(Dates)
 
 
@@ -93,8 +96,7 @@ for(i in 1:length(X)) {
   #bacon with both
   bfile<-Data$Core.ID[1]
   Bacon(bfile,
-        d.min=0,d.max=max(Data$Acc.Mass),
-        MinYr=-66)
+        d.min=0,d.max=max(Data$Acc.Mass))
   
   #load chronological model file
   results<-list.files(path = file.path(path, Data$Core.ID[1]), full.names = TRUE)
@@ -119,8 +121,7 @@ for(i in 1:length(X)) {
   #bacon with Pb
   bfile<-paste(Data$Core.ID[1],"Pb")
   Bacon(bfile,
-        d.min=0,d.max=max(Data$Acc.Mass),
-        MinYr=-66)
+        d.min=0,d.max=max(Data$Acc.Mass))
   
   #load chronological model file
   results<-list.files(path = file.path(path, paste(Data$Core.ID[1],"Pb")), full.names = TRUE)
@@ -144,8 +145,7 @@ for(i in 1:length(X)) {
   #bacon with 14C
   bfile<-paste(Data$Core.ID[1],"C")
   Bacon(bfile,
-        d.min=0,d.max=max(Data$Acc.Mass),
-        MinYr=-66)
+        d.min=0,d.max=max(Data$Acc.Mass))
   
   #load chronological model file
   results<-list.files(path = file.path(path, paste(Data$Core.ID[1],"C")), full.names = TRUE)
@@ -180,5 +180,5 @@ models<-models[,c(1:3,8:10)]
 colnames(models)<-list
 
 
-write.csv(models,"Acc_Mass-Age.csv",sep=";", dec=",")  
+write.csv(models,"Acc_Mass-Age_Gr.csv",sep=";", dec=",")  
 
