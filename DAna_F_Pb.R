@@ -916,9 +916,9 @@ DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")]
 
 fit_100Pb<-OCModel(DataAM, nwpath="Decay2023_Pb/100")
 
-#eliminate some cores after visual check, we eliminate: Sg_081, Sg_111, Sg_192, Sg_316, Sg_321, Sg_323, Sg_332, Sm_004, 
-#Sm_068, Sm_069, Sm_092, Sm_097, Sm_105
-fit_100Pb[c(10, 13, 21, 31, 33, 34, 35, 37, 49, 50, 55, 57, 58), "k"]<-NA
+#eliminate some cores after visual check, we eliminate: Sg_081, Sg_111, Sg_316, Sg_321, Sg_323, Sm_004, 
+#Sm_068, Sm_069, Sm_092, Sm_094, Sm_097, Sm_105
+fit_100Pb[c(10, 13, 31, 33, 34, 38, 50, 51, 56, 57, 58, 59), "k"]<-NA
 
 
 ggplot(fit_100Pb, aes( Ecosystem, k))+
@@ -981,7 +981,7 @@ fit_150Pb<-OCModel(DataAM, MA= 100, nwpath="Decay2023_Pb/150")
 
 
 #eliminate some cores after visual check, we eliminate: Mg_023, Sm_004
-fit_150Pb <- fit_150Pb[-c(6,40), ]
+fit_150Pb <- fit_150Pb[-c(6,41), ]
 
 #eliminate empty cores (no model)
 fit_150Pb<-fit_150Pb[!is.na(fit_150Pb$P),]
@@ -1046,8 +1046,8 @@ fit_300Pb<-OCModel(DataAM, MA= 150, nwpath="Decay2023_Pb/300")
 ggplot(fit_300Pb, aes(x = k)) +
   geom_histogram()
 
-#eliminate some cores after visual check, we eliminate: Sg_179, Sg_311, Sm_004
-fit_300Pb <- fit_300Pb[-c( 28, 37, 45), ]
+#eliminate some cores after visual check, we eliminate: Sg_179, Sg_192, Sm_004, Sm_010, Sm_094
+fit_300Pb <- fit_300Pb[-c( 28, 30, 45, 46, 66), ]
 
 #eliminate empty cores (no model)
 fit_300Pb<-fit_300Pb[!is.na(fit_300Pb$P),]
@@ -1058,7 +1058,7 @@ ggplot(fit_300Pb, aes( Ecosystem, k))+
   geom_jitter()
 
 
-pairwise.wilcox.test(fit_300Pb$k, fit_300$Ecosystem,
+pairwise.wilcox.test(fit_300Pb$k, fit_300Pb$Ecosystem,
                      p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 
@@ -1108,7 +1108,7 @@ DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")]
 fit_500Pb<-OCModel(DataAM, MA= 300, nwpath="Decay2023_Pb/500")
 
 
-#eliminate some cores after visual check, we eliminate: Sg_019, Sg_041, Sg_190, Sg_192, Sg_310, Sg_312, Sg_314, Sg_323, Sm_004
+#eliminate some cores after visual check, we eliminate: Sm_004
 fit_500Pb <- fit_500Pb[-c(12, 14, 29, 31, 37, 39, 40, 44, 46 ), ]
 
 #eliminate empty cores (no model)
@@ -1168,8 +1168,8 @@ DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")]
 
 fit_1000Pb<-OCModel(DataAM, MA= 500, nwpath="Decay2023_Pb/1000")
 
-#eliminate some cores after visual check, we eliminate: Sg_019, Sg_041, Sg_111, Sg_117, Sg_195, Sg_312, Sg_314, Sm_004, Sm_010
-fit_1000Pb <- fit_1000Pb[-c( 12, 13, 19, 21, 32, 40, 41, 47, 48), ]
+#eliminate some cores after visual check, we eliminate: Sg_019, Sg_041, Sg_111, Sg_117, Sg_195, Sg_312, Sm_004, Sm_010
+fit_1000Pb <- fit_1000Pb[-c( 12, 13, 19, 21, 32, 39, 47, 48), ]
 
 #eliminate empty cores (no model)
 fit_1000Pb<-fit_1000Pb[!is.na(fit_1000Pb$P),]
@@ -1235,8 +1235,8 @@ fit_1500Pb<-OCModel(DataAM, MA= 1000, nwpath="Decay2023_Pb/1500")
 ggplot(fit_1500Pb, aes(x = k)) +
   geom_histogram()
 
-#eliminate some cores after visual check, we eliminate: 
-fit_1500Pb <- fit_1500Pb[-c(13, 17, 19, 20, 23, 25, 31, 39, 40, 46, 48 ), ]
+#eliminate some cores after visual check, we eliminate:  Sg_041, Sg_092, Sg_112, Sg_121, Sg_170, Sg_195, Sg_312, Sm_004, Sm_010
+fit_1500Pb <- fit_1500Pb[-c(13, 17, 19, 23, 25, 31, 38, 46, 48 ), ]
 
 #eliminate empty cores (no model)
 fit_1500Pb<-fit_1500Pb[!is.na(fit_1500Pb$P),]
@@ -1246,8 +1246,8 @@ ggplot(fit_1500Pb, aes( Ecosystem, k))+
   geom_boxplot()+
   geom_jitter()
 
-pairwise.wilcox.test(fit_1500Pb$k, fit_1500Pb$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+#pairwise.wilcox.test(fit_1500Pb$k, fit_1500Pb$Ecosystem,
+                     #p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 
 # model 1500-2000 years ---------------------------------------------------
@@ -1302,8 +1302,8 @@ fit_2000Pb<-OCModel(DataAM, MA= 1500, nwpath="Decay2023_Pb/2000")
 ggplot(fit_2000Pb, aes(x = k)) +
   geom_histogram()
 
-#eliminate some cores after visual check, we eliminate:
-fit_2000Pb <- fit_2000Pb[-c( 29), ]
+#eliminate some cores after visual check, we eliminate: Sg_041, Sg_191
+fit_2000Pb <- fit_2000Pb[-c( 13, 29), ]
 
 #eliminate empty cores (no model)
 fit_2000Pb<-fit_2000Pb[!is.na(fit_2000Pb$P),]
@@ -1368,20 +1368,11 @@ fit_m2000Pb<-OCModel(DataAM, MA= 2000, nwpath="Decay2023_Pb/more_2000")
 ggplot(fit_m2000Pb, aes(x = k)) +
   geom_histogram()
 
-#eliminate some cores after visual check, we eliminate:
-fit_m2000Pb <- fit_m2000Pb[-c(18, 40), ]
+#eliminate some cores after visual check, we eliminate: Sg_041, Sg_097
+fit_m2000Pb <- fit_m2000Pb[-c(14, 18), ]
 
 #eliminate empty cores (no model)
 fit_m2000Pb<-fit_m2000Pb[!is.na(fit_m2000Pb$P),]
-
-
-ggplot(fit_m2000Pb, aes( Ecosystem, k))+
-  geom_boxplot()+
-  geom_jitter()
-
-
-
-
 
 
 
@@ -1405,593 +1396,3 @@ k_tablePb<-merge(k_tablePb, SingleCore[,c(1, 3, 7, 6, 8, 11, 12)], by = 'ID', al
 k_tablePb<-merge(k_tablePb, SAR[,c(1,5)], by = 'ID', all.x=T, all.y=F)
 k_tablePb<-merge(k_tablePb, CM[,c(1,9,11)], by = 'ID', all.x=T, all.y=F)
 
-
-
-#normal distribution and significant differences among ecosystems
-
-shapiro.test(k_tablePb$k_100) #normal if pvalue > than 0.05
-
-apply(k_tablePb[,c(2:8)], FUN=shapiro.test, MARGIN = 2)
-
-
-# differences among species
-
-pairwise.wilcox.test(k_tablePb$k_100, k_tablePb$Specie,
-                     p.adjust.method = "BH")
-
-
-
-
-# correlation decay rate (150) and SAR ------------------------------------
-
-
-plot(k_tablePb_Sg$k_100, k_tablePb_Sg$Av_Mud_25)
-
-ggplot(k_tablePb,aes(k_1000, SAR))+
-  geom_point(aes(color=Bioregions))
-
-cor.test(k_tablePb$k_150, k_tablePb$SAR, method=c("pearson"))
-
-ggplot(k_tablePb, aes(k_150, SAR))+
-  geom_point(aes(color=Ecosystem))
-
-shapiro.test(k_tablePb$k_150)
-shapiro.test(k_tablePb$Av_Mud_25)
-
-
-# correlation decay rate and Mud ------------------------------------
-
-# first we estimate the average mud content for the studied time frame
-# we use the max age of each core
-
-x<-split(TPb, TPb$Core)
-
-Mud150_a<-fit_150Pb
-Mud150_a$Mud<-"NA"
-
-for (i in 1:nrow(Mud150_a)) {
-  
-  data<-as.data.frame(x[Mud150_a[i,"ID"]])
-  colnames(data)<-colnames(TPb)
-  data_a<-subset(data, data$FAge<=Mud150_a[i, "Max.Age"])
-  Mud150_a[i, "Mud"]<-mean(data_a$Mud, na.rm=TRUE)}
-
-Mud150_a$Mud<-as.numeric(Mud150_a$Mud)
-
-Mud1000_a<-fit_1000Pb
-Mud1000_a$Mud<-"NA"
-
-for (i in 1:nrow(Mud1000_a)) {
-  
-  data<-as.data.frame(x[Mud1000_a[i,"ID"]])
-  colnames(data)<-colnames(TPb)
-  data_a<-subset(data, data$FAge<=Mud1000_a[i, "Max.Age"])
-  Mud1000_a[i, "Mud"]<-mean(data_a$Mud, na.rm=TRUE)}
-
-Mud1000_a$Mud<-as.numeric(Mud1000_a$Mud)
-
-shapiro.test(Mud150_a$k)
-shapiro.test(as.numeric(Mud150_a$Mud))
-plot(Mud150_a$k, Mud150_a$Mud)
-cor.test(as.numeric(Mud150_a$k), as.numeric(Mud150_a$Mud), method=c("spearman"))
-
-ggplot(Mud150_a, aes(k, Mud))+
-  geom_point(aes(color=Ecosystem))+
-  scale_color_manual(values=c('blue', 'green4', "orange"))
-
-
-plot(Mud1000_a$k, Mud1000_a$Mud)
-cor.test(as.numeric(Mud1000_a$k), as.numeric(Mud1000_a$Mud), method=c("spearman"))
-
-plot(k_tablePb_Sg$k_150, k_tablePb_Sg$Av_Mud_25)
-
-ggplot(k_tablePb, aes(k_150, Av_Mud_25))+
-  geom_point(aes(color=Ecosystem))
-
-
-# Mud distribution of fitted cores vs mud distribution global
-
-library(moments)#skewness
-
-
-# whole core collection
-histogram(CM$Av_Mud_25, breaks = 10)
-mean(CM$Av_Mud_25, na.rm=TRUE)
-std(CM$Av_Mud_25)
-nrow(CM[complete.cases(CM[,"Av_Mud_25"]),])
-skewness(CM$Av_Mud_25, na.rm = TRUE)
-
-P1<-ggplot(CM, aes(x=Av_Mud_25))+ ylab("Whole core collection")+
-  geom_histogram(aes(y = after_stat(count / sum(count))), binwidth = 10)+
-  scale_y_continuous(labels = scales::percent)+
-  annotate("text", x=60, y=0.18, label= "27.2±0.95 (mean±SE)")+
-  annotate("text", x=60, y=0.15, label= "skewness=1.1")+
-  annotate("text", x=60, y=0.12, label= "n=248")+
-  theme(axis.title.x=element_blank())
-
-# cores fitted to last 100-150 yr model
-Mud150<-k_tablePb[complete.cases(k_tablePb[,"k_150"]),]
-
-histogram(Mud150$Av_Mud_25, breaks = 10)
-mean(Mud150$Av_Mud_25, na.rm=TRUE)
-std(Mud150$Av_Mud_25)
-nrow(Mud150[complete.cases(Mud150[,"Av_Mud_25"]),])
-skewness(Mud150$Av_Mud_25, na.rm = TRUE)
-
-P2<-ggplot(Mud150, aes(x=Av_Mud_25))+ ylab("Cores 100-150 yr model") + 
-  geom_histogram(aes(y = after_stat(count / sum(count))), binwidth = 10)+
-  scale_y_continuous(labels = scales::percent)+
-  annotate("text", x=60, y=0.25, label= "23.5±4.8 (mean±SE)")+
-  annotate("text", x=60, y=0.2, label= "skewness=1.3")+
-  annotate("text", x=60, y=0.16, label= "n=21")+
-  theme(axis.title.x=element_blank())
-
-# cores fitted to last 500-1000 yr model
-Mud1000<-k_tablePb[complete.cases(k_tablePb[,"k_1000"]),]
-
-histogram(Mud1000$Av_Mud_25, breaks = 10)
-mean(Mud1000$Av_Mud_25, na.rm=TRUE)
-std(Mud1000$Av_Mud_25)
-nrow(Mud1000[complete.cases(Mud1000[,"Av_Mud_25"]),])
-skewness(Mud1000$Av_Mud_25, na.rm = TRUE)
-
-P3<-ggplot(Mud1000, aes(x=Av_Mud_25))+ ylab("Cores 500-1000 yr model") + xlab("Mud (<0.063 mm) concentration (%)") +
-  geom_histogram(aes(y = after_stat(count / sum(count))), binwidth = 10)+
-  scale_y_continuous(labels = scales::percent)+
-  annotate("text", x=60, y=0.2, label= "30.9±6.4 (mean±SE)")+
-  annotate("text", x=60, y=0.17, label= "skewness=1")+
-  annotate("text", x=60, y=0.14, label= "n=22")
-
-
-gridExtra::grid.arrange(P1, P2, P3, ncol = 1)
-
-### boxplots and wilcox
-
-CM$label<-"All"
-Mud150$label<-"k 100-150"
-Mud1000$label<-"k 500-1000"
-
-
-ggplot(CM, aes(label,Av_Mud_25))+ ylab("Mud % (<0.063 mm)") +
-  geom_boxplot()+
-  geom_boxplot(data=Mud150, aes(label,Av_Mud_25))+
-  geom_boxplot(data=Mud1000, aes(label,Av_Mud_25))+
-  geom_jitter(aes(color=Ecosystem))+
-  geom_jitter(data=Mud150, aes(color=Ecosystem))+
-  geom_jitter(data=Mud1000, aes(color=Ecosystem))+
-  scale_color_manual(values=c('blue', 'green4', "orange"))
-  
-
-temp<-rbind(CM[,c(1,11,14)], Mud150[,c(1,19,20)], Mud1000[,c(1,19,20)])
-temp$Av_Mud_25<-as.numeric(temp$Av_Mud_25)
-
-pairwise.wilcox.test(temp$Av_Mud_25, temp$label,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-
-
-global_mud<-ggplot(CM, aes(Ecosystem,Av_Mud_25))+ ylab("Mud % top 25 cm (<0.063 mm)") +
-  geom_boxplot()+
-  geom_jitter(aes(color=Ecosystem))+
-  scale_color_manual(values=c('blue', 'green4', "orange"))+
-  ylim(0, 110)
-
-
-pairwise.wilcox.test(CM$Av_Mud_25, CM$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-
-ggsave(
-  plot = global_mud,
-  path = Folder,
-  filename = "global_mud.jpg",
-  units = "cm",
-  width = 12,
-  height = 7
-)
-
-
-#only for seagrass
-
-CM_Sg<-subset(CM, Ecosystem == "Seagrass")
-
-mean(CM_Sg$Av_Mud_25, na.rm=TRUE)
-std(CM_Sg$Av_Mud_25)
-
-
-#check for outlayers (https://www.r-bloggers.com/2016/12/outlier-detection-and-treatment-with-r/)
-
-# visual check
-boxplot(k_100 ~ Ecosystem, data=k_tablePb, main="Decay 150yr by Ecosystem")  # clear pattern is noticeable.
-boxplot(SAR ~ Ecosystem, data=k_tablePb, main="SAR by Ecosystem")  # this may not be significant, as day of week variable is a subset of the month var.
-
-#Cook’s Distance
-mod <- lm(SAR ~ k_100, data=k_tablePb)
-cooksd <- cooks.distance(mod)
-
-plot(cooksd, pch="*", cex=2, main="Influential Obs by Cooks distance")  # plot cook's distance
-abline(h = 4*mean(cooksd, na.rm=T), col="red")  # add cutoff line
-text(x=1:length(cooksd)+1, y=cooksd, labels=ifelse(cooksd>4*mean(cooksd, na.rm=T),names(cooksd),""), col="red")  # add labels
-
-# one outlayer: 100
-
-cor.test(k_tablePb[,-c(51,100)]$k_100, k_tablePb[,-c(51,100)]$SAR, method=c("pearson"))
-
-ggplot(k_tablePb[,-c(51,100)],aes(k_100, SAR))+
-  geom_point(aes(color=Ecosystem))
-
-
-
-
-
-
-
-
-# summary table (manuscript Table 1) -----------------------------------
-
-
-k_tablePb_Mg<-subset(k_tablePb, Ecosystem=='Mangrove')
-k_tablePb_Mg<-sapply(k_tablePb_Mg,FUN=as.numeric)
-k_tablePb_Sg<-subset(k_tablePb, Ecosystem=='Seagrass')
-k_tablePb_Sg<-sapply(k_tablePb_Sg,FUN=as.numeric)
-k_tablePb_Sm<-subset(k_tablePb, Ecosystem=='Tidal Marsh')
-k_tablePb_Sm<-sapply(k_tablePb_Sm,FUN=as.numeric)
-
-std <- function(x) sd(x, na.rm=TRUE)/sqrt(length(x))
-cnt <- function(x) sum(!is.na(x))   
-
-sum_table<-as.data.frame(colMeans(k_tablePb_Mg[,c(2:8)], na.rm = TRUE))
-sum_table[,2]<-as.data.frame(apply(k_tablePb_Mg[,c(2:8)], FUN=std, MARGIN = 2))
-sum_table[,3]<-as.data.frame(apply(k_tablePb_Mg[,c(2:8)], FUN=cnt, MARGIN = 2))
-
-sum_table[,4]<-colMeans(k_tablePb_Sg[,c(2:8)], na.rm = TRUE)
-sum_table[,5]<-as.data.frame(apply(k_tablePb_Sg[,c(2:8)], FUN=std, MARGIN = 2))
-sum_table[,6]<-as.data.frame(apply(k_tablePb_Sg[,c(2:8)], FUN=cnt, MARGIN = 2))
-
-sum_table[,7]<-colMeans(k_tablePb_Sm[,c(2:8)], na.rm = TRUE)
-sum_table[,8]<-as.data.frame(apply(k_tablePb_Sm[,c(2:8)], FUN=std, MARGIN = 2))
-sum_table[,9]<-as.data.frame(apply(k_tablePb_Sm[,c(2:8)], FUN=cnt, MARGIN = 2))
-
-sum_table[,10]<-colMeans(k_tablePb[,c(2:8)], na.rm = TRUE)
-sum_table[,11]<-as.data.frame(apply(k_tablePb[,c(2:8)], FUN=std, MARGIN = 2))
-sum_table[,12]<-as.data.frame(apply(k_tablePb[,c(2:8)], FUN=cnt, MARGIN = 2))
-
-colnames(sum_table)<-c("Mean Mangrove", "SE Mangrove", "n Mangrove","Mean Seagrass", "SE Seagrass", "n Seagrass",
-                       "Mean Tidal Marsh", "SE Tidal Marsh", "n Tidal Marsh", "Mean All", "SE All", "n All")
-
-
-write.csv(sum_table,
-          file.path(Folder, "Summar decay.csv"),
-          sep = ";",
-          dec = ".")
-
-
-
-# load decay rates from review
-
-File <- "Data/k_rev.csv"
-
-k_rev <- read.csv(File,
-                  header = T,
-                  sep = ";",
-                  dec = ".")
-k_rev <- as.data.frame(k_rev)
-k_revS<- k_rev [-c(1,6,8,9),]
-k_revM<- k_rev [c(8,9),]
-
-
-
-# boxplot by timeframe figure
-
-mk_tablePb<-melt(k_tablePb[,c(1:8, 11, 12)], id = c("ID","Ecosystem", "Specie")) 
-
-mk_tablePb$variable <- as.character(mk_tablePb$variable)
-mk_tablePb$variable[mk_tablePb$variable == 'k_100'] <- '0-100 yr'
-mk_tablePb$variable[mk_tablePb$variable == 'k_150'] <- '100-150 yr'
-mk_tablePb$variable[mk_tablePb$variable == 'k_300'] <- '150-300 yr'
-mk_tablePb$variable[mk_tablePb$variable == 'k_500'] <- '300-500 yr'
-mk_tablePb$variable[mk_tablePb$variable == 'k_1000'] <- '500-1000 yr'
-mk_tablePb$variable[mk_tablePb$variable == 'k_1500'] <- '1000-1500 yr'
-mk_tablePb$variable[mk_tablePb$variable == 'k_2000'] <- '1500-2000 yr'
-
-mk_tablePb$value<-as.numeric(mk_tablePb$value)
-
-ggplot(transform(mk_tablePb,
-                 variable=factor(variable,levels=c('0-100 yr','100-150 yr','150-300 yr', '300-500 yr', '500-1000 yr', '1000-1500 yr', '1500-2000 yr'))),
-       aes(Ecosystem, value))+ ggtitle("Decay rates by ecosystem and time frame")+ ylab("Decay rate (yr-1)") +
-  geom_boxplot()+
-  geom_jitter(aes(color=Ecosystem))+
-  facet_wrap(~variable)+
-  scale_color_manual(values=c('blue', 'green4', "orange"))+
-  theme(legend.position = c(1, 0),
-        legend.justification = c(1, 0), 
-        axis.title.x = element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.text.x=element_blank(),)
-
-
-mk_tablePb2<-subset(mk_tablePb, mk_tablePb$variable == "100-150 yr" | mk_tablePb$variable == "500-1000 yr")
-
-box_150_1000<-  ggplot(transform(mk_tablePb2,
-                 variable=factor(variable,levels=c('100-150 yr',"500-1000 yr"))),
-       aes(Ecosystem, value))+ ggtitle("Decay rates by ecosystem and time frame")+ ylab("Decay rate (yr-1)") +
-  geom_boxplot()+
-  geom_jitter(aes(color=Ecosystem))+
-  facet_wrap(~variable)+
-  scale_color_manual(values=c('blue', 'green4', "orange"))+
-  ylim(0,0.0475)+
-  theme(#legend.position = c(1, 0),
-        #legend.justification = c(1, 0), 
-        axis.title.x = element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.text.x=element_blank(),)
-
-
-
-ggsave(
-  plot = box_150_1000,
-  path = Folder,
-  filename = "box_150_1000.jpg",
-  units = "cm",
-  width = 12,
-  height = 7
-)
-
-
-ggplot(transform(mk_tablePb2,
-                 variable=factor(variable,levels=c('100-150 yr',"500-1000 yr"))),
-       aes(Ecosystem, value))+ ggtitle("Decay rates by ecosystem and time frame")+ ylab("Decay rate (yr-1)") +
-  geom_boxplot()+
-  geom_jitter(aes(color=Specie))+
-  facet_wrap(~variable)+
-  #scale_color_manual(values=c('blue', 'green4', "orange"))+
-  theme(#legend.position = c(1, 0),
-    #legend.justification = c(1, 0), 
-    axis.title.x = element_blank(),
-    axis.ticks.x=element_blank(),
-    axis.text.x=element_blank(),)
-
-
-
-
-
-
-# exponential model to predict k  -----------------------------------------
-
-#fitting table
-
-f_table_Sg<-as.data.frame(colMeans(k_tablePb[c(7:51),c(2:8)], na.rm = TRUE))
-f_table_Sg[,2]<-c(50, 125, 225, 400, 750, 1250, 1750)
-f_table_Sg[c(8:11),1]<-na.omit(k_tablePb[,9])
-f_table_Sg[c(8:11),2]<-na.omit(k_tablePb[,10])
-f_table_Sg[c(12:16), c(1,2)]<-k_revS[,c(2:3)]
-f_table[c(17:18), c(1,2)]<-k_revM[,c(2:3)]
-
-f_table_Sg<-f_table[-9,]
-colnames(f_table_Sg)<-c("k","timeframe")
-
-f_table_Tm<-as.data.frame(colMeans(k_tablePb[c(52:76),c(2:7)], na.rm = TRUE))
-f_table_Tm[,2]<-c(50, 125, 225, 400, 750, 1250)
-f_table_Tm[c(7:8), c(1,2)]<-k_revM[,c(2:3)]
-colnames(f_table_Tm)<-c("k","timeframe")
-
-f_table_Mg<-as.data.frame(colMeans(k_tablePb[c(1:6),c(2:6)], na.rm = TRUE))
-f_table_Mg[,2]<-c(50, 125, 225, 400, 750)
-colnames(f_table_Mg)<-c("k","timeframe")
-
-# fit function k-timeframe
-
-### exponential model to predict k 
-
-kchange <- function(Tframe, A, C)
-  (A * exp(C * Tframe))
-
-# seagrass model
-modelSg <-
-  nls(
-    k ~ kchange(timeframe, myA, myC),
-    data = f_table_Sg,
-    start = list(myA = 0.02, myC = 0.0003)
-  )
-
-summary(modelSg)
-
-fitSg <- as.data.frame(c(1:5000))
-fitSg['new_col'] <- NA
-fitSg[, 2] <- kchange(c(1:5000), 0.0237, -0.002)
-colnames(fitSg) <- list("timeframe", "predict")
-
-# tidal marsh model
-modelTm <-
-  nls(
-    k ~ kchange(timeframe, myA, myC),
-    data = f_table_Tm,
-    start = list(myA = 0.02, myC = 0.0003)
-  )
-
-summary(modelTm)
-
-fitTm <- as.data.frame(c(1:5000))
-fitTm['new_col'] <- NA
-fitTm[, 2] <- kchange(c(1:5000), 0.021, -0.003)
-colnames(fitTm) <- list("timeframe", "predict")
-
-# Mangrove model
-modelMg <-
-  nls(
-    k ~ kchange(timeframe, myA, myC),
-    data = f_table_Mg,
-    start = list(myA = 0.02, myC = 0.0003)
-  )
-
-summary(modelMg)
-
-fitMg <- as.data.frame(c(1:5000))
-fitMg['new_col'] <- NA
-fitMg[, 2] <- kchange(c(1:5000), 0.0268, -0.0038)
-colnames(fitMg) <- list("timeframe", "predict")
-
-
-
-# k vs time frame fitting figure ------------------------------------------
-
-
-std <- function(x) sd(x)/sqrt(length(x))
-
-fit_figPb<-
-  ggplot(k_tablePb_Sg, aes( Max_Age, k_m2000))+ ggtitle("Decay rate by time frame") + xlab("Time frame (years)") + ylab("Decay rate (yr-1)") +
-  geom_point(color='green4')+
-  geom_point(aes(50, mean(na.omit(k_tablePb_Sg$k_100))), color='green4')+
-  geom_errorbar(aes(50, ymin=mean(na.omit(k_tablePb_Sg$k_100))-std(na.omit(k_tablePb_Sg$k_100)), ymax=mean(na.omit(k_tablePb_Sg$k_100))+std(na.omit(k_tablePb_Sg$k_100))), color='green4')+
-  geom_point(aes(50, mean(na.omit(k_tablePb_Mg$k_100))), color='blue')+
-  geom_errorbar(aes(50, ymin=mean(na.omit(k_tablePb_Mg$k_100))-std(na.omit(k_tablePb_Mg$k_100)), ymax=mean(na.omit(k_tablePb_Mg$k_100))+std(na.omit(k_tablePb_Mg$k_100))), color='blue')+
-  geom_point(aes(50, mean(na.omit(k_tablePb_Sm$k_100))), color='orange')+
-  geom_errorbar(aes(50, ymin=mean(na.omit(k_tablePb_Sm$k_100))-std(na.omit(k_tablePb_Sm$k_100)), ymax=mean(na.omit(k_tablePb_Sm$k_100))+std(na.omit(k_tablePb_Sm$k_100))), color='orange')+
-  
-  geom_point(aes(125, mean(na.omit(k_tablePb_Sg$k_150))), color='green4')+
-  geom_errorbar(aes(125, ymin=mean(na.omit(k_tablePb_Sg$k_150))-std(na.omit(k_tablePb_Sg$k_150)), ymax=mean(na.omit(k_tablePb_Sg$k_150))+std(na.omit(k_tablePb_Sg$k_150))), color='green4')+
-  geom_point(aes(125, mean(na.omit(k_tablePb_Mg$k_150))), color='blue')+
-  geom_errorbar(aes(125, ymin=mean(na.omit(k_tablePb_Mg$k_150))-std(na.omit(k_tablePb_Mg$k_150)), ymax=mean(na.omit(k_tablePb_Mg$k_150))+std(na.omit(k_tablePb_Mg$k_150))), color='blue')+  
-  geom_point(aes(125, mean(na.omit(k_tablePb_Sm$k_150))), color='orange')+
-  geom_errorbar(aes(125, ymin=mean(na.omit(k_tablePb_Sm$k_150))-std(na.omit(k_tablePb_Sm$k_150)), ymax=mean(na.omit(k_tablePb_Sm$k_150))+std(na.omit(k_tablePb_Sm$k_150))), color='orange')+  
-  
-  geom_point(aes(175, mean(na.omit(k_tablePb_Sg$k_300))), color='green4')+
-  geom_errorbar(aes(175, ymin=mean(na.omit(k_tablePb_Sg$k_300))-std(na.omit(k_tablePb_Sg$k_300)), ymax=mean(na.omit(k_tablePb_Sg$k_300))+std(na.omit(k_tablePb_Sg$k_300))), color='green4')+
-  geom_point(aes(175, mean(na.omit(k_tablePb_Mg$k_300))), color='blue')+
-  geom_errorbar(aes(175, ymin=mean(na.omit(k_tablePb_Mg$k_300))-std(na.omit(k_tablePb_Mg$k_300)), ymax=mean(na.omit(k_tablePb_Mg$k_300))+std(na.omit(k_tablePb_Mg$k_300))), color='blue')+
-  geom_point(aes(175, mean(na.omit(k_tablePb_Sm$k_300))), color='orange')+
-  geom_errorbar(aes(175, ymin=mean(na.omit(k_tablePb_Sm$k_300))-std(na.omit(k_tablePb_Sm$k_300)), ymax=mean(na.omit(k_tablePb_Sm$k_300))+std(na.omit(k_tablePb_Sm$k_300))), color='orange')+
-  
-  geom_point(aes(400, mean(na.omit(k_tablePb_Sg$k_500))), color='green4')+
-  geom_errorbar(aes(400, ymin=mean(na.omit(k_tablePb_Sg$k_500))-std(na.omit(k_tablePb_Sg$k_500)), ymax=mean(na.omit(k_tablePb_Sg$k_500))+std(na.omit(k_tablePb_Sg$k_500))), color='green4')+
-  geom_point(aes(400, mean(na.omit(k_tablePb_Mg$k_500))), color='blue')+
-  geom_errorbar(aes(400, ymin=mean(na.omit(k_tablePb_Mg$k_500))-std(na.omit(k_tablePb_Mg$k_500)), ymax=mean(na.omit(k_tablePb_Mg$k_500))+std(na.omit(k_tablePb_Mg$k_500))), color='blue')+
-  geom_point(aes(400, mean(na.omit(k_tablePb_Sm$k_500))), color='orange')+
-  geom_errorbar(aes(400, ymin=mean(na.omit(k_tablePb_Sm$k_500))-std(na.omit(k_tablePb_Sm$k_500)), ymax=mean(na.omit(k_tablePb_Sm$k_500))+std(na.omit(k_tablePb_Sm$k_500))), color='orange')+
-  
-  geom_point(aes(750, mean(na.omit(k_tablePb_Sg$k_1000))), color='green4')+
-  geom_errorbar(aes(750, ymin=mean(na.omit(k_tablePb_Sg$k_1000))-std(na.omit(k_tablePb_Sg$k_1000)), ymax=mean(na.omit(k_tablePb_Sg$k_1000))+std(na.omit(k_tablePb_Sg$k_1000))), color='green4')+
-  geom_point(aes(750, mean(na.omit(k_tablePb_Mg$k_1000))), color='blue')+
-  geom_errorbar(aes(750, ymin=mean(na.omit(k_tablePb_Mg$k_1000))-std(na.omit(k_tablePb_Mg$k_1000)), ymax=mean(na.omit(k_tablePb_Mg$k_1000))+std(na.omit(k_tablePb_Mg$k_1000))), color='blue')+
-  geom_point(aes(750, mean(na.omit(k_tablePb_Sm$k_1000))), color='orange')+
-  geom_errorbar(aes(750, ymin=mean(na.omit(k_tablePb_Sm$k_1000))-std(na.omit(k_tablePb_Sm$k_1000)), ymax=mean(na.omit(k_tablePb_Sm$k_1000))+std(na.omit(k_tablePb_Sm$k_1000))), color='orange')+
-  
-  geom_point(aes(1250, mean(na.omit(k_tablePb_Sg$k_1500))), color='green4')+
-  geom_errorbar(aes(1250, ymin=mean(na.omit(k_tablePb_Sg$k_1500))-std(na.omit(k_tablePb_Sg$k_1500)), ymax=mean(na.omit(k_tablePb_Sg$k_1500))+std(na.omit(k_tablePb_Sg$k_1500))), color='green4')+
-  geom_point(aes(1250, mean(na.omit(k_tablePb_Mg$k_1500))), color='blue')+
-  geom_errorbar(aes(1250, ymin=mean(na.omit(k_tablePb_Mg$k_1500))-std(na.omit(k_tablePb_Mg$k_1500)), ymax=mean(na.omit(k_tablePb_Mg$k_1500))+std(na.omit(k_tablePb_Mg$k_1500))), color='blue')+
-  geom_point(aes(1250, mean(na.omit(k_tablePb_Sm$k_1500))), color='orange')+
-  geom_errorbar(aes(1250, ymin=mean(na.omit(k_tablePb_Sm$k_1500))-std(na.omit(k_tablePb_Sm$k_1500)), ymax=mean(na.omit(k_tablePb_Sm$k_1500))+std(na.omit(k_tablePb_Sm$k_1500))), color='orange')+
-  
-  geom_point(aes(1750, mean(na.omit(k_tablePb_Sg$k_2000))), color='green4')+
-  geom_errorbar(aes(1750, ymin=mean(na.omit(k_tablePb_Sg$k_2000))-std(na.omit(k_tablePb_Sg$k_2000)), ymax=mean(na.omit(k_tablePb_Sg$k_2000))+std(na.omit(k_tablePb_Sg$k_2000))), color='green4')+
-  geom_point(aes(1750, mean(na.omit(k_tablePb_Mg$k_2000))), color='blue')+
-  geom_errorbar(aes(1750, ymin=mean(na.omit(k_tablePb_Mg$k_2000))-std(na.omit(k_tablePb_Mg$k_2000)), ymax=mean(na.omit(k_tablePb_Mg$k_2000))+std(na.omit(k_tablePb_Mg$k_2000))), color='blue')+
-  geom_point(aes(1750, mean(na.omit(k_tablePb_Sm$k_2000))), color='orange')+
-  geom_errorbar(aes(1750, ymin=mean(na.omit(k_tablePb_Sm$k_2000))-std(na.omit(k_tablePb_Sm$k_2000)), ymax=mean(na.omit(k_tablePb_Sm$k_2000))+std(na.omit(k_tablePb_Sm$k_2000))), color='orange')+
-  
-  geom_point(data= k_revS,mapping = aes(k_revS$Max_Age, k_revS$k), color='green', shape= 17)+
-  geom_point(data= k_revM,mapping = aes(k_revM$Max_Age, k_revM$k), color='orange4', shape= 17)+
-  
-  geom_line(data= fitSg, mapping = aes(timeframe, predict), color='green4')+
-  geom_line(data= fitTm, mapping = aes(timeframe, predict), color='orange')+
-  geom_line(data= fitMg, mapping = aes(timeframe, predict), color='blue')+
-  
-  xlim(0,4000)+
-  
-    annotate("text", x=1500, y=0.025, color= "blue",  size = 5, label= expression(y == 0.027 * e ** (-0.004 * 
-                                                                                             x)))+
-    annotate("text", x=1500, y=0.02, color= "green4",size = 5,label= expression(y == 0.024 * e ** (-0.002 * 
-                                                                              x)))+
-  annotate("text", x=1500, y=0.015, color= "orange",size = 5,label= expression(y == 0.021 * e ** (-0.003 * 
-                                                                          x)))
-  
-
-ggsave(
-  plot = fit_figPb,
-  path = Folder,
-  filename = "fit_plot.jpg",
-  units = "cm",
-  width = 12,
-  height = 7
-)
-
-
-
-# # results distribution (Fig 4) --------------------------------------------------
-
-
-#get coordinates from B dataframe
-
-WM <- map_data("world")
-
-mapa<-k_tablePb[rowSums(is.na(k_tablePb)) != ncol(k_tablePb)-2,]
-
-CoordR<-subset(B, B$Core %in% mapa$ID==TRUE)
-CoordR$Lat<-as.numeric(CoordR$Lat)
-CoordR$Long<-as.numeric(CoordR$Long)
-
-CoordR %>%
-  ggplot() + ggtitle("Estimated k distribution") + xlab("Longitude") + ylab("Latitude") +
-  geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
-  #geom_point(aes(x = Long, y = Lat))+
-  geom_point(aes(x = Long, y = Lat,  fill = Ecosystem),
-             pch = 21,
-             size = 1.8) +
-  coord_sf(xlim = c(-140, 150), ylim = c(-40, 75)) +
-  scale_fill_manual(values = c( "blue", "green","orange")) +
-  theme(plot.title = element_text(hjust = 0.5))
-
-
-ggsave(path = Folder,
-       filename =  "Estimated k all map.jpg",
-       units = "cm",
-       width = 20,
-       height = 10
-)
-
-
-
-# age and decay rates at 100 cm -----------------------------------------------------------
-
-
-extract_depth_by_age<- function (df, AGE = 100) {
-  
-  core <- df[1,"Core"]
-  c_length <- max(df[,"Max.Depth"])
-  age_depth <- df[which.min(abs(AGE-df$Max.Depth)),"FAge"]
-  
-  output <- data.frame(core = core, Length= c_length, age_depth = age_depth)
-  
-  return(output)
-  
-}
-
-x<-split(TPb, TPb$Core)
-
-core_100_age_l <- lapply(X = x,  extract_depth_by_age, AGE = 100) # return a list
-core_100_age <- as.data.frame(do.call(rbind, core_100_age_l)) # from list to dataframe
-
-core_100_age <- subset(core_100_age, core_100_age$Length > 90)
-
-mean(core_100_age$age_depth)
-std(core_100_age$age_depth)
-
-
-# from time to decay rate
-
-#seagrass
-0.024 * exp(-0.002 * 1953.206)
-
-0.024 * exp(-0.002 * 1504.5)
-0.024 * exp(-0.002 * 2401.9)
-
-#mangrove
-0.027 * exp(-0.004 * 1953.206)
-
-0.027 * exp(-0.004 * 1504.5)
-0.027 * exp(-0.004 * 2401.9)
-
-#tidal marshes
-0.021 * exp(-0.003 * 1953.206)
-
-0.021 * exp(-0.003 * 1504.5)
-0.021 * exp(-0.003 * 2401.9)

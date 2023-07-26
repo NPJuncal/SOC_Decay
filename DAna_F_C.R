@@ -394,7 +394,7 @@ max_depth<-OCModel(DataAM, nwpath="Decay2023_C/Max_Depth")
 #eliminate empty cores (no model): 
 #eliminate some cores after visual check, we eliminate: Sg_041, Sg_310, Sg_316, Sg_321, Sm_010, Sm_022, Sm_68, Sm_69, 
 #Sm_092, Sm_097, Sm_105
-max_depth <- max_depth[-c(14, 18, 37, 41, 43, 46, 47, 60, 61, 66, 68, 69), ]
+#max_depth <- max_depth[-c(14, 18, 37, 41, 43, 46, 47, 60, 61, 66, 68, 69), ]
 
 
 
@@ -455,22 +455,8 @@ DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")]
 
 fit_100C<-OCModel(DataAM, nwpath="Decay2023_C/100")
 
-#eliminate some cores after visual check, we eliminate: Sg_081, Sg_111, Sg_192, Sg_316, Sg_321, Sg_323, Sg_332, Sm_004, 
-#Sm_068, Sm_069, Sm_092, Sm_097, Sm_105
-fit_100C[c(10, 13, 21, 31, 33, 34, 35, 37, 49, 50, 55, 57, 58), "k"]<-NA
-
-
-ggplot(fit_100C, aes( Ecosystem, k))+
-  geom_boxplot()+
-  geom_jitter()
-
-ggplot(fit_100C, aes( Max.Age, k))+
-  geom_point()
-
-
-pairwise.wilcox.test(fit_100C$k, fit_100C$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-
+#eliminate some cores after visual check, we eliminate: Sg_104, Sg_111, Sg_241, Sg_316, Sg_317, Sg_321, Sg_323, Sg_497, Sm_004, 
+fit_100C[c(8, 10, 19, 29, 30, 31, 32, 37, 39), "k"]<-NA
 
 
 # model 100-150 years ---------------------------------------------------
@@ -519,19 +505,13 @@ DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")]
 fit_150C<-OCModel(DataAM, MA= 100, nwpath="Decay2023_C/150")
 
 
-#eliminate some cores after visual check, we eliminate: Mg_023, Sm_004
-fit_150C <- fit_150C[-c(6,40), ]
+#eliminate some cores after visual check, we eliminate: Sg_193, Sg_323, Sm_004
+fit_150C <- fit_150C[-c(22, 37, 47), ]
 
 #eliminate empty cores (no model)
 fit_150C<-fit_150C[!is.na(fit_150C$P),]
 
 
-ggplot(fit_150C, aes( Ecosystem, k))+
-  geom_boxplot()+
-  geom_jitter()
-
-pairwise.wilcox.test(fit_150C$k, fit_150C$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 # model 150-300 years ---------------------------------------------------
 
@@ -585,20 +565,14 @@ fit_300C<-OCModel(DataAM, MA= 150, nwpath="Decay2023_C/300")
 ggplot(fit_300C, aes(x = k)) +
   geom_histogram()
 
-#eliminate some cores after visual check, we eliminate: Sg_179, Sg_311, Sm_004
-fit_300C <- fit_300C[-c( 28, 37, 45), ]
+#eliminate some cores after visual check, we eliminate: Sg_250, Sg_476, Sg_485, Sg_495, Sg_497, Sm_004
+fit_300C <- fit_300C[-c( 34, 47, 54, 56, 58, 60), ]
 
 #eliminate empty cores (no model)
 fit_300C<-fit_300C[!is.na(fit_300C$P),]
 
 
-ggplot(fit_300C, aes( Ecosystem, k))+
-  geom_boxplot()+
-  geom_jitter()
 
-
-pairwise.wilcox.test(fit_300C$k, fit_300C$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 
 # model 300-500 years ---------------------------------------------------
@@ -647,19 +621,14 @@ DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")]
 fit_500C<-OCModel(DataAM, MA= 300, nwpath="Decay2023_C/500")
 
 
-#eliminate some cores after visual check, we eliminate: Sg_019, Sg_041, Sg_190, Sg_192, Sg_310, Sg_312, Sg_314, Sg_323, Sm_004
-fit_500C <- fit_500C[-c(12, 14, 29, 31, 37, 39, 40, 44, 46 ), ]
+#eliminate some cores after visual check, we eliminate: Sg_097, Sg_193, Sg_298, Sg_315, Sg_476, Sg_477, Sg_479, Sg_480, Sg_495, Sg_497, Sm_004
+fit_500C <- fit_500C[-c(14, 29, 36, 41, 46, 47, 49, 50, 58, 60, 62 ), ]
 
 #eliminate empty cores (no model)
-fit_50C0<-fit_500C[!is.na(fit_500C$P),]
+fit_500<-fit_500C[!is.na(fit_500C$P),]
 
 
-ggplot(fit_500C, aes( Ecosystem, k))+
-  geom_boxplot()+
-  geom_jitter()
 
-pairwise.wilcox.test(fit_500C$k, fit_500C$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 # model 500-1000 years ---------------------------------------------------
 
@@ -707,20 +676,13 @@ DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")]
 
 fit_1000C<-OCModel(DataAM, MA= 500, nwpath="Decay2023_C/1000")
 
-#eliminate some cores after visual check, we eliminate: Sg_019, Sg_041, Sg_111, Sg_117, Sg_195, Sg_312, Sg_314, Sm_004, Sm_010
-fit_1000C <- fit_1000C[-c( 12, 13, 19, 21, 32, 40, 41, 47, 48), ]
+#eliminate some cores after visual check, we eliminate: Sg_041, Sg_111, Sg_113, Sg_195, Sg_490, Sm_004, Sm_010
+fit_1000C <- fit_1000C[-c( 8, 17, 19, 30, 56, 64, 65), ]
 
 #eliminate empty cores (no model)
 fit_1000C<-fit_1000C[!is.na(fit_1000C$P),]
 
 
-ggplot(fit_1000C, aes( Ecosystem, k))+
-  geom_boxplot()+
-  geom_jitter()
-
-
-pairwise.wilcox.test(fit_1000C$k, fit_1000C$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 # model 1000-1500 years ---------------------------------------------------
 
@@ -774,19 +736,11 @@ fit_1500C<-OCModel(DataAM, MA= 1000, nwpath="Decay2023_C/1500")
 ggplot(fit_1500C, aes(x = k)) +
   geom_histogram()
 
-#eliminate some cores after visual check, we eliminate: 
-fit_1500C <- fit_1500C[-c(13, 17, 19, 20, 23, 25, 31, 39, 40, 46, 48 ), ]
+#eliminate some cores after visual check, we eliminate: Sg_041, Sg_097, Sg_121, Sg_195, Sg_490, Sm_004, Sm_022
+fit_1500C <- fit_1500C[-c(8, 15, 25, 30, 56, 65, 67), ]
 
 #eliminate empty cores (no model)
 fit_1500C<-fit_1500C[!is.na(fit_1500C$P),]
-
-
-ggplot(fit_1500C, aes( Ecosystem, k))+
-  geom_boxplot()+
-  geom_jitter()
-
-pairwise.wilcox.test(fit_1500C$k, fit_1500C$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 
 # model 1500-2000 years ---------------------------------------------------
@@ -841,20 +795,12 @@ fit_2000C<-OCModel(DataAM, MA= 1500, nwpath="Decay2023_C/2000")
 ggplot(fit_2000C, aes(x = k)) +
   geom_histogram()
 
-#eliminate some cores after visual check, we eliminate:
-fit_2000C <- fit_2000C[-c( 29), ]
+#eliminate some cores after visual check, we eliminate: Sg_041, Sg_191
+fit_2000C <- fit_2000C[-c( 8, 15), ]
 
 #eliminate empty cores (no model)
 fit_2000C<-fit_2000C[!is.na(fit_2000C$P),]
 
-
-ggplot(fit_2000C, aes( Ecosystem, k))+
-  geom_boxplot()+
-  geom_jitter()
-
-
-pairwise.wilcox.test(fit_2000C$k, fit_2000C$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 # model > 2000 years ---------------------------------------------------
 
@@ -907,17 +853,32 @@ fit_m2000C<-OCModel(DataAM, MA= 2000, nwpath="Decay2023_C/more_2000")
 ggplot(fit_m2000C, aes(x = k)) +
   geom_histogram()
 
-#eliminate some cores after visual check, we eliminate:
-fit_m2000C <- fit_m2000C[-c(18, 40), ]
+#eliminate some cores after visual check, we eliminate: Sg_041, Sg_097
+fit_m2000C <- fit_m2000C[-c(10, 17), ]
 
 #eliminate empty cores (no model)
 fit_m2000C<-fit_m2000C[!is.na(fit_m2000C$P),]
 
 
-ggplot(fit_m2000C, aes( Ecosystem, k))+
-  geom_boxplot()+
-  geom_jitter()
+# Final table and plots -------------------------------------------------------
 
+k_tableC <-merge(fit_100C[,c(1,4)], fit_150C[,c(1,4)], by = "ID", all = TRUE)
+k_tableC <-merge(k_tableC, fit_300C[,c(1,4)], by = "ID", all = TRUE)
+k_tableC <-merge(k_tableC, fit_500C[,c(1,4)], by = "ID", all = TRUE)
+k_tableC <-merge(k_tableC, fit_1000C[,c(1,4)], by = "ID", all = TRUE)
+k_tableC <-merge(k_tableC, fit_1500C[,c(1,4)], by = "ID", all = TRUE)
+k_tableC <-merge(k_tableC, fit_2000C[,c(1,4)], by = "ID", all = TRUE)
+k_tableC <-merge(k_tableC, fit_m2000C[,c(1,4, 5)], by = "ID", all = TRUE)
+
+colnames(k_tableC)<-c("ID", "k_100", "k_150", "k_300", "k_500", "k_1000","k_1500", "k_2000", "k_m2000", "Max_Age")
+k_tableC$k_100<-as.numeric(k_tableC$k_100)
+k_tableC$k_300<-as.numeric(k_tableC$k_300)
+
+names(SingleCore)[names(SingleCore) == 'Core'] <- 'ID'
+
+k_tableC<-merge(k_tableC, SingleCore[,c(1, 3, 7, 6, 8, 11, 12)], by = 'ID', all.x=T, all.y=F)
+k_tableC<-merge(k_tableC, SAR[,c(1,5)], by = 'ID', all.x=T, all.y=F)
+k_tableC<-merge(k_tableC, CM[,c(1,9,11)], by = 'ID', all.x=T, all.y=F)
 
 
 
