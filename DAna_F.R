@@ -351,8 +351,13 @@ ggplot(CM, aes(DT2$C_Gr, CM$Av_C_25)) +
 pairwise.wilcox.test(CM$Av_C_25, DT2$C_Gr,
                      p.adjust.method = "BH") # are significantly different (p < 0.05)
 
+
+
 DT2<-cbind(CM, DT2)
 DT2<-DT2[,c(1:20, 25)]
+DT2 <-merge(DT2, SAR[,c(1,3:6)], by = "ID", all = TRUE)
+
+
 
 #Seagrass meadows
     DT2Sg<-subset(DT2, Ecosystem=="Seagrass")
@@ -361,6 +366,12 @@ DT2<-DT2[,c(1:20, 25)]
     SC<-ggplot(DT2Sg, aes(C_Gr, Av_C_25)) + ggtitle("Seagrass")+
         geom_boxplot()+
         geom_jitter(color="green4")+
+        ylim(-5,50)+
+        annotate("text",
+                 x = 1:length(table(DT2Sg$C_Gr)),
+                 y = -5,
+                 label = table(subset(DT2Sg, !is.na(Av_C_25))[,"C_Gr"]),
+                 col = "black")+
         theme(plot.title = element_text(hjust = 0.5),
               axis.title.x = element_blank(), 
               axis.title.y = element_blank())
@@ -372,6 +383,12 @@ DT2<-DT2[,c(1:20, 25)]
       SM<-ggplot(DT2Sg, aes(C_Gr, Av_Mud_25)) + 
         geom_boxplot()+
         geom_jitter(color="green4")+
+        ylim(-10,110)+
+        annotate("text",
+                 x = 1:length(table(DT2Sg$C_Gr)),
+                 y = -7,
+                 label = table(subset(DT2Sg, !is.na(Av_Mud_25))[,"C_Gr"]),
+                 col = "black")+
         theme(axis.title.x = element_blank(), 
               axis.title.y = element_blank())
         
@@ -379,15 +396,56 @@ DT2<-DT2[,c(1:20, 25)]
       pairwise.wilcox.test(DT2Sg$Av_Mud_25, DT2Sg$C_Gr,
                            p.adjust.method = "BH") # are significantly different (p < 0.05)  
       
-     
+     #SAR
       
+      SS<-ggplot(DT2Sg, aes(C_Gr, SAR)) + 
+        geom_boxplot()+
+        geom_jitter(color="green4")+
+        ylim(-0.15,1.1)+
+        annotate("text",
+                 x = 1:length(table(DT2Sg$C_Gr)),
+                 y = -0.1,
+                 label = table(subset(DT2Sg, !is.na(SAR))[,"C_Gr"]),
+                 col = "black")+
+        theme(axis.title.x = element_blank(), 
+              axis.title.y = element_blank())
+      
+      
+      pairwise.wilcox.test(DT2Sg$SAR, DT2Sg$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05)  
+      
+      #d13C
+      
+      d13S<-ggplot(DT2Sg, aes(C_Gr, Av_13C_25)) + 
+        geom_boxplot()+
+        geom_jitter(color="green4")+
+        ylim(-30,-5)+
+        annotate("text",
+                 x = 1:length(table(DT2Sg$C_Gr)),
+                 y = -30,
+                 label = table(subset(DT2Sg, !is.na(Av_13C_25))[,"C_Gr"]),
+                 col = "black")+
+        theme(axis.title.x = element_blank(), 
+              axis.title.y = element_blank())
+      
+      
+      pairwise.wilcox.test(DT2Sg$Av_13C_25, DT2Sg$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05)  
       
        
-#Tidal marshes      
+#Tidal marshes  
+      DT2Sm<-subset(DT2, Ecosystem=="Tidal Marsh")
+      
       #organic carbon  
       TMC<-ggplot(DT2Sm, aes(C_Gr, Av_C_25)) + ggtitle("Tidal Marsh")+
         geom_boxplot()+
         geom_jitter(color="orange")+
+        ylim(-5,50)+
+        annotate("text",
+                 x = 1:length(table(DT2Sm$C_Gr)),
+                 y = -5,
+                 label = table(subset(DT2Sm, !is.na(Av_C_25))[,"C_Gr"]),
+                 col = "black")+
         theme(plot.title = element_text(hjust = 0.5),
               axis.title.x = element_blank(), 
               axis.title.y = element_blank())
@@ -398,11 +456,52 @@ DT2<-DT2[,c(1:20, 25)]
       TMM<-ggplot(DT2Sm, aes(C_Gr, Av_Mud_25)) +
         geom_boxplot()+
         geom_jitter(color="orange")+
+        ylim(-10,110)+
+        annotate("text",
+                 x = 1:length(table(DT2Sm$C_Gr)),
+                 y = -7,
+                 label = table(subset(DT2Sm, !is.na(Av_Mud_25))[,"C_Gr"]),
+                 col = "black")+
         theme(axis.title.x = element_blank(), 
               axis.title.y = element_blank())
       
       pairwise.wilcox.test(DT2Sm$Av_Mud_25, DT2Sm$C_Gr,
                            p.adjust.method = "BH") # are significantly different (p < 0.05)  
+      
+      #SAR 
+      TMS<-ggplot(DT2Sm, aes(C_Gr, SAR)) +
+        geom_boxplot()+
+        geom_jitter(color="orange")+
+        ylim(-0.15,1.1)+
+        annotate("text",
+                 x = 1:length(table(DT2Sm$C_Gr)),
+                 y = -0.1,
+                 label = table(subset(DT2Sm, !is.na(SAR))[,"C_Gr"]),
+                 col = "black")+
+        theme(axis.title.x = element_blank(), 
+              axis.title.y = element_blank())
+      
+      pairwise.wilcox.test(DT2Sm$SAR, DT2Sm$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05) 
+      
+      #d13C
+      
+      d13T<-ggplot(DT2Sm, aes(C_Gr, Av_13C_25)) + 
+        geom_boxplot()+
+        geom_jitter(color="orange")+
+        ylim(-30,-5)+
+        annotate("text",
+                 x = 1:length(table(DT2Sm$C_Gr)),
+                 y = -30,
+                 label = table(subset(DT2Sm, !is.na(Av_13C_25))[,"C_Gr"]),
+                 col = "black")+
+        theme(axis.title.x = element_blank(), 
+              axis.title.y = element_blank())
+      
+      
+      pairwise.wilcox.test(DT2Sm$Av_13C_25, DT2Sm$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05)
+      
       
 #Mangroves        
     DT2Mg<-subset(DT2, Ecosystem=="Mangrove")
@@ -410,6 +509,12 @@ DT2<-DT2[,c(1:20, 25)]
     MGC<-ggplot(DT2Mg, aes(C_Gr, Av_C_25)) + ylab("OC% (Top 25cm)") + ggtitle("Mangrove")+
       geom_boxplot()+
       geom_jitter(color="blue")+
+      ylim(-5,50)+
+      annotate("text",
+               x = 1:length(table(DT2Mg$C_Gr)),
+               y = -5,
+               label = table(subset(DT2Mg, !is.na(Av_C_25))[,"C_Gr"]),
+               col = "black")+
       theme(plot.title = element_text(hjust = 0.5),
             axis.title.x = element_blank())
     
@@ -419,21 +524,61 @@ DT2<-DT2[,c(1:20, 25)]
     TGM<-ggplot(DT2Mg, aes(C_Gr, Av_Mud_25)) + ylab("Mud% (Top 25cm)") +
       geom_boxplot()+
       geom_jitter(color="blue")+
+      ylim(-10,110)+
+      annotate("text",
+               x = 1:length(table(DT2Mg$C_Gr)),
+               y = -7,
+               label = table(subset(DT2Mg, !is.na(Av_Mud_25))[,"C_Gr"]),
+               col = "black")+
       theme(axis.title.x = element_blank())
     
     pairwise.wilcox.test(DT2Mg$Av_Mud_25, DT2Mg$C_Gr,
                          p.adjust.method = "BH") # are significantly different (p < 0.05) 
+    
+    #SAR 
+    TGS<-ggplot(DT2Mg, aes(C_Gr, SAR)) + ylab("Sediment acc. rate (cm)") +
+      geom_boxplot()+
+      geom_jitter(color="blue")+
+      ylim(-0.15,1.1)+
+      annotate("text",
+               x = 1:length(table(DT2Mg$C_Gr)),
+               y = -0.1,
+               label = table(subset(DT2Mg, !is.na(SAR))[,"C_Gr"]),
+               col = "black")+
+      theme(axis.title.x = element_blank())
+    
+    pairwise.wilcox.test(DT2Mg$SAR, DT2Mg$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05) 
 
+    #d13C
+    
+    d13M<-ggplot(DT2Mg, aes(C_Gr, Av_13C_25)) + ylab("Average d13C") +
+      geom_boxplot()+
+      geom_jitter(color="blue")+
+      #ylim(-0.15,1.1)+
+      #annotate("text",
+       #        x = 1:length(table(DT2Mg$C_Gr)),
+        #       y = -0.1,
+         #      label = table(subset(DT2Mg, !is.na(Av_13C_25))[,"C_Gr"]),
+          #     col = "black")+
+    theme(axis.title.x = element_blank())
+    
+    
+    #pairwise.wilcox.test(DT2Mg$Av_13C_25, DT2Mg$C_Gr,
+     #                    p.adjust.method = "BH") # are significantly different (p < 0.05)
 
     
-todos_CM<-grid.arrange(MGC, SC, TMC, TGM, SM, TMM, ncol=3)
+todos_CM<-ggpubr::ggarrange(MGC, SC, TMC, TGM, SM, TMM, TGS, SS, TMS,d13M, d13S, d13T,
+                  labels = c("A","B", "C","D" , "E","F", "G","H", "I", "J", "K", "L"),
+                  ncol=3, nrow= 4)
+
     
 ggsave( plot = todos_CM,
       path = Folder,
        filename =  "C_Mud_Gr.jpg",
        units = "cm",
        width = 20,
-       height = 10
+       height = 25
 )    
 
 
