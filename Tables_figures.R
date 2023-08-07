@@ -1,3 +1,292 @@
+##### Av Corg and trends
+
+ggplot(CM, aes(DT$C_Gr, CM$Av_C)) +
+  geom_boxplot() +
+  geom_jitter()
+
+names(SingleCore)[names(SingleCore) == 'Core'] <- 'ID'
+DT<-merge(DT, SingleCore[,c(1, 3, 7, 6, 8, 11, 12)], by = 'ID', all.x=T, all.y=F)
+
+library(janitor)
+counts<-tabyl(DT, Specie, C_Gr)
+counts<-counts %>% mutate(percent = counts[,2]*100/((counts[,2])+(counts[,3])+(counts[,4])))
+
+counts[c(2,8,13,14,15,18:22),6]<-"Persistent"
+counts[c(4:7, 17, 23:25),6]<-"Opportunistic"
+counts[c(9:12, 16),6]<-"Colonising"
+
+ggplot(counts,aes(V6, percent))+
+  geom_boxplot()+
+  geom_jitter()
+
+
+counts<-tabyl(DT, Life.form, C_Gr)
+counts<-counts %>% mutate(percent = counts[,2]*100/((counts[,2])+(counts[,3])+(counts[,4])))
+
+#geom_dotplot(binaxis='y', stackdir='center', dotsize=0.5)
+
+shapiro.test(CM$Av_C_25) #(>0.05 normal, <0.05 no normal)
+
+## Student's t-test  if normally distributed, wilcox if not
+
+
+DT2<-DT
+DT2$C_Gr <- recode(DT2$C_Gr, DEC = 'DEC',
+                   INC  = 'N',
+                   NT = 'N')
+
+ggplot(CM, aes(DT2$C_Gr, CM$Av_C_25)) +
+  geom_boxplot()+
+  geom_jitter()
+
+pairwise.wilcox.test(CM$Av_C_25, DT2$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+
+
+DT2<-cbind(CM, DT2)
+DT2<-DT2[,c(1:20, 25)]
+DT2 <-merge(DT2, SAR[,c(1,3:6)], by = "ID", all = TRUE)
+
+cor.test(DT2$Av_Mud_25, DT2$Av_13C_25)
+plot(DT2$Av_Mud_25, DT2$Av_13C_25)
+
+
+#### Figure 1 ####
+
+      #Seagrass meadows
+      DT2Sg<-subset(DT2, Ecosystem=="Seagrass")
+      
+      
+      cor.test(DT2Sg$Av_C_25, DT2Sg$Av_13C_25, method="spearman")
+      plot(DT2Sg$Av_C_25, DT2Sg$Av_13C_25)
+      
+      #organic carbon  
+      
+      SC<-ggplot(DT2Sg, aes(C_Gr, Av_C_25)) + ggtitle("Seagrass")+
+        geom_boxplot()+
+        geom_jitter(color="green4")+
+        ylim(-5,50)+
+        annotate("text",
+                 x = 1:length(table(DT2Sg$C_Gr)),
+                 y = -5,
+                 label = table(subset(DT2Sg, !is.na(Av_C_25))[,"C_Gr"]),
+                 col = "black")+
+        theme(plot.title = element_text(hjust = 0.5),
+              axis.title.x = element_blank(), 
+              axis.title.y = element_blank())
+      
+      
+      pairwise.wilcox.test(DT2Sg$Av_C_25, DT2Sg$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05)
+      #mud  
+      SM<-ggplot(DT2Sg, aes(C_Gr, Av_Mud_25)) + 
+        geom_boxplot()+
+        geom_jitter(color="green4")+
+        ylim(-10,110)+
+        annotate("text",
+                 x = 1:length(table(DT2Sg$C_Gr)),
+                 y = -7,
+                 label = table(subset(DT2Sg, !is.na(Av_Mud_25))[,"C_Gr"]),
+                 col = "black")+
+        theme(axis.title.x = element_blank(), 
+              axis.title.y = element_blank())
+      
+      
+      pairwise.wilcox.test(DT2Sg$Av_Mud_25, DT2Sg$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05)  
+      
+      #SAR
+      
+      SS<-ggplot(DT2Sg, aes(C_Gr, SAR)) + 
+        geom_boxplot()+
+        geom_jitter(color="green4")+
+        ylim(-0.15,1.1)+
+        annotate("text",
+                 x = 1:length(table(DT2Sg$C_Gr)),
+                 y = -0.1,
+                 label = table(subset(DT2Sg, !is.na(SAR))[,"C_Gr"]),
+                 col = "black")+
+        theme(axis.title.x = element_blank(), 
+              axis.title.y = element_blank())
+      
+      
+      pairwise.wilcox.test(DT2Sg$SAR, DT2Sg$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05)  
+      
+      #d13C
+      
+      d13S<-ggplot(DT2Sg, aes(C_Gr, Av_13C_25)) + 
+        geom_boxplot()+
+        geom_jitter(color="green4")+
+        ylim(-30,-5)+
+        annotate("text",
+                 x = 1:length(table(DT2Sg$C_Gr)),
+                 y = -30,
+                 label = table(subset(DT2Sg, !is.na(Av_13C_25))[,"C_Gr"]),
+                 col = "black")+
+        theme(axis.title.x = element_blank(), 
+              axis.title.y = element_blank())
+      
+      
+      pairwise.wilcox.test(DT2Sg$Av_13C_25, DT2Sg$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05)  
+      
+      
+      #Tidal marshes  
+      DT2Sm<-subset(DT2, Ecosystem=="Tidal Marsh")
+      
+      #organic carbon  
+      TMC<-ggplot(DT2Sm, aes(C_Gr, Av_C_25)) + ggtitle("Tidal Marsh")+
+        geom_boxplot()+
+        geom_jitter(color="orange")+
+        ylim(-5,50)+
+        annotate("text",
+                 x = 1:length(table(DT2Sm$C_Gr)),
+                 y = -5,
+                 label = table(subset(DT2Sm, !is.na(Av_C_25))[,"C_Gr"]),
+                 col = "black")+
+        theme(plot.title = element_text(hjust = 0.5),
+              axis.title.x = element_blank(), 
+              axis.title.y = element_blank())
+      
+      pairwise.wilcox.test(DT2Sm$Av_C_25, DT2Sm$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05)
+      #mud  
+      TMM<-ggplot(DT2Sm, aes(C_Gr, Av_Mud_25)) +
+        geom_boxplot()+
+        geom_jitter(color="orange")+
+        ylim(-10,110)+
+        annotate("text",
+                 x = 1:length(table(DT2Sm$C_Gr)),
+                 y = -7,
+                 label = table(subset(DT2Sm, !is.na(Av_Mud_25))[,"C_Gr"]),
+                 col = "black")+
+        theme(axis.title.x = element_blank(), 
+              axis.title.y = element_blank())
+      
+      pairwise.wilcox.test(DT2Sm$Av_Mud_25, DT2Sm$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05)  
+      
+      #SAR 
+      TMS<-ggplot(DT2Sm, aes(C_Gr, SAR)) +
+        geom_boxplot()+
+        geom_jitter(color="orange")+
+        ylim(-0.15,1.1)+
+        annotate("text",
+                 x = 1:length(table(DT2Sm$C_Gr)),
+                 y = -0.1,
+                 label = table(subset(DT2Sm, !is.na(SAR))[,"C_Gr"]),
+                 col = "black")+
+        theme(axis.title.x = element_blank(), 
+              axis.title.y = element_blank())
+      
+      pairwise.wilcox.test(DT2Sm$SAR, DT2Sm$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05) 
+      
+      #d13C
+      
+      d13T<-ggplot(DT2Sm, aes(C_Gr, Av_13C_25)) + 
+        geom_boxplot()+
+        geom_jitter(color="orange")+
+        ylim(-30,-5)+
+        annotate("text",
+                 x = 1:length(table(DT2Sm$C_Gr)),
+                 y = -30,
+                 label = table(subset(DT2Sm, !is.na(Av_13C_25))[,"C_Gr"]),
+                 col = "black")+
+        theme(axis.title.x = element_blank(), 
+              axis.title.y = element_blank())
+      
+      
+      pairwise.wilcox.test(DT2Sm$Av_13C_25, DT2Sm$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05)
+      
+      
+      #Mangroves        
+      DT2Mg<-subset(DT2, Ecosystem=="Mangrove")
+      #organic carbon  
+      MGC<-ggplot(DT2Mg, aes(C_Gr, Av_C_25)) + ylab("OC% (Top 25cm)") + ggtitle("Mangrove")+
+        geom_boxplot()+
+        geom_jitter(color="blue")+
+        ylim(-5,50)+
+        annotate("text",
+                 x = 1:length(table(DT2Mg$C_Gr)),
+                 y = -5,
+                 label = table(subset(DT2Mg, !is.na(Av_C_25))[,"C_Gr"]),
+                 col = "black")+
+        theme(plot.title = element_text(hjust = 0.5),
+              axis.title.x = element_blank())
+      
+      pairwise.wilcox.test(DT2Mg$Av_C_25, DT2Mg$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05)
+      #mud  
+      TGM<-ggplot(DT2Mg, aes(C_Gr, Av_Mud_25)) + ylab("Mud% (Top 25cm)") +
+        geom_boxplot()+
+        geom_jitter(color="blue")+
+        ylim(-10,110)+
+        annotate("text",
+                 x = 1:length(table(DT2Mg$C_Gr)),
+                 y = -7,
+                 label = table(subset(DT2Mg, !is.na(Av_Mud_25))[,"C_Gr"]),
+                 col = "black")+
+        theme(axis.title.x = element_blank())
+      
+      pairwise.wilcox.test(DT2Mg$Av_Mud_25, DT2Mg$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05) 
+      
+      #SAR 
+      TGS<-ggplot(DT2Mg, aes(C_Gr, SAR)) + ylab("Sediment acc. rate (cm)") +
+        geom_boxplot()+
+        geom_jitter(color="blue")+
+        ylim(-0.15,1.1)+
+        annotate("text",
+                 x = 1:length(table(DT2Mg$C_Gr)),
+                 y = -0.1,
+                 label = table(subset(DT2Mg, !is.na(SAR))[,"C_Gr"]),
+                 col = "black")+
+        theme(axis.title.x = element_blank())
+      
+      pairwise.wilcox.test(DT2Mg$SAR, DT2Mg$C_Gr,
+                           p.adjust.method = "BH") # are significantly different (p < 0.05) 
+      
+      #d13C
+      
+      d13M<-ggplot(DT2Mg, aes(C_Gr, Av_13C_25)) + ylab("Average d13C") +
+        geom_boxplot()+
+        geom_jitter(color="blue")+
+        #ylim(-0.15,1.1)+
+        #annotate("text",
+        #        x = 1:length(table(DT2Mg$C_Gr)),
+        #       y = -0.1,
+        #      label = table(subset(DT2Mg, !is.na(Av_13C_25))[,"C_Gr"]),
+        #     col = "black")+
+        theme(axis.title.x = element_blank())
+      
+      
+      #pairwise.wilcox.test(DT2Mg$Av_13C_25, DT2Mg$C_Gr,
+      #                    p.adjust.method = "BH") # are significantly different (p < 0.05)
+      
+      
+      todos_CM<-ggpubr::ggarrange(MGC, SC, TMC, TGM, SM, TMM, TGS, SS, TMS,d13M, d13S, d13T,
+                                  labels = c("A","B", "C","D" , "E","F", "G","H", "I", "J", "K", "L"),
+                                  ncol=3, nrow= 4)
+      
+      
+      ggsave( plot = todos_CM,
+              path = Folder,
+              filename =  "C_Mud_Gr.jpg",
+              units = "cm",
+              width = 20,
+              height = 25
+      )    
+
+
+
+
+
+#### Table 1 ####
+
 #comparisong among methods and final tables and figures
 
 k_tablePb$G<-"Pb"
@@ -131,10 +420,10 @@ ggplot(transform(mtable_k,
         axis.text.x=element_blank(),)
 
 
-mtable_k2<-subset(mtable_k, mtable_k$variable == "80-100 yr" | mtable_k$variable == "500-1000 yr")
+mtable_k2<-subset(mtable_k, mtable_k$variable == "100-150 yr" | mtable_k$variable == "500-1000 yr")
 
-box_100_1000<-  ggplot(transform(mtable_k2,
-                                 variable=factor(variable,levels=c('80-100 yr',"500-1000 yr"))),
+box_150_1000<-  ggplot(transform(mtable_k2,
+                                 variable=factor(variable,levels=c('100-150 yr',"500-1000 yr"))),
                        aes(Ecosystem, value))+ ggtitle("Decay rates by ecosystem and time frame")+ ylab("Decay rate (yr-1)") +
   geom_boxplot()+
   geom_jitter(aes(color=Ecosystem))+
@@ -150,9 +439,9 @@ box_100_1000<-  ggplot(transform(mtable_k2,
 
 
 ggsave(
-  plot = box_100_1000,
+  plot = box_150_1000,
   path = Folder,
-  filename = "box_100_1000.jpg",
+  filename = "box_150_1000.jpg",
   units = "cm",
   width = 12,
   height = 7
@@ -347,30 +636,36 @@ ggsave(
 
 
 
-# correlation decay rate, Mud and d13C ------------------------------------
+# correlation decay rate, OC, Mud and d13C ------------------------------------
 
-# first we estimate the average mud content for the studied time frame
+# first we estimate the average OC, mud, d13C and SAR content for the studied time frame
 # we use the max age of each core
 
 x<-split(TPb, TPb$Core)
 
-Sum100_a<-fit_100Pb
-Sum100_a$Mud<-"NA"
-Sum100_a$d13C<-"NA"
-Sum100_a$SAR<-"NA"
+Sum150_a<-fit_150Pb
+Sum150_a$OC<-"NA"
+Sum150_a$Mud<-"NA"
+Sum150_a$d13C<-"NA"
+Sum150_a$SAR<-"NA"
 
-for (i in 1:nrow(Sum100_a)) {
+for (i in 1:nrow(Sum150_a)) {
   
-  data<-as.data.frame(x[Sum100_a[i,"ID"]])
+  data<-as.data.frame(x[Sum150_a[i,"ID"]])
   colnames(data)<-colnames(TPb)
-  data_a<-subset(data, data$FAge<=Sum100_a[i, "Max.Age"])
-  Sum100_a[i, "Mud"]<-mean(data_a$Mud, na.rm=TRUE)
-  Sum100_a[i, "d13C"]<-mean(data_a$d13C, na.rm=TRUE)
-  Sum100_a[i, "SAR"]<-max(data_a$Max.Depth)/max(data_a$FAge)}
+  data_a<-subset(data, data$FAge<=Sum150_a[i, "Max.Age"])
+  Sum150_a[i, "OC"]<-mean(data_a$Corg, na.rm=TRUE)
+  Sum150_a[i, "Mud"]<-mean(data_a$Mud, na.rm=TRUE)
+  Sum150_a[i, "d13C"]<-mean(data_a$d13C, na.rm=TRUE)
+  Sum150_a[i, "SAR"]<-max(data_a$Max.Depth)/max(data_a$FAge)}
 
-Sum100_a$Mud<-as.numeric(Sum100_a$Mud)
+Sum150_a$Mud<-as.numeric(Sum150_a$Mud)
+Sum150_a$OC<-as.numeric(Sum150_a$OC)
+Sum150_a$d13C<-as.numeric(Sum150_a$d13C)
+Sum150_a$SAR<-as.numeric(Sum150_a$SAR)
 
 Sum1000_a<-fit_1000C
+Sum1000_a$OC<-"NA"
 Sum1000_a$Mud<-"NA"
 Sum1000_a$d13C<-"NA"
 Sum1000_a$SAR<-"NA"
@@ -382,38 +677,93 @@ for (i in 1:nrow(Sum1000_a)) {
   data<-as.data.frame(x[Sum1000_a[i,"ID"]])
   colnames(data)<-colnames(TC)
   data_a<-subset(data, data$FAge<=Sum1000_a[i, "Max.Age"])
+  Sum1000_a[i, "OC"]<-mean(data_a$Corg, na.rm=TRUE)
   Sum1000_a[i, "Mud"]<-mean(data_a$Mud, na.rm=TRUE)
   Sum1000_a[i, "d13C"]<-mean(data_a$d13C, na.rm=TRUE)
   Sum1000_a[i, "SAR"]<-max(data_a$Max.Depth)/max(data_a$FAge)}
 
 Sum1000_a$Mud<-as.numeric(Sum1000_a$Mud)
+Sum1000_a$OC<-as.numeric(Sum1000_a$OC)
+Sum1000_a$d13C<-as.numeric(Sum1000_a$d13C)
+Sum1000_a$SAR<-as.numeric(Sum1000_a$SAR)
+
+
+shapiro.test(Sum150_a$k) #normal if pvalue > than 0.05
+shapiro.test(as.numeric(Sum150_a$OC))
+shapiro.test(as.numeric(Sum150_a$Mud))
+shapiro.test(as.numeric(Sum150_a$d13C))
+shapiro.test(as.numeric(Sum150_a$SAR))
+plot(Sum150_a$k, Sum150_a$Mud)
+
+cor.test(as.numeric(Sum150_a$k), as.numeric(Sum150_a$Mud), method=c("spearman"))
+cor.test(as.numeric(Sum150_a$k), as.numeric(Sum150_a$OC), method=c("spearman"))
+cor.test(as.numeric(Sum150_a$k), as.numeric(Sum150_a$d13C), method=c("spearman"))
+cor.test(as.numeric(Sum150_a$k), as.numeric(Sum150_a$SAR), method=c("spearman"))
 
 
 
-
-
-shapiro.test(Sum100_a$k) #normal if pvalue > than 0.05
-shapiro.test(as.numeric(Sum100_a$Mud))
-shapiro.test(as.numeric(Sum100_a$d13C))
-shapiro.test(as.numeric(Sum100_a$SAR))
-plot(Sum100_a$k, Sum100_a$Mud)
-cor.test(as.numeric(Sum100_a$k), as.numeric(Sum100_a$Mud), method=c("spearman"))
-
-ggplot(Sum100_a, aes(k, Mud))+
+ggplot(Sum150_a, aes(k, OC))+
   geom_point(aes(color=Ecosystem))+
   scale_color_manual(values=c('blue', 'green4', "orange"))
+
+ggplot(Sum150_a, aes(k, d13C))+
+  geom_point(aes(color=Ecosystem))+
+  scale_color_manual(values=c('blue', 'green4', "orange"))
+
+ggplot(Sum150_a, aes(k, SAR))+
+  geom_point(aes(color=Ecosystem))+
+  scale_color_manual(values=c('blue', 'green4', "orange"))
+
 
 
 shapiro.test(Sum1000_a$k) #normal if pvalue > than 0.05
 shapiro.test(as.numeric(Sum1000_a$Mud))
 shapiro.test(as.numeric(Sum1000_a$d13C))
 shapiro.test(as.numeric(Sum1000_a$SAR))
-plot(Sum1000_a$k, Sum1000_a$Mud)
 cor.test(as.numeric(Sum1000_a$k), as.numeric(Sum1000_a$Mud), method=c("spearman"))
+cor.test(as.numeric(Sum1000_a$k), as.numeric(Sum1000_a$OC), method=c("spearman"))
+cor.test(as.numeric(Sum1000_a$k), as.numeric(Sum1000_a$d13C), method=c("spearman"))
+cor.test(as.numeric(Sum1000_a$k), as.numeric(Sum1000_a$SAR), method=c("spearman"))
 
-ggplot(Sum1000_a, aes(k, Mud))+
+ltm<-ggplot(Sum1000_a, aes(k, Mud))+ ylab("Mud % (<0.063 mm)") +
   geom_point(aes(color=Ecosystem))+
+  scale_color_manual(values=c( 'green4', "orange"))
+
+ggplot(Sum1000_a, aes(k, OC))+
+  geom_point(aes(color=Ecosystem))+
+  scale_color_manual(values=c( 'green4', "orange"))
+
+ggplot(Sum1000_a, aes(k, d13C))+
+  geom_point(aes(color=Ecosystem))+
+  scale_color_manual(values=c( 'green4', "orange"))
+
+ggplot(Sum1000_a, aes(k, SAR))+
+  geom_point(aes(color=Ecosystem))+
+  scale_color_manual(values=c('green4', "orange"))
+
+# figure 3
+stm<-ggplot(Sum150_a, aes(k, Mud))+ ylab("Mud % (<0.063 mm)") + xlab("100-150 yr") +
+  geom_point(aes(color=Ecosystem))+
+  xlim(0, 0.04)+ ylim (0,100)+
   scale_color_manual(values=c('blue', 'green4', "orange"))
+
+ltm<-ggplot(Sum1000_a, aes(k, Mud))+ ylab("Mud % (<0.063 mm)") + xlab("500-1000 yr") +
+  geom_point(aes(color=Ecosystem))+
+  xlim(0, 0.04)+ ylim (0,100)+
+  scale_color_manual(values=c( 'green4', "orange"))
+
+
+mud_decay<-grid.arrange(stm, ltm, top = "Dacay rates (yr-1)")
+
+
+ggsave(
+  plot = mud_decay,
+  path = Folder,
+  filename = "mud_decay.jpg",
+  units = "cm",
+  width = 9,
+  height = 10
+)
 
 
 
@@ -526,24 +876,68 @@ CoordR<-subset(B, B$Core %in% mapa$ID==TRUE)
 CoordR$Lat<-as.numeric(CoordR$Lat)
 CoordR$Long<-as.numeric(CoordR$Long)
 
-CoordR %>%
-  ggplot() + ggtitle("Estimated k distribution") + xlab("Longitude") + ylab("Latitude") +
-  geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
-  #geom_point(aes(x = Long, y = Lat))+
-  geom_point(aes(x = Long, y = Lat,  fill = Ecosystem),
-             pch = 21,
-             size = 1.8) +
-  coord_sf(xlim = c(-140, 150), ylim = c(-40, 75)) +
-  scale_fill_manual(values = c( "blue", "green","orange")) +
-  theme(plot.title = element_text(hjust = 0.5))
+    global2<-CoordR %>%
+      ggplot() + ggtitle("Estimated k distribution") + xlab("Longitude") + ylab("Latitude") +
+      geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
+      #geom_point(aes(x = Long, y = Lat))+
+      geom_point(aes(x = Long, y = Lat,  fill = Ecosystem),
+                 pch = 21,
+                 size = 1.8) +
+      coord_sf(xlim = c(-140, 150), ylim = c(-40, 75)) +
+      scale_fill_manual(values = c( "blue", "green","orange")) +
+      theme(plot.title = element_text(hjust = 0.5))
+    
+    nam2<-CoordR %>%
+      ggplot() + xlab("Longitude") + ylab("Latitude") +
+      geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
+      #geom_point(aes(x = Long, y = Lat))+
+      geom_point(aes(x = Long, y = Lat,  fill = Ecosystem),
+                 pch = 21,
+                 size = 1.8) +
+      coord_sf(xlim = c(-150, -50), ylim = c(0, 70)) +
+      scale_fill_manual(values = c( "blue", "green","orange")) +
+      theme(plot.title = element_text(hjust = 0.5), 
+            legend.position = "none")
+    
+    eu2<-CoordR %>%
+      ggplot() + xlab("Longitude") + ylab("Latitude") +
+      geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
+      #geom_point(aes(x = Long, y = Lat))+
+      geom_point(aes(x = Long, y = Lat,  fill = Ecosystem),
+                 pch = 21,
+                 size = 1.8) +
+      coord_sf(xlim = c(-10, 50), ylim = c(20, 70)) +
+      scale_fill_manual(values = c( "blue", "green","orange")) +
+      theme(plot.title = element_text(hjust = 0.5), 
+            legend.position = "none")
+    
+    aus2<-CoordR %>%
+      ggplot() + xlab("Longitude") + ylab("Latitude") +
+      geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
+      #geom_point(aes(x = Long, y = Lat))+
+      geom_point(aes(x = Long, y = Lat,  fill = Ecosystem),
+                 pch = 21,
+                 size = 1.8) +
+      coord_sf(xlim = c(110, 152), ylim = c(-45, -10))  +
+      scale_fill_manual(values = c( "blue", "green","orange")) +
+      theme(plot.title = element_text(hjust = 0.5), 
+            legend.position = "none")
 
 
-ggsave(path = Folder,
-       filename =  "Estimated k all map.jpg",
-       units = "cm",
-       width = 20,
-       height = 10
-)
+
+    ssp2<-grid.arrange(global2, nam2, eu2, aus2, 
+                      layout_matrix = rbind(c(1, 1, 1),
+                                            c(2, 3, 4)))
+    
+    
+    ggsave(
+      plot = ssp2,
+      path = Folder,
+      filename =  "estimated k all map.jpg",
+      units = "cm",
+      width = 20,
+      height = 15
+    )
 
 
 
@@ -573,22 +967,24 @@ mean(core_100_age$age_depth)
 std(core_100_age$age_depth)
 
 
-# from time to decay rate
 
+# from time to decay rate -------------------------------------------------
+
+# degradation of the first meter
 #seagrass
-0.024 * exp(-0.002 * 1953.206)
+0.037 * exp(-0.003 * 1953.206)
 
-0.024 * exp(-0.002 * 1504.5)
-0.024 * exp(-0.002 * 2401.9)
+0.037 * exp(-0.003 * 1504.5)
+0.037 * exp(-0.003 * 2401.9)
 
 #mangrove
-0.027 * exp(-0.004 * 1953.206)
+0.028 * exp(-0.004 * 1953.206)
 
-0.027 * exp(-0.004 * 1504.5)
-0.027 * exp(-0.004 * 2401.9)
+0.028 * exp(-0.004 * 1504.5)
+0.028 * exp(-0.004 * 2401.9)
 
 #tidal marshes
-0.021 * exp(-0.003 * 1953.206)
+0.023 * exp(-0.003 * 1953.206)
 
-0.021 * exp(-0.003 * 1504.5)
-0.021 * exp(-0.003 * 2401.9)
+0.023 * exp(-0.003 * 1504.5)
+0.023 * exp(-0.003 * 2401.9)
