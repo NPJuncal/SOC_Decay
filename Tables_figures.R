@@ -65,7 +65,7 @@ plot(DT2$Av_Mud_25, DT2$Av_13C_25)
       
       SC<-ggplot(DT2Sg, aes(C_Gr, Av_C_25)) + ggtitle("Seagrass")+
         geom_boxplot()+
-        geom_jitter(color="green4")+
+        geom_jitter(color="green4", alpha = 0.1)+
         ylim(-5,50)+
         annotate("text",
                  x = 1:length(table(DT2Sg$C_Gr)),
@@ -82,7 +82,7 @@ plot(DT2$Av_Mud_25, DT2$Av_13C_25)
       #mud  
       SM<-ggplot(DT2Sg, aes(C_Gr, Av_Mud_25)) + 
         geom_boxplot()+
-        geom_jitter(color="green4")+
+        geom_jitter(color="green4", alpha = 0.5)+
         ylim(-10,110)+
         annotate("text",
                  x = 1:length(table(DT2Sg$C_Gr)),
@@ -100,7 +100,7 @@ plot(DT2$Av_Mud_25, DT2$Av_13C_25)
       
       SS<-ggplot(DT2Sg, aes(C_Gr, SAR)) + 
         geom_boxplot()+
-        geom_jitter(color="green4")+
+        geom_jitter(color="green4", alpha = 0.5)+
         ylim(-0.15,1.1)+
         annotate("text",
                  x = 1:length(table(DT2Sg$C_Gr)),
@@ -118,7 +118,7 @@ plot(DT2$Av_Mud_25, DT2$Av_13C_25)
       
       d13S<-ggplot(DT2Sg, aes(C_Gr, Av_13C_25)) + 
         geom_boxplot()+
-        geom_jitter(color="green4")+
+        geom_jitter(color="green4", alpha = 0.5)+
         ylim(-30,-5)+
         annotate("text",
                  x = 1:length(table(DT2Sg$C_Gr)),
@@ -139,7 +139,7 @@ plot(DT2$Av_Mud_25, DT2$Av_13C_25)
       #organic carbon  
       TMC<-ggplot(DT2Sm, aes(C_Gr, Av_C_25)) + ggtitle("Tidal Marsh")+
         geom_boxplot()+
-        geom_jitter(color="orange")+
+        geom_jitter(color="orange", alpha = 0.1)+
         ylim(-5,50)+
         annotate("text",
                  x = 1:length(table(DT2Sm$C_Gr)),
@@ -155,7 +155,7 @@ plot(DT2$Av_Mud_25, DT2$Av_13C_25)
       #mud  
       TMM<-ggplot(DT2Sm, aes(C_Gr, Av_Mud_25)) +
         geom_boxplot()+
-        geom_jitter(color="orange")+
+        geom_jitter(color="orange", alpha = 0.5)+
         ylim(-10,110)+
         annotate("text",
                  x = 1:length(table(DT2Sm$C_Gr)),
@@ -171,7 +171,7 @@ plot(DT2$Av_Mud_25, DT2$Av_13C_25)
       #SAR 
       TMS<-ggplot(DT2Sm, aes(C_Gr, SAR)) +
         geom_boxplot()+
-        geom_jitter(color="orange")+
+        geom_jitter(color="orange", alpha = 0.5)+
         ylim(-0.15,1.1)+
         annotate("text",
                  x = 1:length(table(DT2Sm$C_Gr)),
@@ -188,7 +188,7 @@ plot(DT2$Av_Mud_25, DT2$Av_13C_25)
       
       d13T<-ggplot(DT2Sm, aes(C_Gr, Av_13C_25)) + 
         geom_boxplot()+
-        geom_jitter(color="orange")+
+        geom_jitter(color="orange", alpha = 0.5)+
         ylim(-30,-5)+
         annotate("text",
                  x = 1:length(table(DT2Sm$C_Gr)),
@@ -208,7 +208,7 @@ plot(DT2$Av_Mud_25, DT2$Av_13C_25)
       #organic carbon  
       MGC<-ggplot(DT2Mg, aes(C_Gr, Av_C_25)) + ylab("OC% (Top 25cm)") + ggtitle("Mangrove")+
         geom_boxplot()+
-        geom_jitter(color="blue")+
+        geom_jitter(color="blue", alpha = 0.5)+
         ylim(-5,50)+
         annotate("text",
                  x = 1:length(table(DT2Mg$C_Gr)),
@@ -223,7 +223,7 @@ plot(DT2$Av_Mud_25, DT2$Av_13C_25)
       #mud  
       TGM<-ggplot(DT2Mg, aes(C_Gr, Av_Mud_25)) + ylab("Mud% (Top 25cm)") +
         geom_boxplot()+
-        geom_jitter(color="blue")+
+        geom_jitter(color="blue", alpha = 0.5)+
         ylim(-10,110)+
         annotate("text",
                  x = 1:length(table(DT2Mg$C_Gr)),
@@ -238,7 +238,7 @@ plot(DT2$Av_Mud_25, DT2$Av_13C_25)
       #SAR 
       TGS<-ggplot(DT2Mg, aes(C_Gr, SAR)) + ylab("Sediment acc. rate (cm)") +
         geom_boxplot()+
-        geom_jitter(color="blue")+
+        geom_jitter(color="blue", alpha = 0.5)+
         ylim(-0.15,1.1)+
         annotate("text",
                  x = 1:length(table(DT2Mg$C_Gr)),
@@ -254,7 +254,7 @@ plot(DT2$Av_Mud_25, DT2$Av_13C_25)
       
       d13M<-ggplot(DT2Mg, aes(C_Gr, Av_13C_25)) + ylab("Average d13C") +
         geom_boxplot()+
-        geom_jitter(color="blue")+
+        geom_jitter(color="blue", alpha = 0.5)+
         #ylim(-0.15,1.1)+
         #annotate("text",
         #        x = 1:length(table(DT2Mg$C_Gr)),
@@ -303,16 +303,16 @@ if (Eco == "Mg") { k_tableF[j, "Ecosystem"] <- "Mangrove"}
 if (Eco == "Sg") { k_tableF[j, "Ecosystem"] <- "Seagrass"}
 if (Eco == "Sm") { k_tableF[j, "Ecosystem"] <- "Tidal Marsh"}}
 
-k_tableFm<-melt (k_tableF[, c(1:8, 11, 12)], id=c( "ID", "G", "Ecosystem" ))
 
-ggplot(k_tableFm, aes(G, value))+
-  geom_boxplot()+
-  geom_jitter(aes(color=Ecosystem))+
-  ylim(0,0.1)+
-  facet_wrap(~variable)
 
-pairwise.wilcox.test(k_tableF$k_2000, k_tableF$G,
-                     p.adjust.method = "BH")
+
+
+
+
+
+
+k_tablem<-melt (k_table[, c(1:8, 11)], id=c( "ID", "Ecosystem" ))
+
 
 
 # Final table (Pb <500, 14C >500) -----------------------------------------
@@ -338,47 +338,49 @@ table_k<-table_k[!is.na(table_k$ID),]
 
 #normal distribution and significant differences among ecosystems
 
-shapiro.test(table_k$k150) #normal if pvalue > than 0.05
+shapiro.test(k_table$k_150) #normal if pvalue > than 0.05
 
-apply(table_k[,c(2:8)], FUN=shapiro.test, MARGIN = 2)
+
+
+apply(k_table[,c(2:8)], FUN=shapiro.test, MARGIN = 2)
 
 
 # differences among species
 
-pairwise.wilcox.test(table_k$k1000, table_k$Ecosystem,
+pairwise.wilcox.test(k_table$k_100, k_table$Ecosystem,
                      p.adjust.method = "BH")
-temp<-subset(table_k, !Ecosystem=="Mangrove")
-pairwise.wilcox.test(temp$k1000, temp$Ecosystem,
+temp<-subset(k_table, !Ecosystem=="Mangrove")
+pairwise.wilcox.test(temp$k_1000, temp$Ecosystem,
                      p.adjust.method = "BH")
 
 # summary table (manuscript Table 1) -----------------------------------
 
 
-table_k_Mg<-subset(table_k, Ecosystem=='Mangrove')
-table_k_Mg<-sapply(table_k_Mg,FUN=as.numeric)
-table_k_Sg<-subset(table_k, Ecosystem=='Seagrass')
-table_k_Sg<-sapply(table_k_Sg,FUN=as.numeric)
-table_k_Sm<-subset(table_k, Ecosystem=='Tidal Marsh')
-table_k_Sm<-sapply(table_k_Sm,FUN=as.numeric)
+k_table_Mg<-subset(k_table, Ecosystem=='Mangrove')
+k_table_Mg<-sapply(k_table_Mg,FUN=as.numeric)
+k_table_Sg<-subset(k_table, Ecosystem=='Seagrass')
+k_table_Sg<-sapply(k_table_Sg,FUN=as.numeric)
+k_table_Sm<-subset(k_table, Ecosystem=='Tidal Marsh')
+k_table_Sm<-sapply(k_table_Sm,FUN=as.numeric)
 
 std <- function(x) sd(x, na.rm=TRUE)/sqrt(length(x))
 cnt <- function(x) sum(!is.na(x))   
 
-sum_table<-as.data.frame(colMeans(table_k_Mg[,c(2:8)], na.rm = TRUE))
-sum_table[,2]<-as.data.frame(apply(table_k_Mg[,c(2:8)], FUN=std, MARGIN = 2))
-sum_table[,3]<-as.data.frame(apply(table_k_Mg[,c(2:8)], FUN=cnt, MARGIN = 2))
+sum_table<-as.data.frame(colMeans(k_table_Mg[,c(2:8)], na.rm = TRUE))
+sum_table[,2]<-as.data.frame(apply(k_table_Mg[,c(2:8)], FUN=std, MARGIN = 2))
+sum_table[,3]<-as.data.frame(apply(k_table_Mg[,c(2:8)], FUN=cnt, MARGIN = 2))
 
-sum_table[,4]<-colMeans(table_k_Sg[,c(2:8)], na.rm = TRUE)
-sum_table[,5]<-as.data.frame(apply(table_k_Sg[,c(2:8)], FUN=std, MARGIN = 2))
-sum_table[,6]<-as.data.frame(apply(table_k_Sg[,c(2:8)], FUN=cnt, MARGIN = 2))
+sum_table[,4]<-colMeans(k_table_Sg[,c(2:8)], na.rm = TRUE)
+sum_table[,5]<-as.data.frame(apply(k_table_Sg[,c(2:8)], FUN=std, MARGIN = 2))
+sum_table[,6]<-as.data.frame(apply(k_table_Sg[,c(2:8)], FUN=cnt, MARGIN = 2))
 
-sum_table[,7]<-colMeans(table_k_Sm[,c(2:8)], na.rm = TRUE)
-sum_table[,8]<-as.data.frame(apply(table_k_Sm[,c(2:8)], FUN=std, MARGIN = 2))
-sum_table[,9]<-as.data.frame(apply(table_k_Sm[,c(2:8)], FUN=cnt, MARGIN = 2))
+sum_table[,7]<-colMeans(k_table_Sm[,c(2:8)], na.rm = TRUE)
+sum_table[,8]<-as.data.frame(apply(k_table_Sm[,c(2:8)], FUN=std, MARGIN = 2))
+sum_table[,9]<-as.data.frame(apply(k_table_Sm[,c(2:8)], FUN=cnt, MARGIN = 2))
 
-sum_table[,10]<-colMeans(table_k[,c(2:8)], na.rm = TRUE)
-sum_table[,11]<-as.data.frame(apply(table_k[,c(2:8)], FUN=std, MARGIN = 2))
-sum_table[,12]<-as.data.frame(apply(table_k[,c(2:8)], FUN=cnt, MARGIN = 2))
+sum_table[,10]<-colMeans(k_table[,c(2:8)], na.rm = TRUE)
+sum_table[,11]<-as.data.frame(apply(k_table[,c(2:8)], FUN=std, MARGIN = 2))
+sum_table[,12]<-as.data.frame(apply(k_table[,c(2:8)], FUN=cnt, MARGIN = 2))
 
 colnames(sum_table)<-c("Mean Mangrove", "SE Mangrove", "n Mangrove","Mean Seagrass", "SE Seagrass", "n Seagrass",
                        "Mean Tidal Marsh", "SE Tidal Marsh", "n Tidal Marsh", "Mean All", "SE All", "n All")
@@ -393,20 +395,20 @@ write.csv(sum_table,
 # boxplot by timeframe figure ---------------------------------------------
 
 
-mtable_k<-melt(table_k[,c(1:8, 11)], id = c("ID","Ecosystem")) 
+k_tablem<-melt(k_table[,c(1:8, 11)], id = c("ID","Ecosystem")) 
 
-mtable_k$variable <- as.character(mtable_k$variable)
-mtable_k$variable[mtable_k$variable == 'k100'] <- '80-100 yr'
-mtable_k$variable[mtable_k$variable == 'k150'] <- '100-150 yr'
-mtable_k$variable[mtable_k$variable == 'k300'] <- '150-300 yr'
-mtable_k$variable[mtable_k$variable == 'k500'] <- '300-500 yr'
-mtable_k$variable[mtable_k$variable == 'k1000'] <- '500-1000 yr'
-mtable_k$variable[mtable_k$variable == 'k1500'] <- '1000-1500 yr'
-mtable_k$variable[mtable_k$variable == 'k2000'] <- '1500-2000 yr'
+k_tablem$variable <- as.character(k_tablem$variable)
+k_tablem$variable[k_tablem$variable == 'k_100'] <- '80-100 yr'
+k_tablem$variable[k_tablem$variable == 'k_150'] <- '100-150 yr'
+k_tablem$variable[k_tablem$variable == 'k_300'] <- '150-300 yr'
+k_tablem$variable[k_tablem$variable == 'k_500'] <- '300-500 yr'
+k_tablem$variable[k_tablem$variable == 'k_1000'] <- '500-1000 yr'
+k_tablem$variable[k_tablem$variable == 'k_1500'] <- '1000-1500 yr'
+k_tablem$variable[k_tablem$variable == 'k_2000'] <- '1500-2000 yr'
 
-mk_table$value<-as.numeric(mk_table$value)
+k_tablem$value<-as.numeric(k_tablem$value)
 
-ggplot(transform(mtable_k,
+ggplot(transform(k_tablem,
                  variable=factor(variable,levels=c('80-100 yr','100-150 yr','150-300 yr', '300-500 yr', '500-1000 yr', '1000-1500 yr', '1500-2000 yr'))),
        aes(Ecosystem, value))+ ggtitle("Decay rates by ecosystem and time frame")+ ylab("Decay rate (yr-1)") +
   geom_boxplot()+
@@ -420,10 +422,10 @@ ggplot(transform(mtable_k,
         axis.text.x=element_blank(),)
 
 
-mtable_k2<-subset(mtable_k, mtable_k$variable == "100-150 yr" | mtable_k$variable == "500-1000 yr")
+k_tablem2<-subset(k_tablem, k_tablem$variable == "80-100 yr" | k_tablem$variable == "500-1000 yr")
 
-box_150_1000<-  ggplot(transform(mtable_k2,
-                                 variable=factor(variable,levels=c('100-150 yr',"500-1000 yr"))),
+box_100_1000<-  ggplot(transform(k_tablem2,
+                                 variable=factor(variable,levels=c('80-100 yr',"500-1000 yr"))),
                        aes(Ecosystem, value))+ ggtitle("Decay rates by ecosystem and time frame")+ ylab("Decay rate (yr-1)") +
   geom_boxplot()+
   geom_jitter(aes(color=Ecosystem))+
@@ -439,7 +441,7 @@ box_150_1000<-  ggplot(transform(mtable_k2,
 
 
 ggsave(
-  plot = box_150_1000,
+  plot = box_100_1000,
   path = Folder,
   filename = "box_150_1000.jpg",
   units = "cm",
@@ -447,19 +449,6 @@ ggsave(
   height = 7
 )
 
-
-ggplot(transform(mk_tablePb2,
-                 variable=factor(variable,levels=c('100-150 yr',"500-1000 yr"))),
-       aes(Ecosystem, value))+ ggtitle("Decay rates by ecosystem and time frame")+ ylab("Decay rate (yr-1)") +
-  geom_boxplot()+
-  geom_jitter(aes(color=Specie))+
-  facet_wrap(~variable)+
-  #scale_color_manual(values=c('blue', 'green4', "orange"))+
-  theme(#legend.position = c(1, 0),
-    #legend.justification = c(1, 0), 
-    axis.title.x = element_blank(),
-    axis.ticks.x=element_blank(),
-    axis.text.x=element_blank(),)
 
 
 # load decay rates from review --------------------------------------------
@@ -480,21 +469,21 @@ k_revM<- k_rev [c(8,9),]
 
 #fitting table
 
-f_table_Sg<-as.data.frame(colMeans(table_k[c(7:90),c(2:8)], na.rm = TRUE))
+f_table_Sg<-as.data.frame(colMeans(subset(k_table, Ecosystem=="Seagrass")[,c(2:8)], na.rm = TRUE))
 f_table_Sg[,2]<-c(90, 125, 225, 400, 750, 1250, 1750)
-f_table_Sg[c(8:13),1]<-na.omit(table_k[,9])
-f_table_Sg[c(8:13),2]<-na.omit(table_k[,10])
-f_table_Sg[c(14:18), c(1,2)]<-k_revS[,c(2:3)]
+f_table_Sg[c(8:11),1]<-na.omit(k_table[,9])
+f_table_Sg[c(8:11),2]<-na.omit(k_table[,10])
+f_table_Sg[c(11:15), c(1,2)]<-k_revS[,c(2:3)]
 
 #f_table_Sg<-f_table[-9,]
 colnames(f_table_Sg)<-c("k","timeframe")
 
-f_table_Tm<-as.data.frame(colMeans(table_k[c(91:115),c(2:6)], na.rm = TRUE))
+f_table_Tm<-as.data.frame(colMeans(subset(k_table, Ecosystem=="Tidal Marsh")[,c(2:6)], na.rm = TRUE))
 f_table_Tm[,2]<-c(90, 125, 225, 400, 750)
 f_table_Tm[c(6:7), c(1,2)]<-k_revM[,c(2:3)]
 colnames(f_table_Tm)<-c("k","timeframe")
 
-f_table_Mg<-as.data.frame(colMeans(table_k[c(1:6),c(2:5)], na.rm = TRUE))
+f_table_Mg<-as.data.frame(colMeans(subset(k_table, Ecosystem=="Mangrove")[,c(2:5)], na.rm = TRUE))
 f_table_Mg[,2]<-c(50, 125, 225, 400)
 colnames(f_table_Mg)<-c("k","timeframe")
 
@@ -517,7 +506,7 @@ summary(modelSg)
 
 fitSg <- as.data.frame(c(1:5000))
 fitSg['new_col'] <- NA
-fitSg[, 2] <- kchange(c(1:5000), 0.0237, -0.002)
+fitSg[, 2] <- kchange(c(1:5000), 0.0532, -0.004)
 colnames(fitSg) <- list("timeframe", "predict")
 
 # tidal marsh model
@@ -532,7 +521,7 @@ summary(modelTm)
 
 fitTm <- as.data.frame(c(1:5000))
 fitTm['new_col'] <- NA
-fitTm[, 2] <- kchange(c(1:5000), 0.021, -0.003)
+fitTm[, 2] <- kchange(c(1:5000), 0.022, -0.003)
 colnames(fitTm) <- list("timeframe", "predict")
 
 # Mangrove model
@@ -547,7 +536,7 @@ summary(modelMg)
 
 fitMg <- as.data.frame(c(1:5000))
 fitMg['new_col'] <- NA
-fitMg[, 2] <- kchange(c(1:5000), 0.0268, -0.0038)
+fitMg[, 2] <- kchange(c(1:5000), 0.0282, -0.0043)
 colnames(fitMg) <- list("timeframe", "predict")
 
 
@@ -557,56 +546,67 @@ colnames(fitMg) <- list("timeframe", "predict")
 
 std <- function(x) sd(x)/sqrt(length(x))
 
-fit_fig<-  ggplot(table_k_Sg, aes( MaxAge, m2000))+ ggtitle("Decay rate by time frame") + xlab("Time frame (years)") + ylab("Decay rate (yr-1)") +
+
+k_table_Mg<-subset(k_table, Ecosystem=='Mangrove')
+k_table_Mg[,c(2:10)]<-sapply(k_table_Mg[,c(2:10)],FUN=as.numeric)
+k_table_Sg<-subset(k_table, Ecosystem=='Seagrass')
+k_table_Sg[,c(2:10)]<-sapply(k_table_Sg[,c(2:10)],FUN=as.numeric)
+k_table_Sm<-subset(k_table, Ecosystem=='Tidal Marsh')
+k_table_Sm[,c(2:10)]<-sapply(k_table_Sm[,c(2:10)],FUN=as.numeric)
+
+
+
+fit_fig<-  
+  ggplot(k_table_Sg, aes( Max_Age, k_m2000))+ ggtitle("Decay rate by time frame") + xlab("Time frame (years)") + ylab("Decay rate (yr-1)") +
   geom_point(color='green4')+
-  geom_point(aes(50, mean(na.omit(table_k_Sg$k100))), color='green4')+
-  geom_errorbar(aes(50, ymin=mean(na.omit(table_k_Sg$k100))-std(na.omit(table_k_Sg$k100)), ymax=mean(na.omit(table_k_Sg$k100))+std(na.omit(table_k_Sg$k100))), color='green4')+
-  geom_point(aes(50, mean(na.omit(table_k_Mg$k100))), color='blue')+
-  geom_errorbar(aes(50, ymin=mean(na.omit(table_k_Mg$k100))-std(na.omit(table_k_Mg$k100)), ymax=mean(na.omit(table_k_Mg$k100))+std(na.omit(table_k_Mg$k100))), color='blue')+
-  geom_point(aes(50, mean(na.omit(table_k_Sm$k100))), color='orange')+
-  geom_errorbar(aes(50, ymin=mean(na.omit(table_k_Sm$k100))-std(na.omit(table_k_Sm$k100)), ymax=mean(na.omit(table_k_Sm$k100))+std(na.omit(table_k_Sm$k100))), color='orange')+
+  geom_point(aes(50, mean(na.omit(k_table_Sg$k_100))), color='green4')+
+  geom_errorbar(aes(50, ymin=mean(na.omit(k_table_Sg$k_100))-std(na.omit(k_table_Sg$k_100)), ymax=mean(na.omit(k_table_Sg$k_100))+std(na.omit(k_table_Sg$k_100))), color='green4')+
+  geom_point(aes(50, mean(na.omit(k_table_Mg$k_100))), color='blue')+
+  geom_errorbar(aes(50, ymin=mean(na.omit(k_table_Mg$k_100))-std(na.omit(k_table_Mg$k_100)), ymax=mean(na.omit(k_table_Mg$k_100))+std(na.omit(k_table_Mg$k_100))), color='blue')+
+  geom_point(aes(50, mean(na.omit(k_table_Sm$k_100))), color='orange')+
+  geom_errorbar(aes(50, ymin=mean(na.omit(k_table_Sm$k_100))-std(na.omit(k_table_Sm$k_100)), ymax=mean(na.omit(k_table_Sm$k_100))+std(na.omit(k_table_Sm$k_100))), color='orange')+
   
-  geom_point(aes(125, mean(na.omit(table_k_Sg$k150))), color='green4')+
-  geom_errorbar(aes(125, ymin=mean(na.omit(table_k_Sg$k150))-std(na.omit(table_k_Sg$k150)), ymax=mean(na.omit(table_k_Sg$k150))+std(na.omit(table_k_Sg$k150))), color='green4')+
-  geom_point(aes(125, mean(na.omit(table_k_Mg$k150))), color='blue')+
-  geom_errorbar(aes(125, ymin=mean(na.omit(table_k_Mg$k150))-std(na.omit(table_k_Mg$k150)), ymax=mean(na.omit(table_k_Mg$k150))+std(na.omit(table_k_Mg$k150))), color='blue')+  
-  geom_point(aes(125, mean(na.omit(table_k_Sm$k150))), color='orange')+
-  geom_errorbar(aes(125, ymin=mean(na.omit(table_k_Sm$k150))-std(na.omit(table_k_Sm$k150)), ymax=mean(na.omit(table_k_Sm$k150))+std(na.omit(table_k_Sm$k150))), color='orange')+  
+  geom_point(aes(125, mean(na.omit(k_table_Sg$k_150))), color='green4')+
+  geom_errorbar(aes(125, ymin=mean(na.omit(k_table_Sg$k_150))-std(na.omit(k_table_Sg$k_150)), ymax=mean(na.omit(k_table_Sg$k_150))+std(na.omit(k_table_Sg$k_150))), color='green4')+
+  geom_point(aes(125, mean(na.omit(k_table_Mg$k_150))), color='blue')+
+  geom_errorbar(aes(125, ymin=mean(na.omit(k_table_Mg$k_150))-std(na.omit(k_table_Mg$k_150)), ymax=mean(na.omit(k_table_Mg$k_150))+std(na.omit(k_table_Mg$k_150))), color='blue')+  
+  geom_point(aes(125, mean(na.omit(k_table_Sm$k_150))), color='orange')+
+  geom_errorbar(aes(125, ymin=mean(na.omit(k_table_Sm$k_150))-std(na.omit(k_table_Sm$k_150)), ymax=mean(na.omit(k_table_Sm$k_150))+std(na.omit(k_table_Sm$k_150))), color='orange')+  
   
-  geom_point(aes(175, mean(na.omit(table_k_Sg$k300))), color='green4')+
-  geom_errorbar(aes(175, ymin=mean(na.omit(table_k_Sg$k300))-std(na.omit(table_k_Sg$k300)), ymax=mean(na.omit(table_k_Sg$k300))+std(na.omit(table_k_Sg$k300))), color='green4')+
-  geom_point(aes(175, mean(na.omit(table_k_Mg$k300))), color='blue')+
-  geom_errorbar(aes(175, ymin=mean(na.omit(table_k_Mg$k300))-std(na.omit(table_k_Mg$k300)), ymax=mean(na.omit(table_k_Mg$k300))+std(na.omit(table_k_Mg$k300))), color='blue')+
-  geom_point(aes(175, mean(na.omit(table_k_Sm$k300))), color='orange')+
-  geom_errorbar(aes(175, ymin=mean(na.omit(table_k_Sm$k300))-std(na.omit(table_k_Sm$k300)), ymax=mean(na.omit(table_k_Sm$k300))+std(na.omit(table_k_Sm$k300))), color='orange')+
+  geom_point(aes(175, mean(na.omit(k_table_Sg$k_300))), color='green4')+
+  geom_errorbar(aes(175, ymin=mean(na.omit(k_table_Sg$k_300))-std(na.omit(k_table_Sg$k_300)), ymax=mean(na.omit(k_table_Sg$k_300))+std(na.omit(k_table_Sg$k_300))), color='green4')+
+  geom_point(aes(175, mean(na.omit(k_table_Mg$k_300))), color='blue')+
+  geom_errorbar(aes(175, ymin=mean(na.omit(k_table_Mg$k_300))-std(na.omit(k_table_Mg$k_300)), ymax=mean(na.omit(k_table_Mg$k_300))+std(na.omit(k_table_Mg$k_300))), color='blue')+
+  geom_point(aes(175, mean(na.omit(k_table_Sm$k_300))), color='orange')+
+  geom_errorbar(aes(175, ymin=mean(na.omit(k_table_Sm$k_300))-std(na.omit(k_table_Sm$k_300)), ymax=mean(na.omit(k_table_Sm$k_300))+std(na.omit(k_table_Sm$k_300))), color='orange')+
   
-  geom_point(aes(400, mean(na.omit(table_k_Sg$k500))), color='green4')+
-  geom_errorbar(aes(400, ymin=mean(na.omit(table_k_Sg$k500))-std(na.omit(table_k_Sg$k500)), ymax=mean(na.omit(table_k_Sg$k500))+std(na.omit(table_k_Sg$k500))), color='green4')+
-  geom_point(aes(400, mean(na.omit(table_k_Mg$k500))), color='blue')+
-  geom_errorbar(aes(400, ymin=mean(na.omit(table_k_Mg$k500))-std(na.omit(table_k_Mg$k500)), ymax=mean(na.omit(table_k_Mg$k500))+std(na.omit(table_k_Mg$k500))), color='blue')+
-  geom_point(aes(400, mean(na.omit(table_k_Sm$k500))), color='orange')+
-  geom_errorbar(aes(400, ymin=mean(na.omit(table_k_Sm$k500))-std(na.omit(table_k_Sm$k500)), ymax=mean(na.omit(table_k_Sm$k500))+std(na.omit(table_k_Sm$k500))), color='orange')+
+  geom_point(aes(400, mean(na.omit(k_table_Sg$k_500))), color='green4')+
+  geom_errorbar(aes(400, ymin=mean(na.omit(k_table_Sg$k_500))-std(na.omit(k_table_Sg$k_500)), ymax=mean(na.omit(k_table_Sg$k_500))+std(na.omit(k_table_Sg$k_500))), color='green4')+
+  geom_point(aes(400, mean(na.omit(k_table_Mg$k_500))), color='blue')+
+  geom_errorbar(aes(400, ymin=mean(na.omit(k_table_Mg$k_500))-std(na.omit(k_table_Mg$k_500)), ymax=mean(na.omit(k_table_Mg$k_500))+std(na.omit(k_table_Mg$k_500))), color='blue')+
+  geom_point(aes(400, mean(na.omit(k_table_Sm$k_500))), color='orange')+
+  geom_errorbar(aes(400, ymin=mean(na.omit(k_table_Sm$k_500))-std(na.omit(k_table_Sm$k_500)), ymax=mean(na.omit(k_table_Sm$k_500))+std(na.omit(k_table_Sm$k_500))), color='orange')+
   
-  geom_point(aes(750, mean(na.omit(table_k_Sg$k1000))), color='green4')+
-  geom_errorbar(aes(750, ymin=mean(na.omit(table_k_Sg$k1000))-std(na.omit(table_k_Sg$k1000)), ymax=mean(na.omit(table_k_Sg$k1000))+std(na.omit(table_k_Sg$k1000))), color='green4')+
-  geom_point(aes(750, mean(na.omit(table_k_Mg$k1000))), color='blue')+
-  geom_errorbar(aes(750, ymin=mean(na.omit(table_k_Mg$k1000))-std(na.omit(table_k_Mg$k1000)), ymax=mean(na.omit(table_k_Mg$k1000))+std(na.omit(table_k_Mg$k1000))), color='blue')+
-  geom_point(aes(750, mean(na.omit(table_k_Sm$k1000))), color='orange')+
-  geom_errorbar(aes(750, ymin=mean(na.omit(table_k_Sm$k1000))-std(na.omit(table_k_Sm$k1000)), ymax=mean(na.omit(table_k_Sm$k1000))+std(na.omit(table_k_Sm$k1000))), color='orange')+
+  geom_point(aes(750, mean(na.omit(k_table_Sg$k_1000))), color='green4')+
+  geom_errorbar(aes(750, ymin=mean(na.omit(k_table_Sg$k_1000))-std(na.omit(k_table_Sg$k_1000)), ymax=mean(na.omit(k_table_Sg$k_1000))+std(na.omit(k_table_Sg$k_1000))), color='green4')+
+  geom_point(aes(750, mean(na.omit(k_table_Mg$k_1000))), color='blue')+
+  geom_errorbar(aes(750, ymin=mean(na.omit(k_table_Mg$k_1000))-std(na.omit(k_table_Mg$k_1000)), ymax=mean(na.omit(k_table_Mg$k_1000))+std(na.omit(k_table_Mg$k_1000))), color='blue')+
+  geom_point(aes(750, mean(na.omit(k_table_Sm$k_1000))), color='orange')+
+  geom_errorbar(aes(750, ymin=mean(na.omit(k_table_Sm$k_1000))-std(na.omit(k_table_Sm$k_1000)), ymax=mean(na.omit(k_table_Sm$k_1000))+std(na.omit(k_table_Sm$k_1000))), color='orange')+
   
-  geom_point(aes(1250, mean(na.omit(table_k_Sg$k1500))), color='green4')+
-  geom_errorbar(aes(1250, ymin=mean(na.omit(table_k_Sg$k1500))-std(na.omit(table_k_Sg$k1500)), ymax=mean(na.omit(table_k_Sg$k1500))+std(na.omit(table_k_Sg$k1500))), color='green4')+
-  geom_point(aes(1250, mean(na.omit(table_k_Mg$k1500))), color='blue')+
-  geom_errorbar(aes(1250, ymin=mean(na.omit(table_k_Mg$k1500))-std(na.omit(table_k_Mg$k1500)), ymax=mean(na.omit(table_k_Mg$k1500))+std(na.omit(table_k_Mg$k1500))), color='blue')+
-  geom_point(aes(1250, mean(na.omit(table_k_Sm$k1500))), color='orange')+
-  geom_errorbar(aes(1250, ymin=mean(na.omit(table_k_Sm$k1500))-std(na.omit(table_k_Sm$k1500)), ymax=mean(na.omit(table_k_Sm$k1500))+std(na.omit(table_k_Sm$k1500))), color='orange')+
+  geom_point(aes(1250, mean(na.omit(k_table_Sg$k_1500))), color='green4')+
+  geom_errorbar(aes(1250, ymin=mean(na.omit(k_table_Sg$k_1500))-std(na.omit(k_table_Sg$k_1500)), ymax=mean(na.omit(k_table_Sg$k_1500))+std(na.omit(k_table_Sg$k_1500))), color='green4')+
+  geom_point(aes(1250, mean(na.omit(k_table_Mg$k_1500))), color='blue')+
+  geom_errorbar(aes(1250, ymin=mean(na.omit(k_table_Mg$k_1500))-std(na.omit(k_table_Mg$k_1500)), ymax=mean(na.omit(k_table_Mg$k_1500))+std(na.omit(k_table_Mg$k_1500))), color='blue')+
+  geom_point(aes(1250, mean(na.omit(k_table_Sm$k_1500))), color='orange')+
+  geom_errorbar(aes(1250, ymin=mean(na.omit(k_table_Sm$k_1500))-std(na.omit(k_table_Sm$k_1500)), ymax=mean(na.omit(k_table_Sm$k_1500))+std(na.omit(k_table_Sm$k_1500))), color='orange')+
   
-  geom_point(aes(1750, mean(na.omit(table_k_Sg$k2000))), color='green4')+
-  geom_errorbar(aes(1750, ymin=mean(na.omit(table_k_Sg$k2000))-std(na.omit(table_k_Sg$k2000)), ymax=mean(na.omit(table_k_Sg$k2000))+std(na.omit(table_k_Sg$k2000))), color='green4')+
-  geom_point(aes(1750, mean(na.omit(table_k_Mg$k2000))), color='blue')+
-  geom_errorbar(aes(1750, ymin=mean(na.omit(table_k_Mg$k2000))-std(na.omit(table_k_Mg$k2000)), ymax=mean(na.omit(table_k_Mg$k2000))+std(na.omit(table_k_Mg$k2000))), color='blue')+
-  geom_point(aes(1750, mean(na.omit(table_k_Sm$k2000))), color='orange')+
-  geom_errorbar(aes(1750, ymin=mean(na.omit(table_k_Sm$k2000))-std(na.omit(table_k_Sm$k2000)), ymax=mean(na.omit(table_k_Sm$k2000))+std(na.omit(table_k_Sm$k2000))), color='orange')+
+  geom_point(aes(1750, mean(na.omit(k_table_Sg$k_2000))), color='green4')+
+  geom_errorbar(aes(1750, ymin=mean(na.omit(k_table_Sg$k_2000))-std(na.omit(k_table_Sg$k_2000)), ymax=mean(na.omit(k_table_Sg$k_2000))+std(na.omit(k_table_Sg$k_2000))), color='green4')+
+  geom_point(aes(1750, mean(na.omit(k_table_Mg$k_2000))), color='blue')+
+  geom_errorbar(aes(1750, ymin=mean(na.omit(k_table_Mg$k_2000))-std(na.omit(k_table_Mg$k_2000)), ymax=mean(na.omit(k_table_Mg$k_2000))+std(na.omit(k_table_Mg$k_2000))), color='blue')+
+  geom_point(aes(1750, mean(na.omit(k_table_Sm$k_2000))), color='orange')+
+  geom_errorbar(aes(1750, ymin=mean(na.omit(k_table_Sm$k_2000))-std(na.omit(k_table_Sm$k_2000)), ymax=mean(na.omit(k_table_Sm$k_2000))+std(na.omit(k_table_Sm$k_2000))), color='orange')+
   
   geom_point(data= k_revS,mapping = aes(k_revS$Max_Age, k_revS$k), color='green', shape= 17)+
   geom_point(data= k_revM,mapping = aes(k_revM$Max_Age, k_revM$k), color='orange4', shape= 17)+
@@ -619,9 +619,9 @@ fit_fig<-  ggplot(table_k_Sg, aes( MaxAge, m2000))+ ggtitle("Decay rate by time 
   
   annotate("text", x=1500, y=0.025, color= "blue",  size = 5, label= expression(y == 0.028 * e ** (-0.004 * 
                                                                                                      x)))+
-  annotate("text", x=1500, y=0.02, color= "green4",size = 5,label= expression(y == 0.037 * e ** (-0.003 * 
+  annotate("text", x=1500, y=0.02, color= "green4",size = 5,label= expression(y == 0.053 * e ** (-0.004 * 
                                                                                                    x)))+
-  annotate("text", x=1500, y=0.015, color= "orange",size = 5,label= expression(y == 0.023 * e ** (-0.003 * 
+  annotate("text", x=1500, y=0.015, color= "orange",size = 5,label= expression(y == 0.022 * e ** (-0.003 * 
                                                                                                     x)))
 
 
@@ -633,6 +633,24 @@ ggsave(
   width = 12,
   height = 7
 )
+
+
+
+
+
+
+
+
+
+
+###########################
+
+
+
+
+
+
+
 
 
 

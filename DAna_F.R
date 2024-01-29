@@ -1,3 +1,5 @@
+#Degradacion anaerobia 1/3
+
 setwd("C:/Users/npjun/Dropbox/Seagrasses/Degradacion anaerobia_OSCAR/SOC_Decay")
 
 library(ggplot2)
@@ -22,9 +24,33 @@ Cores <- read.csv(File,
                   dec = ".")
 Cores <- as.data.frame(Cores)
 
-#clean the rows without OC data
+# check numeric variables in dataset
+
+is.numeric(Cores$DBD)
+is.numeric(Cores$Corg)
+is.numeric(Cores$Corg_.gcm3)
+is.numeric(Cores$d13C)
+is.numeric(Cores$Mud)
+
+Cores$Max.Depth<-as.numeric(Cores$Max.Depth)
+
+#clean the rows without DBD and OC data
+Cores <- Cores[!is.na(Cores$DBD),]
+Cores$Corg <- as.numeric(Cores$Corg)
+Cores <- Cores[!is.na(Cores$Corg),]
+
+# estimation of carbon density for those samples where there are bulk density and oc percentage available
+
 Cores$Corg_.gcm3 <- as.numeric(Cores$Corg_.gcm3)
-Cores <- Cores[!is.na(Cores$Corg_.gcm3),]
+
+for (i in 1:nrow(Cores)) {
+  
+  if (is.na(Cores[i, "Corg_.gcm3"]) & !is.na(Cores[i, "DBD"]) & !is.na(Cores[i, "Corg"])) {
+    
+    Cores[i, "Corg_.gcm3"] <- Cores[i, "DBD"] * (Cores[i, "Corg"]/100)}}
+
+
+
 
 ### we create a folder to save the results
 
@@ -38,7 +64,7 @@ unique(Cores[, 5])
 
 B <- subset(Cores, Cores$V.vs.B == "Vegetated" | Cores$V.vs.B == "vegetated")
 unique(B[, 5])
-#Bare <- subset(A, A[,5]=='Bare')
+
 length(unique(B$Core))
 SingleCore<-B[!duplicated(B$Core),]
 
@@ -54,21 +80,60 @@ B$DBD <- as.numeric(B$DBD)
 #load a world map
 WM <- map_data("world")
 
-B %>%
-  ggplot() + ggtitle("Sampling sites") + xlab("Longitude") + ylab("Latitude") +
-  geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
-  #geom_point(aes(x = long, y = lat))+
-  geom_point(aes(x = Long, y = Lat,  fill = Ecosystem), pch = 21, size = 1.8) +
-  coord_sf(xlim = c(-140, 150), ylim = c(-40, 75)) +
-  scale_fill_manual(values = c("blue",  "green","orange")) +
-  theme(plot.title = element_text(hjust = 0.5))
+   global<- B %>%
+      ggplot() + ggtitle("Sampling sites") + xlab("Longitude") + ylab("Latitude") +
+      geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
+      #geom_point(aes(x = long, y = lat))+
+      geom_point(aes(x = Long, y = Lat,  fill = Ecosystem), pch = 21, size = 1.8) +
+      coord_sf(xlim = c(-140, 150), ylim = c(-40, 75)) +
+      scale_fill_manual(values = c("blue",  "green","orange")) +
+      theme(plot.title = element_text(hjust = 0.5))
+    
+    
+    nam<-B %>%
+      ggplot() + xlab("Longitude") + ylab("Latitude") +
+      geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
+      #geom_point(aes(x = long, y = lat))+
+      geom_point(aes(x = Long, y = Lat,  fill = Ecosystem), pch = 21, size = 1.8) +
+      coord_sf(xlim = c(-150, -50), ylim = c(-20, 80)) +
+      scale_fill_manual(values = c("blue",  "green","orange")) +
+      theme(plot.title = element_text(hjust = 0.5), 
+            legend.position = "none")
+    
+    
+    eu<-B %>%
+      ggplot()  + xlab("Longitude") + ylab("Latitude") +
+      geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
+      #geom_point(aes(x = long, y = lat))+
+      geom_point(aes(x = Long, y = Lat,  fill = Ecosystem), pch = 21, size = 1.8) +
+      coord_sf(xlim = c(-10, 50), ylim = c(20, 60)) +
+      scale_fill_manual(values = c("blue",  "green","orange")) +
+      theme(plot.title = element_text(hjust = 0.5), 
+            legend.position = "none")
+    
+    
+    aus<-B %>%
+      ggplot()  + xlab("Longitude") + ylab("Latitude") +
+      geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
+      #geom_point(aes(x = long, y = lat))+
+      geom_point(aes(x = Long, y = Lat,  fill = Ecosystem), pch = 21, size = 1.8) +
+      coord_sf(xlim = c(110, 155), ylim = c(-40, -5))  +
+      scale_fill_manual(values = c("blue",  "green","orange")) +
+      theme(plot.title = element_text(hjust = 0.5), 
+            legend.position = "none")
 
-
-ggsave(path = Folder,
+    ssp<-grid.arrange(global, nam, eu, aus, 
+      layout_matrix = rbind(c(1, 1, 1),
+                            c(2, 3, 4)))
+    
+    
+ggsave(
+  plot = ssp,
+  path = Folder,
   filename =  "Sampling sites.jpg",
   units = "cm",
   width = 20,
-  height = 10
+  height = 15
 )
 
 
@@ -249,6 +314,7 @@ pairwise.wilcox.test(SAR$SAR, SAR$Ecosystem,
 
 ADT <- B[, c("Core", "Ecosystem", "Max.Depth", "Corg")]
 
+
 X <- split(ADT, ADT$Core)
 
 DT <- data.frame(
@@ -315,15 +381,15 @@ write.csv(DT,
 NGr <- DT %>% group_by(C_Gr) %>% count()
 NGr %>% mutate(proc = ((n * 100) / sum(NGr[, 2])))
 
-DT %>% group_by(Ecosystem.x, C_Gr) %>% count()
-NGrSg <- subset(DT, Ecosystem.x == "Seagrass") %>% group_by(C_Gr) %>% count()
+DT %>% group_by(Ecosystem, C_Gr) %>% count()
+NGrSg <- subset(DT, Ecosystem == "Seagrass") %>% group_by(C_Gr) %>% count()
 NGrSg %>% mutate(proc = ((n * 100) / sum(NGrSg[, 2])))
 
 NGrSm <-
-  subset(DT, Ecosystem.x == "Tidal Marsh") %>% group_by(C_Gr) %>% count()
+  subset(DT, Ecosystem == "Tidal Marsh") %>% group_by(C_Gr) %>% count()
 NGrSm %>% mutate(proc = ((n * 100) / sum(NGrSm[, 2])))
 
-NGrMg <- subset(DT, Ecosystem.x == "Mangrove") %>% group_by(C_Gr) %>% count()
+NGrMg <- subset(DT, Ecosystem == "Mangrove") %>% group_by(C_Gr) %>% count()
 NGrMg %>% mutate(proc = ((n * 100) / sum(NGrMg[, 2])))
 
 ### plot per grupos. Change size of jpg file when saving!!!!!!
@@ -344,6 +410,8 @@ ggsave(
   units = 'cm',
   limitsize = FALSE
 )
+
+# too many, we have to divide
 
 ggplot(DEC, aes(Max.Depth, Corg)) + xlab("Depth (cm)") + ylab("Organic carbon (g cm-3)") +
   geom_point(aes(Max.Depth, Corg)) +
@@ -375,30 +443,10 @@ ggsave(
   path = Folder,
   filename = 'INCpor.jpg',
   width = 20,
-  height = 200,
+  height = 300,
   units = 'cm',
   limitsize = FALSE
 )
-
-
-#### MDA ### 
-
-CMS<-CM[,c(1,9,11)]
-SARS<-SAR[,c(1,5)]
-BS<- B[ !duplicated(B$Core), ]
-names(BS)[names(BS) == 'Core'] <- 'ID'
-
-
-SUM<-left_join(DT, CMS, by="ID")
-SUM<-left_join(SUM, SARS, by="ID")
-SUM<-left_join(BS, SUM, by="ID")
-
-SUM<-SUM[,-c(15:19)]
-
-
-
-
-
 
 
 
@@ -1456,30 +1504,30 @@ ggplot(fit_m2000, aes( Ecosystem, k))+
 
 # Final table and plots -------------------------------------------------------
 
-k_table <-merge(fit_100[,c(1,4)], fit_150[,c(1,4)], by = "ID", all = TRUE)
-k_table <-merge(k_table, fit_300[,c(1,4)], by = "ID", all = TRUE)
-k_table <-merge(k_table, fit_500[,c(1,4)], by = "ID", all = TRUE)
-k_table <-merge(k_table, fit_1000[,c(1,4)], by = "ID", all = TRUE)
-k_table <-merge(k_table, fit_1500[,c(1,4)], by = "ID", all = TRUE)
-k_table <-merge(k_table, fit_2000[,c(1,4)], by = "ID", all = TRUE)
-k_table <-merge(k_table, fit_m2000[,c(1,4, 5)], by = "ID", all = TRUE)
+k_table <-merge(fit_100Pb[,c(1,4)], fit_150Pb[,c(1,4)], by = "ID", all = TRUE)
+k_table <-merge(k_table, fit_300Pb[,c(1,4)], by = "ID", all = TRUE)
+k_table <-merge(k_table, fit_500Pb[,c(1,4)], by = "ID", all = TRUE)
+k_table <-merge(k_table, fit_1000C[,c(1,4)], by = "ID", all = TRUE)
+k_table <-merge(k_table, fit_1500C[,c(1,4)], by = "ID", all = TRUE)
+k_table <-merge(k_table, fit_2000C[,c(1,4)], by = "ID", all = TRUE)
+k_table <-merge(k_table, fit_m2000C[,c(1,4, 5)], by = "ID", all = TRUE)
 
 colnames(k_table)<-c("ID", "k_100", "k_150", "k_300", "k_500", "k_1000","k_1500", "k_2000", "k_m2000", "Max_Age")
-k_table$k_100<-as.numeric(k_table$k_100)
-k_table$k_300<-as.numeric(k_table$k_300)
+#k_table$k_100<-as.numeric(k_table$k_100)
+#k_table$k_300<-as.numeric(k_table$k_300)
 
 names(SingleCore)[names(SingleCore) == 'Core'] <- 'ID'
 
 k_table<-merge(k_table, SingleCore[,c(1, 3, 7, 6, 8, 11, 12)], by = 'ID', all.x=T, all.y=F)
-k_table<-merge(k_table, SAR[,c(1,5)], by = 'ID', all.x=T, all.y=F)
+k_table<-merge(k_table, SAR[,c(1,6)], by = 'ID', all.x=T, all.y=F)
 
 
-ggplot(temp, aes(k_150, Bioregions))+
+ggplot(k_table, aes(k_150, Bioregions))+
   geom_boxplot()+
   geom_jitter(aes(color=temp$Specie))
 
 
-ggplot(temp, aes(k_100, Specie))+
+ggplot(k_table, aes(k_100, Specie))+
   geom_boxplot()+
   geom_jitter(aes(color=temp$Bioregions))
 
@@ -1490,12 +1538,7 @@ shapiro.test(k_table$k_100) #normal if pvalue > than 0.05
 
 apply(k_table[,c(2:8)], FUN=shapiro.test, MARGIN = 2)
 
-
-temp<-subset(k_table_Sg, !is.na(k_100))
-
-pairwise.wilcox.test(temp$k_100, temp$Bioregions,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-
+#################### Here QUE ESTO SEGUIA EN TABLES Y FIGURAS ######################
 
 # summary table (manuscript Table 1)
 
@@ -1549,7 +1592,7 @@ k_rev<- k_rev [-c(1,6),]
 
 # boxplot by timeframe figure
 
-mk_table<-melt(k_table[,-c(9,10)], id = c("ID","Ecosystem")) 
+mk_table<-melt(k_table[,c(1:9,11)], id = c("ID","Ecosystem")) 
 
 mk_table$variable <- as.character(mk_table$variable)
 mk_table$variable[mk_table$variable == 'k_100'] <- '0-100 yr'
@@ -1559,6 +1602,9 @@ mk_table$variable[mk_table$variable == 'k_500'] <- '300-500 yr'
 mk_table$variable[mk_table$variable == 'k_1000'] <- '500-1000 yr'
 mk_table$variable[mk_table$variable == 'k_1500'] <- '1000-1500 yr'
 mk_table$variable[mk_table$variable == 'k_2000'] <- '1500-2000 yr'
+
+mk_table$value<-as.numeric(mk_table$value)
+
 
 ggplot(transform(mk_table,
                  variable=factor(variable,levels=c('0-100 yr','100-150 yr','150-300 yr', '300-500 yr', '500-1000 yr', '1000-1500 yr', '1500-2000 yr'))),
@@ -1574,18 +1620,24 @@ ggplot(transform(mk_table,
         axis.text.x=element_blank(),)
 
 
+
+
+
 #fitting table
 
 f_table<-as.data.frame(colMeans(k_table[,c(2:8)], na.rm = TRUE))
 f_table[,2]<-c(100, 150, 300, 500, 1000, 1500, 2000)
-f_table[c(8:12),1]<-na.omit(k_table[,9])
-f_table[c(8:12),2]<-na.omit(k_table[,10])
-f_table[c(13:16), c(1,2)]<-k_rev[,c(2:3)]
+f_table[c(8:11),1]<-na.omit(k_table[,9])
+f_table[c(8:11),2]<-na.omit(k_table[,10])
+f_table[c(12:18), c(1,2)]<-k_rev[,c(2:3)]
+
+
+
 
 
 # fit function k-timeframe
 
-### exponential model to predict k in Posidonia meadows
+### exponential model to predict k 
 
 
 kchange <- function(Tframe, A, C)

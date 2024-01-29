@@ -12,7 +12,8 @@ File<-"Dates.csv"
 Dates <- read.csv(File,
                   header = T,
                   sep = ";",
-                  dec = ".")
+                  dec = ".",
+                  fileEncoding="latin1")
 Dates<-as.data.frame(Dates)
 
 
@@ -152,7 +153,7 @@ for(i in 1:length(X)) {
   Ages.file<-results[grep("*_ages*", results)]
   crono3<-read.table(Ages.file, header = T, sep = "", dec = ".")
   
-  #we fill the conological model columns with the mean age at the Acc mass 
+  #we fill the chronological model columns with the mean age at the Acc mass 
   
   for (j in 1:(length(temp$Acc.Mass))) {
     
@@ -181,4 +182,15 @@ colnames(models)<-list
 
 
 write.csv(models,"Acc_Mass-Age_Gr.csv",sep=";", dec=",")  
+
+
+#### add ages from new salt marsh cores
+
+File <- "Data/Acc_Mass-Age_F.csv"
+
+Dates <- read.csv(File,
+                  header = T,
+                  sep = ",",
+                  dec = ".")
+Dates <- as.data.frame(Dates)
 
