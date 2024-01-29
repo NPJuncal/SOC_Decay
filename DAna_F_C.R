@@ -138,24 +138,6 @@ tendency<- function (df, pnames) {
   return(df_list)
 }
 
-ten_gr<-tendency(TC, pnames="Max_depth")
-
-TDEC<-ten_gr[[2]]
-
-tendPb<-ten_gr[[1]]
-
-
-
-# NLM time-Accumulated Mass -----------------------------------------------
-
-
-#For those cores that decrease with time
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-
-#Estimate organic carbon accumulated mass
 
 estimate_h <- function(df = NULL,
                        core = "core",
@@ -216,47 +198,6 @@ estimate_h <- function(df = NULL,
   
 }
 
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-
-
-#estimate carbon density and acc mass per sample
-
-#organic carbon mass per sample
-
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
-  
-  Data <- cbind(Data, Corg.M=NA)
-  
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
-  
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
-  
-  DataAM<-rbind(DataAM,Data)}
-
-
-#estimate model time acc mat 
-
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
-
-# to fit the model the core has to have more than 3 points
 OCModel<-function (df, MA = 0, nwpath) {
   
   SSS <- split(df, df$Core)
@@ -388,253 +329,29 @@ OCModel<-function (df, MA = 0, nwpath) {
 } #function to estimate production decay models over oc acc mass per core. Needs df with
 # columns: c("Core", "Ecosystem", "FAge", "Corg", "Corg.M") and a path to save outputs
 
-max_depth<-OCModel(DataAM, nwpath="Decay2023_C/Max_Depth")
-
-#eliminate outlayers:
-#eliminate empty cores (no model): 
-#eliminate some cores after visual check, we eliminate: Sg_041, Sg_310, Sg_316, Sg_321, Sm_010, Sm_022, Sm_68, Sm_69, 
-#Sm_092, Sm_097, Sm_105
-#max_depth <- max_depth[-c(14, 18, 37, 41, 43, 46, 47, 60, 61, 66, 68, 69), ]
-
-
-
-ggplot(max_depth, aes(x = k)) +
-  geom_histogram()
-
-shapiro.test(max_depth$k) #(>0.05 normal, <0.05 no normal)
-
-# check if time frame has an effect 
-
-ggplot(max_depth, aes(Max.Age, k))+
-  geom_point()
-
-
-
-# model first 100 years ---------------------------------------------------
-
-Data_i<-subset(TC, TC$FAge < 100)
-Data_t<-tendency(Data_i, pnames="100")
-
-TDEC<-Data_t[[2]]
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-#carbon stock estimation por sample
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
-  
-  Data <- cbind(Data, Corg.M=NA)
-  
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
-  
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
-  
-  DataAM<-rbind(DataAM,Data)}
-
-#model
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
-
-fit_100C<-OCModel(DataAM, nwpath="Decay2023_C/100")
-
-#eliminate some cores after visual check, we eliminate: Sg_104, Sg_111, Sg_241, Sg_316, Sg_317, Sg_321, Sg_323, Sg_497, Sm_004, 
-fit_100C[c(8, 10, 19, 29, 30, 31, 32, 37, 39), "k"]<-NA
-
-
-# model 100-150 years ---------------------------------------------------
-
-Data_i<-subset(TC, TC$FAge < 150)
-Data_t<-tendency(Data_i, pnames="100_150")
-
-TDEC<-Data_t[[2]]
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-#carbon stock estimation por sample
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
-  
-  Data <- cbind(Data, Corg.M=NA)
-  
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
-  
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
-  
-  DataAM<-rbind(DataAM,Data)}
-
-#model
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
-
-fit_150C<-OCModel(DataAM, MA= 100, nwpath="Decay2023_C/150")
-
-
-#eliminate some cores after visual check, we eliminate: Sg_193, Sg_323, Sm_004
-fit_150C <- fit_150C[-c(22, 37, 47), ]
-
-#eliminate empty cores (no model)
-fit_150C<-fit_150C[!is.na(fit_150C$P),]
-
-
-
-# model 150-300 years ---------------------------------------------------
-
-
-Data_i<-subset(TC, TC$FAge < 300)
-Data_t<-tendency(Data_i, pnames="150_300")
-
-TDEC<-Data_t[[2]]
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-#carbon stock estimation por sample
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
-  
-  Data <- cbind(Data, Corg.M=NA)
-  
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
-  
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
-  
-  DataAM<-rbind(DataAM,Data)}
-
-#model
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
-
-fit_300C<-OCModel(DataAM, MA= 150, nwpath="Decay2023_C/300")
-
-
-#eliminate outlayers: 
-
-ggplot(fit_300C, aes(x = k)) +
-  geom_histogram()
-
-#eliminate some cores after visual check, we eliminate: Sg_250, Sg_476, Sg_485, Sg_495, Sg_497, Sm_004
-fit_300C <- fit_300C[-c( 34, 47, 54, 56, 58, 60), ]
-
-#eliminate empty cores (no model)
-fit_300C<-fit_300C[!is.na(fit_300C$P),]
-
-
-
-
-
-# model 300-500 years ---------------------------------------------------
-
-Data_i<-subset(TC, TC$FAge < 500)
-Data_t<-tendency(Data_i, pnames="300_500")
-
-TDEC<-Data_t[[2]]
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-#carbon stock estimation por sample
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
-  
-  Data <- cbind(Data, Corg.M=NA)
-  
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
-  
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
-  
-  DataAM<-rbind(DataAM,Data)}
-
-#model
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
-
-fit_500C<-OCModel(DataAM, MA= 300, nwpath="Decay2023_C/500")
-
-
-#eliminate some cores after visual check, we eliminate: Sg_097, Sg_193, Sg_298, Sg_315, Sg_476, Sg_477, Sg_479, Sg_480, Sg_495, Sg_497, Sm_004
-fit_500C <- fit_500C[-c(14, 29, 36, 41, 46, 47, 49, 50, 58, 60, 62 ), ]
-
-#eliminate empty cores (no model)
-fit_500<-fit_500C[!is.na(fit_500C$P),]
-
-
-
 
 # model 500-1000 years ---------------------------------------------------
 
 
 Data_i<-subset(TC, TC$FAge < 1000)
-Data_t<-tendency(Data_i, pnames="500_1000")
+
+X<- split(Data_i, Data_i$Core)
+
+Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+colnames(Data_i2)<-colnames(Data_i)
+
+for (i in 1:length(X)) {
+  
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(Data_i)
+  
+  if (max(Data$FAge)>500) {
+    
+    Data_i2<-rbind(Data_i2, Data)
+  }}
+
+
+Data_t<-tendency(Data_i2, pnames="500_1000")
 
 TDEC<-Data_t[[2]]
 
@@ -677,18 +394,33 @@ DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")]
 fit_1000C<-OCModel(DataAM, MA= 500, nwpath="Decay2023_C/1000")
 
 #eliminate some cores after visual check, we eliminate: Sg_041, Sg_111, Sg_113, Sg_195, Sg_490, Sm_004, Sm_010
-fit_1000C <- fit_1000C[-c( 8, 17, 19, 30, 56, 64, 65), ]
+fit_1000C <- fit_1000C[-c( 8, 16, 18, 28, 36, 46, 50, 51), ]
 
-#eliminate empty cores (no model)
 fit_1000C<-fit_1000C[!is.na(fit_1000C$P),]
-
-
 
 # model 1000-1500 years ---------------------------------------------------
 
 
 Data_i<-subset(TC, TC$FAge < 1500)
-Data_t<-tendency(Data_i, pnames="1000_1500")
+
+X<- split(Data_i, Data_i$Core)
+
+Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+colnames(Data_i2)<-colnames(Data_i)
+
+for (i in 1:length(X)) {
+  
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(Data_i)
+  
+  if (max(Data$FAge)>1000) {
+    
+    Data_i2<-rbind(Data_i2, Data)
+  }}
+
+
+
+Data_t<-tendency(Data_i2, pnames="1000_1500")
 
 TDEC<-Data_t[[2]]
 
@@ -737,7 +469,7 @@ ggplot(fit_1500C, aes(x = k)) +
   geom_histogram()
 
 #eliminate some cores after visual check, we eliminate: Sg_041, Sg_097, Sg_121, Sg_195, Sg_490, Sm_004, Sm_022
-fit_1500C <- fit_1500C[-c(8, 15, 25, 30, 56, 65, 67), ]
+fit_1500C <- fit_1500C[-c(3, 10, 13, 19, 20, 21, 23, 31, 32, 39, 43), ]
 
 #eliminate empty cores (no model)
 fit_1500C<-fit_1500C[!is.na(fit_1500C$P),]
@@ -747,7 +479,24 @@ fit_1500C<-fit_1500C[!is.na(fit_1500C$P),]
 
 
 Data_i<-subset(TC, TC$FAge < 2000)
-Data_t<-tendency(Data_i, pnames="1500_2000")
+
+X<- split(Data_i, Data_i$Core)
+
+Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+colnames(Data_i2)<-colnames(Data_i)
+
+for (i in 1:length(X)) {
+  
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(Data_i)
+  
+  if (max(Data$FAge)>1500) {
+    
+    Data_i2<-rbind(Data_i2, Data)
+  }}
+
+
+Data_t<-tendency(Data_i2, pnames="1500_2000")
 
 TDEC<-Data_t[[2]]
 
@@ -796,7 +545,7 @@ ggplot(fit_2000C, aes(x = k)) +
   geom_histogram()
 
 #eliminate some cores after visual check, we eliminate: Sg_041, Sg_191
-fit_2000C <- fit_2000C[-c( 8, 15), ]
+fit_2000C <- fit_2000C[-c( 1, 2, 13, 14, 21, 22), ]
 
 #eliminate empty cores (no model)
 fit_2000C<-fit_2000C[!is.na(fit_2000C$P),]
@@ -805,7 +554,24 @@ fit_2000C<-fit_2000C[!is.na(fit_2000C$P),]
 # model > 2000 years ---------------------------------------------------
 
 Data_i<-TC
-Data_t<-tendency(Data_i, pnames=">2000_C")
+
+X<- split(Data_i, Data_i$Core)
+
+Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+colnames(Data_i2)<-colnames(Data_i)
+
+for (i in 1:length(X)) {
+  
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(Data_i)
+  
+  if (max(Data$FAge)>2000) {
+    
+    Data_i2<-rbind(Data_i2, Data)
+  }}
+
+
+Data_t<-tendency(Data_i2, pnames=">2000_C")
 
 TDEC<-Data_t[[2]]
 
@@ -854,7 +620,7 @@ ggplot(fit_m2000C, aes(x = k)) +
   geom_histogram()
 
 #eliminate some cores after visual check, we eliminate: Sg_041, Sg_097
-fit_m2000C <- fit_m2000C[-c(10, 17), ]
+fit_m2000C <- fit_m2000C[-c(3, 5, 15, 16), ]
 
 #eliminate empty cores (no model)
 fit_m2000C<-fit_m2000C[!is.na(fit_m2000C$P),]

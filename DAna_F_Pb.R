@@ -457,11 +457,7 @@ for (i in 1:nrow(TPb)) {
   
   if (is.na(TPb[i,"Age"]) == FALSE) {TPb[i,"FAge"]<-TPb[i,"Age"]} 
   
-  else {
-    
-    if (is.na(TPb[i,"Age.Pb"]) == FALSE) {TPb[i,"FAge"]<-TPb[i,"Age.Pb"]}
-    
-    else {if (is.na(TPb[i,"Age.C"]) == FALSE) {TPb[i,"FAge"]<-TPb[i,"Age.C"]}}}}
+  else {TPb[i,"FAge"]<-TPb[i,"Age.Pb"]}}
 
 # function to generate different df depending on their tendency with time (DEC, INC and NT), generate figures per group 
 # and return a dfs: TDT, TDEC, TINC and TNT. Needs a df with columns: c("Core", "Ecosystem","Min.Depth","Max.Depth", "FAge", "Corg"
@@ -583,40 +579,6 @@ tendency<- function (df, pnames) {
   return(df_list)
 }
 
-ten_gr<-tendency(TPb, pnames="Max_depth")
-
-TDEC<-ten_gr[[2]]
-
-tendPb<-ten_gr[[1]]
-
-#### Count cores per group and get the percentages
-
-NGr <- tendPb %>% group_by(C_Gr) %>% count()
-NGr %>% mutate(proc = ((n * 100) / sum(NGr[, 2])))
-
-tendPb %>% group_by(Ecosystem, C_Gr) %>% count()
-NGrSg <- subset(tendPb, Ecosystem == "Seagrass") %>% group_by(C_Gr) %>% count()
-NGrSg %>% mutate(proc = ((n * 100) / sum(NGrSg[, 2])))
-
-NGrSm <-
-  subset(tendPb, Ecosystem == "Tidal Marsh") %>% group_by(C_Gr) %>% count()
-NGrSm %>% mutate(proc = ((n * 100) / sum(NGrSm[, 2])))
-
-NGrMg <- subset(tendPb, Ecosystem == "Mangrove") %>% group_by(C_Gr) %>% count()
-NGrMg %>% mutate(proc = ((n * 100) / sum(NGrMg[, 2])))
-
-
-
-# NLM time-Accumulated Mass -----------------------------------------------
-
-
-#For those cores that decrease with time
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-
-#Estimate organic carbon accumulated mass
 
 estimate_h <- function(df = NULL,
                        core = "core",
@@ -677,47 +639,6 @@ estimate_h <- function(df = NULL,
   
 }
 
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-
-
-#estimate carbon density and acc mass per sample
-
-#organic carbon mass per sample
-
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
-  
-  Data <- cbind(Data, Corg.M=NA)
-  
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
-  
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
-  
-  DataAM<-rbind(DataAM,Data)}
-
-
-#estimate model time acc mat 
-
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
-
-# to fit the model the core has to have more than 3 points
 OCModel<-function (df, MA = 0, nwpath) {
   
   SSS <- split(df, df$Core)
@@ -849,32 +770,40 @@ OCModel<-function (df, MA = 0, nwpath) {
 } #function to estimate production decay models over oc acc mass per core. Needs df with
 # columns: c("Core", "Ecosystem", "FAge", "Corg", "Corg.M") and a path to save outputs
 
-max_depth<-OCModel(DataAM, nwpath="Decay2023_Pb/Max_Depth")
-
-#eliminate outlayers:
-#eliminate empty cores (no model): 
-#eliminate some cores after visual check, we eliminate: Sg_041, Sg_310, Sg_316, Sg_321, Sm_010, Sm_022, Sm_68, Sm_69, 
-#Sm_092, Sm_097, Sm_105
-max_depth <- max_depth[-c(14, 18, 37, 41, 43, 46, 47, 60, 61, 66, 68, 69), ]
 
 
+#General tendency with TAll, with TPb until 500
 
-ggplot(max_depth, aes(x = k)) +
-  geom_histogram()
 
-shapiro.test(max_depth$k) #(>0.05 normal, <0.05 no normal)
-
-# check if time frame has an effect 
-
-ggplot(max_depth, aes(Max.Age, k))+
-  geom_point()
 
 
 
 # model first 100 years ---------------------------------------------------
 
+
+#cores older than 80 years cut at 100
+
 Data_i<-subset(TPb, TPb$FAge < 100)
-Data_t<-tendency(Data_i, pnames="100")
+
+X<- split(Data_i, Data_i$Core)
+
+Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+colnames(Data_i2)<-colnames(Data_i)
+
+for (i in 1:length(X)) {
+  
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(Data_i)
+  
+  if (max(Data$FAge)>80) {
+    
+    Data_i2<-rbind(Data_i2, Data)
+  }}
+
+
+# estimation of tendencies
+
+Data_t<-tendency(Data_i2, pnames="100")
 
 TDEC<-Data_t[[2]]
 
@@ -916,9 +845,14 @@ DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")]
 
 fit_100Pb<-OCModel(DataAM, nwpath="Decay2023_Pb/100")
 
-#eliminate some cores after visual check, we eliminate: Sg_081, Sg_111, Sg_316, Sg_321, Sg_323, Sm_004, 
-#Sm_068, Sm_069, Sm_092, Sm_094, Sm_097, Sm_105
-fit_100Pb[c(10, 13, 31, 33, 34, 38, 50, 51, 56, 57, 58, 59), "k"]<-NA
+
+
+#eliminate some cores after visual check, we eliminate: Sg_241, Sg_323, Sg_333, #Sm_068
+fit_100Pb[c(13, 21, 23, 31), "k"]<-NA
+
+#eliminate empty cores (no model)
+fit_100Pb<-fit_100Pb[!is.na(fit_100Pb$P),]
+
 
 
 ggplot(fit_100Pb, aes( Ecosystem, k))+
@@ -937,7 +871,25 @@ pairwise.wilcox.test(fit_100Pb$k, fit_100Pb$Ecosystem,
 # model 100-150 years ---------------------------------------------------
 
 Data_i<-subset(TPb, TPb$FAge < 150)
-Data_t<-tendency(Data_i, pnames="100_150")
+
+X<- split(Data_i, Data_i$Core)
+
+Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+colnames(Data_i2)<-colnames(Data_i)
+
+for (i in 1:length(X)) {
+  
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(Data_i)
+  
+  if (max(Data$FAge)>100) {
+    
+    Data_i2<-rbind(Data_i2, Data)
+  }}
+
+
+
+Data_t<-tendency(Data_i2, pnames="100_150")
 
 TDEC<-Data_t[[2]]
 
@@ -980,12 +932,11 @@ DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")]
 fit_150Pb<-OCModel(DataAM, MA= 100, nwpath="Decay2023_Pb/150")
 
 
-#eliminate some cores after visual check, we eliminate: Mg_023, Sm_004
-fit_150Pb <- fit_150Pb[-c(6,41), ]
+#eliminate some cores after visual check, we eliminate: Mg_023, Sg_011, Sm_004, Sm_049, Sm_615
+fit_150Pb <- fit_150Pb[-c(6, 11, 33, 37, 48), ]
 
 #eliminate empty cores (no model)
 fit_150Pb<-fit_150Pb[!is.na(fit_150Pb$P),]
-
 
 ggplot(fit_150Pb, aes( Ecosystem, k))+
   geom_boxplot()+
@@ -998,7 +949,25 @@ pairwise.wilcox.test(fit_150Pb$k, fit_150Pb$Ecosystem,
 
 
 Data_i<-subset(TPb, TPb$FAge < 300)
-Data_t<-tendency(Data_i, pnames="150_300")
+
+X<- split(Data_i, Data_i$Core)
+
+Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+colnames(Data_i2)<-colnames(Data_i)
+
+for (i in 1:length(X)) {
+  
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(Data_i)
+  
+  if (max(Data$FAge)>150) {
+    
+    Data_i2<-rbind(Data_i2, Data)
+  }}
+
+
+
+Data_t<-tendency(Data_i2, pnames="150_300")
 
 TDEC<-Data_t[[2]]
 
@@ -1047,11 +1016,10 @@ ggplot(fit_300Pb, aes(x = k)) +
   geom_histogram()
 
 #eliminate some cores after visual check, we eliminate: Sg_179, Sg_192, Sm_004, Sm_010, Sm_094
-fit_300Pb <- fit_300Pb[-c( 28, 30, 45, 46, 66), ]
+fit_300Pb <- fit_300Pb[-c(21, 35), ]
 
 #eliminate empty cores (no model)
 fit_300Pb<-fit_300Pb[!is.na(fit_300Pb$P),]
-
 
 ggplot(fit_300Pb, aes( Ecosystem, k))+
   geom_boxplot()+
@@ -1065,7 +1033,24 @@ pairwise.wilcox.test(fit_300Pb$k, fit_300Pb$Ecosystem,
 # model 300-500 years ---------------------------------------------------
 
 Data_i<-subset(TPb, TPb$FAge < 500)
-Data_t<-tendency(Data_i, pnames="300_500")
+
+X<- split(Data_i, Data_i$Core)
+
+Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+colnames(Data_i2)<-colnames(Data_i)
+
+for (i in 1:length(X)) {
+  
+  Data <- as.data.frame(X[i])
+  colnames(Data)<-colnames(Data_i)
+  
+  if (max(Data$FAge)>300) {
+    
+    Data_i2<-rbind(Data_i2, Data)
+  }}
+
+
+Data_t<-tendency(Data_i2, pnames="300_500")
 
 TDEC<-Data_t[[2]]
 
@@ -1109,10 +1094,10 @@ fit_500Pb<-OCModel(DataAM, MA= 300, nwpath="Decay2023_Pb/500")
 
 
 #eliminate some cores after visual check, we eliminate: Sm_004
-fit_500Pb <- fit_500Pb[-c(12, 14, 29, 31, 37, 39, 40, 44, 46 ), ]
+fit_500Pb <- fit_500Pb[-c(10, 25, 30, 32 ), ]
 
 #eliminate empty cores (no model)
-fit_50Pb0<-fit_500Pb[!is.na(fit_500Pb$P),]
+fit_500Pb<-fit_500Pb[!is.na(fit_500Pb$P),]
 
 
 ggplot(fit_500Pb, aes( Ecosystem, k))+
@@ -1121,259 +1106,6 @@ ggplot(fit_500Pb, aes( Ecosystem, k))+
 
 pairwise.wilcox.test(fit_500Pb$k, fit_500Pb$Ecosystem,
                      p.adjust.method = "BH") # are significantly different (p < 0.05)
-
-# model 500-1000 years ---------------------------------------------------
-
-
-Data_i<-subset(TPb, TPb$FAge < 1000)
-Data_t<-tendency(Data_i, pnames="500_1000")
-
-TDEC<-Data_t[[2]]
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-#carbon stock estimation por sample
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
-  
-  Data <- cbind(Data, Corg.M=NA)
-  
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
-  
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
-  
-  DataAM<-rbind(DataAM,Data)}
-
-#model
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
-
-fit_1000Pb<-OCModel(DataAM, MA= 500, nwpath="Decay2023_Pb/1000")
-
-#eliminate some cores after visual check, we eliminate: Sg_019, Sg_041, Sg_111, Sg_117, Sg_195, Sg_312, Sm_004, Sm_010
-fit_1000Pb <- fit_1000Pb[-c( 12, 13, 19, 21, 32, 39, 47, 48), ]
-
-#eliminate empty cores (no model)
-fit_1000Pb<-fit_1000Pb[!is.na(fit_1000Pb$P),]
-
-
-ggplot(fit_1000Pb, aes( Ecosystem, k))+
-  geom_boxplot()+
-  geom_jitter()
-
-
-pairwise.wilcox.test(fit_1000Pb$k, fit_1000Pb$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-
-# model 1000-1500 years ---------------------------------------------------
-
-
-Data_i<-subset(TPb, TPb$FAge < 1500)
-Data_t<-tendency(Data_i, pnames="1000_1500")
-
-TDEC<-Data_t[[2]]
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-#carbon stock estimation por sample
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
-  
-  Data <- cbind(Data, Corg.M=NA)
-  
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
-  
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
-  
-  DataAM<-rbind(DataAM,Data)}
-
-#model
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
-
-fit_1500Pb<-OCModel(DataAM, MA= 1000, nwpath="Decay2023_Pb/1500")
-
-
-#eliminate outlayers: 
-
-ggplot(fit_1500Pb, aes(x = k)) +
-  geom_histogram()
-
-#eliminate some cores after visual check, we eliminate:  Sg_041, Sg_092, Sg_112, Sg_121, Sg_170, Sg_195, Sg_312, Sm_004, Sm_010
-fit_1500Pb <- fit_1500Pb[-c(13, 17, 19, 23, 25, 31, 38, 46, 48 ), ]
-
-#eliminate empty cores (no model)
-fit_1500Pb<-fit_1500Pb[!is.na(fit_1500Pb$P),]
-
-
-ggplot(fit_1500Pb, aes( Ecosystem, k))+
-  geom_boxplot()+
-  geom_jitter()
-
-#pairwise.wilcox.test(fit_1500Pb$k, fit_1500Pb$Ecosystem,
-                     #p.adjust.method = "BH") # are significantly different (p < 0.05)
-
-
-# model 1500-2000 years ---------------------------------------------------
-
-
-Data_i<-subset(TPb, TPb$FAge < 2000)
-Data_t<-tendency(Data_i, pnames="1500_2000")
-
-TDEC<-Data_t[[2]]
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-#carbon stock estimation por sample
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
-  
-  Data <- cbind(Data, Corg.M=NA)
-  
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
-  
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
-  
-  DataAM<-rbind(DataAM,Data)}
-
-#model
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
-
-fit_2000Pb<-OCModel(DataAM, MA= 1500, nwpath="Decay2023_Pb/2000")
-
-
-#eliminate outlayers: 
-
-ggplot(fit_2000Pb, aes(x = k)) +
-  geom_histogram()
-
-#eliminate some cores after visual check, we eliminate: Sg_041, Sg_191
-fit_2000Pb <- fit_2000Pb[-c( 13, 29), ]
-
-#eliminate empty cores (no model)
-fit_2000Pb<-fit_2000Pb[!is.na(fit_2000Pb$P),]
-
-
-ggplot(fit_2000Pb, aes( Ecosystem, k))+
-  geom_boxplot()+
-  geom_jitter()
-
-
-pairwise.wilcox.test(fit_2000Pb$k, fit_2000Pb$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-
-# model > 2000 years ---------------------------------------------------
-
-Data_i<-TPb
-Data_t<-tendency(Data_i, pnames=">2000_Pb")
-
-TDEC<-Data_t[[2]]
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-#carbon stock estimation por sample
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
-  
-  Data <- cbind(Data, Corg.M=NA)
-  
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
-  
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
-  
-  DataAM<-rbind(DataAM,Data)}
-
-#model
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
-
-fit_m2000Pb<-OCModel(DataAM, MA= 2000, nwpath="Decay2023_Pb/more_2000")
-
-
-#eliminate outlayers: 
-
-ggplot(fit_m2000Pb, aes(x = k)) +
-  geom_histogram()
-
-#eliminate some cores after visual check, we eliminate: Sg_041, Sg_097
-fit_m2000Pb <- fit_m2000Pb[-c(14, 18), ]
-
-#eliminate empty cores (no model)
-fit_m2000Pb<-fit_m2000Pb[!is.na(fit_m2000Pb$P),]
-
 
 
 # Final table and plots -------------------------------------------------------
