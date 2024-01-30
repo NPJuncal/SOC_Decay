@@ -453,6 +453,260 @@ ggsave(
 # Figures and tables tendency with depth ----------------------------------
 
 
+### Figure 1 ###
+
+
+
+DT2<-DT
+DT2$C_Gr <- recode(DT2$C_Gr, DEC = 'DEC',
+                   INC  = 'N',
+                   NT = 'N')
+
+ggplot(CM, aes(DT2$C_Gr, CM$Av_C_25)) +
+  geom_boxplot()+
+  geom_jitter()
+
+pairwise.wilcox.test(CM$Av_C_25, DT2$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+
+
+DT2<-cbind(CM, DT2)
+DT2<-DT2[,c(1:20, 25)]
+DT2 <-merge(DT2, SAR[,c(1,3:6)], by = "ID", all = TRUE)
+
+cor.test(DT2$Av_Mud_25, DT2$Av_13C_25)
+plot(DT2$Av_Mud_25, DT2$Av_13C_25)
+
+
+#### Figure 1 ####
+
+#Seagrass meadows
+DT2Sg<-subset(DT2, Ecosystem=="Seagrass")
+
+
+cor.test(DT2Sg$Av_C_25, DT2Sg$Av_13C_25, method="spearman")
+plot(DT2Sg$Av_C_25, DT2Sg$Av_13C_25)
+
+#organic carbon  
+
+SC<-ggplot(DT2Sg, aes(C_Gr, Av_C_25)) + ggtitle("Seagrass")+
+  geom_boxplot()+
+  geom_jitter(color="green4", alpha = 0.1)+
+  ylim(-5,50)+
+  annotate("text",
+           x = 1:length(table(DT2Sg$C_Gr)),
+           y = -5,
+           label = table(subset(DT2Sg, !is.na(Av_C_25))[,"C_Gr"]),
+           col = "black")+
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
+
+
+pairwise.wilcox.test(DT2Sg$Av_C_25, DT2Sg$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+#mud  
+SM<-ggplot(DT2Sg, aes(C_Gr, Av_Mud_25)) + 
+  geom_boxplot()+
+  geom_jitter(color="green4", alpha = 0.5)+
+  ylim(-10,110)+
+  annotate("text",
+           x = 1:length(table(DT2Sg$C_Gr)),
+           y = -7,
+           label = table(subset(DT2Sg, !is.na(Av_Mud_25))[,"C_Gr"]),
+           col = "black")+
+  theme(axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
+
+
+pairwise.wilcox.test(DT2Sg$Av_Mud_25, DT2Sg$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
+
+#SAR
+
+SS<-ggplot(DT2Sg, aes(C_Gr, SAR)) + 
+  geom_boxplot()+
+  geom_jitter(color="green4", alpha = 0.5)+
+  ylim(-0.15,1.1)+
+  annotate("text",
+           x = 1:length(table(DT2Sg$C_Gr)),
+           y = -0.1,
+           label = table(subset(DT2Sg, !is.na(SAR))[,"C_Gr"]),
+           col = "black")+
+  theme(axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
+
+
+pairwise.wilcox.test(DT2Sg$SAR, DT2Sg$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
+
+#d13C
+
+d13S<-ggplot(DT2Sg, aes(C_Gr, Av_13C_25)) + 
+  geom_boxplot()+
+  geom_jitter(color="green4", alpha = 0.5)+
+  ylim(-30,-5)+
+  annotate("text",
+           x = 1:length(table(DT2Sg$C_Gr)),
+           y = -30,
+           label = table(subset(DT2Sg, !is.na(Av_13C_25))[,"C_Gr"]),
+           col = "black")+
+  theme(axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
+
+
+pairwise.wilcox.test(DT2Sg$Av_13C_25, DT2Sg$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
+
+
+#Tidal marshes  
+DT2Sm<-subset(DT2, Ecosystem=="Tidal Marsh")
+
+#organic carbon  
+TMC<-ggplot(DT2Sm, aes(C_Gr, Av_C_25)) + ggtitle("Tidal Marsh")+
+  geom_boxplot()+
+  geom_jitter(color="orange", alpha = 0.1)+
+  ylim(-5,50)+
+  annotate("text",
+           x = 1:length(table(DT2Sm$C_Gr)),
+           y = -5,
+           label = table(subset(DT2Sm, !is.na(Av_C_25))[,"C_Gr"]),
+           col = "black")+
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
+
+pairwise.wilcox.test(DT2Sm$Av_C_25, DT2Sm$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+#mud  
+TMM<-ggplot(DT2Sm, aes(C_Gr, Av_Mud_25)) +
+  geom_boxplot()+
+  geom_jitter(color="orange", alpha = 0.5)+
+  ylim(-10,110)+
+  annotate("text",
+           x = 1:length(table(DT2Sm$C_Gr)),
+           y = -7,
+           label = table(subset(DT2Sm, !is.na(Av_Mud_25))[,"C_Gr"]),
+           col = "black")+
+  theme(axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
+
+pairwise.wilcox.test(DT2Sm$Av_Mud_25, DT2Sm$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
+
+#SAR 
+TMS<-ggplot(DT2Sm, aes(C_Gr, SAR)) +
+  geom_boxplot()+
+  geom_jitter(color="orange", alpha = 0.5)+
+  ylim(-0.15,1.1)+
+  annotate("text",
+           x = 1:length(table(DT2Sm$C_Gr)),
+           y = -0.1,
+           label = table(subset(DT2Sm, !is.na(SAR))[,"C_Gr"]),
+           col = "black")+
+  theme(axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
+
+pairwise.wilcox.test(DT2Sm$SAR, DT2Sm$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05) 
+
+#d13C
+
+d13T<-ggplot(DT2Sm, aes(C_Gr, Av_13C_25)) + 
+  geom_boxplot()+
+  geom_jitter(color="orange", alpha = 0.5)+
+  ylim(-30,-5)+
+  annotate("text",
+           x = 1:length(table(DT2Sm$C_Gr)),
+           y = -30,
+           label = table(subset(DT2Sm, !is.na(Av_13C_25))[,"C_Gr"]),
+           col = "black")+
+  theme(axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
+
+
+pairwise.wilcox.test(DT2Sm$Av_13C_25, DT2Sm$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+
+#Mangroves        
+DT2Mg<-subset(DT2, Ecosystem=="Mangrove")
+#organic carbon  
+MGC<-ggplot(DT2Mg, aes(C_Gr, Av_C_25)) + ylab("OC% (Top 25cm)") + ggtitle("Mangrove")+
+  geom_boxplot()+
+  geom_jitter(color="blue", alpha = 0.5)+
+  ylim(-5,50)+
+  annotate("text",
+           x = 1:length(table(DT2Mg$C_Gr)),
+           y = -5,
+           label = table(subset(DT2Mg, !is.na(Av_C_25))[,"C_Gr"]),
+           col = "black")+
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.title.x = element_blank())
+
+pairwise.wilcox.test(DT2Mg$Av_C_25, DT2Mg$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+#mud  
+TGM<-ggplot(DT2Mg, aes(C_Gr, Av_Mud_25)) + ylab("Mud% (Top 25cm)") +
+  geom_boxplot()+
+  geom_jitter(color="blue", alpha = 0.5)+
+  ylim(-10,110)+
+  annotate("text",
+           x = 1:length(table(DT2Mg$C_Gr)),
+           y = -7,
+           label = table(subset(DT2Mg, !is.na(Av_Mud_25))[,"C_Gr"]),
+           col = "black")+
+  theme(axis.title.x = element_blank())
+
+pairwise.wilcox.test(DT2Mg$Av_Mud_25, DT2Mg$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05) 
+
+#SAR 
+TGS<-ggplot(DT2Mg, aes(C_Gr, SAR)) + ylab("Sediment acc. rate (cm)") +
+  geom_boxplot()+
+  geom_jitter(color="blue", alpha = 0.5)+
+  ylim(-0.15,1.1)+
+  annotate("text",
+           x = 1:length(table(DT2Mg$C_Gr)),
+           y = -0.1,
+           label = table(subset(DT2Mg, !is.na(SAR))[,"C_Gr"]),
+           col = "black")+
+  theme(axis.title.x = element_blank())
+
+pairwise.wilcox.test(DT2Mg$SAR, DT2Mg$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05) 
+
+#d13C
+
+d13M<-ggplot(DT2Mg, aes(C_Gr, Av_13C_25)) + ylab("Average d13C") +
+  geom_boxplot()+
+  geom_jitter(color="blue", alpha = 0.5)+
+  #ylim(-0.15,1.1)+
+  #annotate("text",
+  #        x = 1:length(table(DT2Mg$C_Gr)),
+  #       y = -0.1,
+  #      label = table(subset(DT2Mg, !is.na(Av_13C_25))[,"C_Gr"]),
+  #     col = "black")+
+  theme(axis.title.x = element_blank())
+
+
+#pairwise.wilcox.test(DT2Mg$Av_13C_25, DT2Mg$C_Gr,
+#                    p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+
+todos_CM<-ggpubr::ggarrange(MGC, SC, TMC, TGM, SM, TMM, TGS, SS, TMS,d13M, d13S, d13T,
+                            labels = c("A","B", "C","D" , "E","F", "G","H", "I", "J", "K", "L"),
+                            ncol=3, nrow= 4)
+
+
+ggsave( plot = todos_CM,
+        path = Folder,
+        filename =  "C_Mud_Gr.jpg",
+        units = "cm",
+        width = 20,
+        height = 25
+)    
 
 
 
@@ -1523,262 +1777,6 @@ k_table_Sm[,c(2:10)]<-sapply(k_table_Sm[,c(2:10)],FUN=as.numeric)
 
 
 
-### Figure 1 ###
-
-
-
-DT2<-DT
-DT2$C_Gr <- recode(DT2$C_Gr, DEC = 'DEC',
-                   INC  = 'N',
-                   NT = 'N')
-
-ggplot(CM, aes(DT2$C_Gr, CM$Av_C_25)) +
-  geom_boxplot()+
-  geom_jitter()
-
-pairwise.wilcox.test(CM$Av_C_25, DT2$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-
-
-
-DT2<-cbind(CM, DT2)
-DT2<-DT2[,c(1:20, 25)]
-DT2 <-merge(DT2, SAR[,c(1,3:6)], by = "ID", all = TRUE)
-
-cor.test(DT2$Av_Mud_25, DT2$Av_13C_25)
-plot(DT2$Av_Mud_25, DT2$Av_13C_25)
-
-
-#### Figure 1 ####
-
-#Seagrass meadows
-DT2Sg<-subset(DT2, Ecosystem=="Seagrass")
-
-
-cor.test(DT2Sg$Av_C_25, DT2Sg$Av_13C_25, method="spearman")
-plot(DT2Sg$Av_C_25, DT2Sg$Av_13C_25)
-
-#organic carbon  
-
-SC<-ggplot(DT2Sg, aes(C_Gr, Av_C_25)) + ggtitle("Seagrass")+
-  geom_boxplot()+
-  geom_jitter(color="green4", alpha = 0.1)+
-  ylim(-5,50)+
-  annotate("text",
-           x = 1:length(table(DT2Sg$C_Gr)),
-           y = -5,
-           label = table(subset(DT2Sg, !is.na(Av_C_25))[,"C_Gr"]),
-           col = "black")+
-  theme(plot.title = element_text(hjust = 0.5),
-        axis.title.x = element_blank(), 
-        axis.title.y = element_blank())
-
-
-pairwise.wilcox.test(DT2Sg$Av_C_25, DT2Sg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-#mud  
-SM<-ggplot(DT2Sg, aes(C_Gr, Av_Mud_25)) + 
-  geom_boxplot()+
-  geom_jitter(color="green4", alpha = 0.5)+
-  ylim(-10,110)+
-  annotate("text",
-           x = 1:length(table(DT2Sg$C_Gr)),
-           y = -7,
-           label = table(subset(DT2Sg, !is.na(Av_Mud_25))[,"C_Gr"]),
-           col = "black")+
-  theme(axis.title.x = element_blank(), 
-        axis.title.y = element_blank())
-
-
-pairwise.wilcox.test(DT2Sg$Av_Mud_25, DT2Sg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
-
-#SAR
-
-SS<-ggplot(DT2Sg, aes(C_Gr, SAR)) + 
-  geom_boxplot()+
-  geom_jitter(color="green4", alpha = 0.5)+
-  ylim(-0.15,1.1)+
-  annotate("text",
-           x = 1:length(table(DT2Sg$C_Gr)),
-           y = -0.1,
-           label = table(subset(DT2Sg, !is.na(SAR))[,"C_Gr"]),
-           col = "black")+
-  theme(axis.title.x = element_blank(), 
-        axis.title.y = element_blank())
-
-
-pairwise.wilcox.test(DT2Sg$SAR, DT2Sg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
-
-#d13C
-
-d13S<-ggplot(DT2Sg, aes(C_Gr, Av_13C_25)) + 
-  geom_boxplot()+
-  geom_jitter(color="green4", alpha = 0.5)+
-  ylim(-30,-5)+
-  annotate("text",
-           x = 1:length(table(DT2Sg$C_Gr)),
-           y = -30,
-           label = table(subset(DT2Sg, !is.na(Av_13C_25))[,"C_Gr"]),
-           col = "black")+
-  theme(axis.title.x = element_blank(), 
-        axis.title.y = element_blank())
-
-
-pairwise.wilcox.test(DT2Sg$Av_13C_25, DT2Sg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
-
-
-#Tidal marshes  
-DT2Sm<-subset(DT2, Ecosystem=="Tidal Marsh")
-
-#organic carbon  
-TMC<-ggplot(DT2Sm, aes(C_Gr, Av_C_25)) + ggtitle("Tidal Marsh")+
-  geom_boxplot()+
-  geom_jitter(color="orange", alpha = 0.1)+
-  ylim(-5,50)+
-  annotate("text",
-           x = 1:length(table(DT2Sm$C_Gr)),
-           y = -5,
-           label = table(subset(DT2Sm, !is.na(Av_C_25))[,"C_Gr"]),
-           col = "black")+
-  theme(plot.title = element_text(hjust = 0.5),
-        axis.title.x = element_blank(), 
-        axis.title.y = element_blank())
-
-pairwise.wilcox.test(DT2Sm$Av_C_25, DT2Sm$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-#mud  
-TMM<-ggplot(DT2Sm, aes(C_Gr, Av_Mud_25)) +
-  geom_boxplot()+
-  geom_jitter(color="orange", alpha = 0.5)+
-  ylim(-10,110)+
-  annotate("text",
-           x = 1:length(table(DT2Sm$C_Gr)),
-           y = -7,
-           label = table(subset(DT2Sm, !is.na(Av_Mud_25))[,"C_Gr"]),
-           col = "black")+
-  theme(axis.title.x = element_blank(), 
-        axis.title.y = element_blank())
-
-pairwise.wilcox.test(DT2Sm$Av_Mud_25, DT2Sm$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
-
-#SAR 
-TMS<-ggplot(DT2Sm, aes(C_Gr, SAR)) +
-  geom_boxplot()+
-  geom_jitter(color="orange", alpha = 0.5)+
-  ylim(-0.15,1.1)+
-  annotate("text",
-           x = 1:length(table(DT2Sm$C_Gr)),
-           y = -0.1,
-           label = table(subset(DT2Sm, !is.na(SAR))[,"C_Gr"]),
-           col = "black")+
-  theme(axis.title.x = element_blank(), 
-        axis.title.y = element_blank())
-
-pairwise.wilcox.test(DT2Sm$SAR, DT2Sm$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05) 
-
-#d13C
-
-d13T<-ggplot(DT2Sm, aes(C_Gr, Av_13C_25)) + 
-  geom_boxplot()+
-  geom_jitter(color="orange", alpha = 0.5)+
-  ylim(-30,-5)+
-  annotate("text",
-           x = 1:length(table(DT2Sm$C_Gr)),
-           y = -30,
-           label = table(subset(DT2Sm, !is.na(Av_13C_25))[,"C_Gr"]),
-           col = "black")+
-  theme(axis.title.x = element_blank(), 
-        axis.title.y = element_blank())
-
-
-pairwise.wilcox.test(DT2Sm$Av_13C_25, DT2Sm$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-
-
-#Mangroves        
-DT2Mg<-subset(DT2, Ecosystem=="Mangrove")
-#organic carbon  
-MGC<-ggplot(DT2Mg, aes(C_Gr, Av_C_25)) + ylab("OC% (Top 25cm)") + ggtitle("Mangrove")+
-  geom_boxplot()+
-  geom_jitter(color="blue", alpha = 0.5)+
-  ylim(-5,50)+
-  annotate("text",
-           x = 1:length(table(DT2Mg$C_Gr)),
-           y = -5,
-           label = table(subset(DT2Mg, !is.na(Av_C_25))[,"C_Gr"]),
-           col = "black")+
-  theme(plot.title = element_text(hjust = 0.5),
-        axis.title.x = element_blank())
-
-pairwise.wilcox.test(DT2Mg$Av_C_25, DT2Mg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-#mud  
-TGM<-ggplot(DT2Mg, aes(C_Gr, Av_Mud_25)) + ylab("Mud% (Top 25cm)") +
-  geom_boxplot()+
-  geom_jitter(color="blue", alpha = 0.5)+
-  ylim(-10,110)+
-  annotate("text",
-           x = 1:length(table(DT2Mg$C_Gr)),
-           y = -7,
-           label = table(subset(DT2Mg, !is.na(Av_Mud_25))[,"C_Gr"]),
-           col = "black")+
-  theme(axis.title.x = element_blank())
-
-pairwise.wilcox.test(DT2Mg$Av_Mud_25, DT2Mg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05) 
-
-#SAR 
-TGS<-ggplot(DT2Mg, aes(C_Gr, SAR)) + ylab("Sediment acc. rate (cm)") +
-  geom_boxplot()+
-  geom_jitter(color="blue", alpha = 0.5)+
-  ylim(-0.15,1.1)+
-  annotate("text",
-           x = 1:length(table(DT2Mg$C_Gr)),
-           y = -0.1,
-           label = table(subset(DT2Mg, !is.na(SAR))[,"C_Gr"]),
-           col = "black")+
-  theme(axis.title.x = element_blank())
-
-pairwise.wilcox.test(DT2Mg$SAR, DT2Mg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05) 
-
-#d13C
-
-d13M<-ggplot(DT2Mg, aes(C_Gr, Av_13C_25)) + ylab("Average d13C") +
-  geom_boxplot()+
-  geom_jitter(color="blue", alpha = 0.5)+
-  #ylim(-0.15,1.1)+
-  #annotate("text",
-  #        x = 1:length(table(DT2Mg$C_Gr)),
-  #       y = -0.1,
-  #      label = table(subset(DT2Mg, !is.na(Av_13C_25))[,"C_Gr"]),
-  #     col = "black")+
-  theme(axis.title.x = element_blank())
-
-
-#pairwise.wilcox.test(DT2Mg$Av_13C_25, DT2Mg$C_Gr,
-#                    p.adjust.method = "BH") # are significantly different (p < 0.05)
-
-
-todos_CM<-ggpubr::ggarrange(MGC, SC, TMC, TGM, SM, TMM, TGS, SS, TMS,d13M, d13S, d13T,
-                            labels = c("A","B", "C","D" , "E","F", "G","H", "I", "J", "K", "L"),
-                            ncol=3, nrow= 4)
-
-
-ggsave( plot = todos_CM,
-        path = Folder,
-        filename =  "C_Mud_Gr.jpg",
-        units = "cm",
-        width = 20,
-        height = 25
-)    
-
-
 ### Table 1 ###
 
 
@@ -1787,10 +1785,6 @@ k_tablem<-melt (k_table[, c(1:8, 11)], id=c( "ID", "Ecosystem" ))
 
 
 # Final table (Pb <500, 14C >500) -----------------------------------------
-
-table_k<-merge(k_tablePb, k_tableC, by = "ID", all = TRUE)
-table_k<-table_k[,c(1:5,16:20)]
-
 
 table_k$Ecosystem<-"NA"
 
@@ -1959,54 +1953,54 @@ colnames(f_table_Mg)<-c("k","timeframe")
 kchange <- function(Tframe, A, C)
   (A * exp(C * Tframe))
 
-# seagrass model
-modelSg <-
-  nls(
-    k ~ kchange(timeframe, myA, myC),
-    data = f_table_Sg,
-    start = list(myA = 0.02, myC = 0.0003)
-  )
+      # seagrass model
+      modelSg <-
+        nls(
+          k ~ kchange(timeframe, myA, myC),
+          data = f_table_Sg,
+          start = list(myA = 0.02, myC = 0.0003)
+        )
+      
+      summary(modelSg)
+      
+      fitSg <- as.data.frame(c(1:5000))
+      fitSg['new_col'] <- NA
+      fitSg[, 2] <- kchange(c(1:5000), 0.0532, -0.004)
+      colnames(fitSg) <- list("timeframe", "predict")
+      
+      # tidal marsh model
+      modelTm <-
+        nls(
+          k ~ kchange(timeframe, myA, myC),
+          data = f_table_Tm,
+          start = list(myA = 0.02, myC = 0.0003)
+        )
+      
+      summary(modelTm)
+      
+      fitTm <- as.data.frame(c(1:5000))
+      fitTm['new_col'] <- NA
+      fitTm[, 2] <- kchange(c(1:5000), 0.022, -0.003)
+      colnames(fitTm) <- list("timeframe", "predict")
+      
+      # Mangrove model
+      modelMg <-
+        nls(
+          k ~ kchange(timeframe, myA, myC),
+          data = f_table_Mg,
+          start = list(myA = 0.02, myC = 0.0003)
+        )
+      
+      summary(modelMg)
+      
+      fitMg <- as.data.frame(c(1:5000))
+      fitMg['new_col'] <- NA
+      fitMg[, 2] <- kchange(c(1:5000), 0.0282, -0.0043)
+      colnames(fitMg) <- list("timeframe", "predict")
 
-summary(modelSg)
-
-fitSg <- as.data.frame(c(1:5000))
-fitSg['new_col'] <- NA
-fitSg[, 2] <- kchange(c(1:5000), 0.0532, -0.004)
-colnames(fitSg) <- list("timeframe", "predict")
-
-# tidal marsh model
-modelTm <-
-  nls(
-    k ~ kchange(timeframe, myA, myC),
-    data = f_table_Tm,
-    start = list(myA = 0.02, myC = 0.0003)
-  )
-
-summary(modelTm)
-
-fitTm <- as.data.frame(c(1:5000))
-fitTm['new_col'] <- NA
-fitTm[, 2] <- kchange(c(1:5000), 0.022, -0.003)
-colnames(fitTm) <- list("timeframe", "predict")
-
-# Mangrove model
-modelMg <-
-  nls(
-    k ~ kchange(timeframe, myA, myC),
-    data = f_table_Mg,
-    start = list(myA = 0.02, myC = 0.0003)
-  )
-
-summary(modelMg)
-
-fitMg <- as.data.frame(c(1:5000))
-fitMg['new_col'] <- NA
-fitMg[, 2] <- kchange(c(1:5000), 0.0282, -0.0043)
-colnames(fitMg) <- list("timeframe", "predict")
 
 
-
-# k vs time frame fitting figure ------------------------------------------
+# k vs time frame fitting figure (Figure 2) ------------------------------------------
 
 
 std <- function(x) sd(x)/sqrt(length(x))
@@ -2101,4 +2095,110 @@ ggsave(
 
 
 
+# correlation decay rate, OC, Mud and d13C (Figure 3) ------------------------------------
 
+  # first we estimate the average OC, mud, d13C and SAR content for the studied time frame
+  # we use the max age of each core
+  
+  
+  #writte a function to estimate correlation between function and k for especific time frames
+  
+  
+  
+  estimate_sum_var <-function (df, df2) {
+    
+    x<-split(df, df$Core)
+    
+    temp<-df2
+    temp$OC<-"NA"
+    temp$Mud<-"NA"
+    temp$d13C<-"NA"
+    temp$SAR<-"NA"
+    
+    
+    for (i in 1:nrow(temp)) {
+      
+      data<-as.data.frame(x[temp[i,"ID"]])
+      colnames(data)<-colnames(df)
+      data_a<-subset(data, data$FAge<=temp[i, "Max.Age"])
+      temp[i, "OC"]<-mean(data_a$Corg, na.rm=TRUE)
+      temp[i, "Mud"]<-mean(data_a$Mud, na.rm=TRUE)
+      temp[i, "d13C"]<-mean(data_a$d13C, na.rm=TRUE)
+      temp[i, "SAR"]<-max(data_a$Max.Depth)/max(data_a$FAge)}
+    
+    temp$Mud<-as.numeric(temp$Mud)
+    temp$OC<-as.numeric(temp$OC)
+    temp$d13C<-as.numeric(temp$d13C)
+    temp$SAR<-as.numeric(temp$SAR)
+    
+    return(temp)
+    
+    
+  }
+  
+  var_100<-estimate_sum_var (TPb, fit_100Pb)
+  var_150<-estimate_sum_var (TPb, fit_150Pb)
+  var_1000<-estimate_sum_var (TC, fit_1000C)
+  
+  
+  
+  plot(var_100$k, var_100$Mud)
+  
+  cor.test(as.numeric(var_100$k), as.numeric(var_100$Mud), method=c("spearman"))
+  cor.test(as.numeric(var_100$k), as.numeric(var_100$OC), method=c("spearman"))
+  cor.test(as.numeric(var_100$k), as.numeric(var_100$d13C), method=c("spearman"))
+  cor.test(as.numeric(var_100$k), as.numeric(var_100$SAR), method=c("spearman"))
+  
+  cor.test(as.numeric(var_150$k), as.numeric(var_150$Mud), method=c("spearman"))
+  cor.test(as.numeric(var_150$k), as.numeric(var_150$OC), method=c("spearman"))
+  cor.test(as.numeric(var_150$k), as.numeric(var_150$d13C), method=c("spearman"))
+  cor.test(as.numeric(var_150$k), as.numeric(var_150$SAR), method=c("spearman"))
+  
+  cor.test(as.numeric(var_1000$k), as.numeric(var_1000$Mud), method=c("spearman"))
+  cor.test(as.numeric(var_1000$k), as.numeric(var_1000$OC), method=c("spearman"))
+  cor.test(as.numeric(var_1000$k), as.numeric(var_1000$d13C), method=c("spearman"))
+  cor.test(as.numeric(var_1000$k), as.numeric(var_1000$SAR), method=c("spearman"))
+  
+  
+  
+  ggplot(var_150, aes(k, OC))+
+    geom_point(aes(color=Ecosystem))+
+    scale_color_manual(values=c('blue', 'green4', "orange"))
+  
+  ggplot(var_150, aes(k, d13C))+
+    geom_point(aes(color=Ecosystem))+
+    scale_color_manual(values=c('blue', 'green4', "orange"))
+  
+  ggplot(var_150, aes(k, SAR))+
+    geom_point(aes(color=Ecosystem))+
+    scale_color_manual(values=c('blue', 'green4', "orange"))
+  
+  
+  
+  
+  # figure 3
+  stm<-ggplot(var_150, aes(k, Mud))+ ylab("Mud % (<0.063 mm)") + xlab("100-150 yr") +
+    geom_point(aes(color=Ecosystem))+
+    xlim(0, 0.04)+ ylim (0,100)+
+    scale_color_manual(values=c('blue', 'green4', "orange"))
+  
+  ltm<-ggplot(var_1000, aes(k, Mud))+ ylab("Mud % (<0.063 mm)") + xlab("500-1000 yr") +
+    geom_point(aes(color=Ecosystem))+
+    xlim(0, 0.04)+ ylim (0,100)+
+    scale_color_manual(values=c( 'green4', "orange"))
+  
+  
+  mud_decay<-grid.arrange(stm, ltm, top = "Dacay rates (yr-1)")
+  
+  
+  ggsave(
+    plot = mud_decay,
+    path = Folder,
+    filename = "mud_decay.jpg",
+    units = "cm",
+    width = 9,
+    height = 10
+  )
+  
+  
+  

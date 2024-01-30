@@ -659,113 +659,89 @@ ggsave(
 # first we estimate the average OC, mud, d13C and SAR content for the studied time frame
 # we use the max age of each core
 
-x<-split(TPb, TPb$Core)
 
-Sum150_a<-fit_150Pb
-Sum150_a$OC<-"NA"
-Sum150_a$Mud<-"NA"
-Sum150_a$d13C<-"NA"
-Sum150_a$SAR<-"NA"
-
-for (i in 1:nrow(Sum150_a)) {
-  
-  data<-as.data.frame(x[Sum150_a[i,"ID"]])
-  colnames(data)<-colnames(TPb)
-  data_a<-subset(data, data$FAge<=Sum150_a[i, "Max.Age"])
-  Sum150_a[i, "OC"]<-mean(data_a$Corg, na.rm=TRUE)
-  Sum150_a[i, "Mud"]<-mean(data_a$Mud, na.rm=TRUE)
-  Sum150_a[i, "d13C"]<-mean(data_a$d13C, na.rm=TRUE)
-  Sum150_a[i, "SAR"]<-max(data_a$Max.Depth)/max(data_a$FAge)}
-
-Sum150_a$Mud<-as.numeric(Sum150_a$Mud)
-Sum150_a$OC<-as.numeric(Sum150_a$OC)
-Sum150_a$d13C<-as.numeric(Sum150_a$d13C)
-Sum150_a$SAR<-as.numeric(Sum150_a$SAR)
-
-Sum1000_a<-fit_1000C
-Sum1000_a$OC<-"NA"
-Sum1000_a$Mud<-"NA"
-Sum1000_a$d13C<-"NA"
-Sum1000_a$SAR<-"NA"
-
-x<-split(TC, TC$Core)
-
-for (i in 1:nrow(Sum1000_a)) {
-  
-  data<-as.data.frame(x[Sum1000_a[i,"ID"]])
-  colnames(data)<-colnames(TC)
-  data_a<-subset(data, data$FAge<=Sum1000_a[i, "Max.Age"])
-  Sum1000_a[i, "OC"]<-mean(data_a$Corg, na.rm=TRUE)
-  Sum1000_a[i, "Mud"]<-mean(data_a$Mud, na.rm=TRUE)
-  Sum1000_a[i, "d13C"]<-mean(data_a$d13C, na.rm=TRUE)
-  Sum1000_a[i, "SAR"]<-max(data_a$Max.Depth)/max(data_a$FAge)}
-
-Sum1000_a$Mud<-as.numeric(Sum1000_a$Mud)
-Sum1000_a$OC<-as.numeric(Sum1000_a$OC)
-Sum1000_a$d13C<-as.numeric(Sum1000_a$d13C)
-Sum1000_a$SAR<-as.numeric(Sum1000_a$SAR)
-
-
-shapiro.test(Sum150_a$k) #normal if pvalue > than 0.05
-shapiro.test(as.numeric(Sum150_a$OC))
-shapiro.test(as.numeric(Sum150_a$Mud))
-shapiro.test(as.numeric(Sum150_a$d13C))
-shapiro.test(as.numeric(Sum150_a$SAR))
-plot(Sum150_a$k, Sum150_a$Mud)
-
-cor.test(as.numeric(Sum150_a$k), as.numeric(Sum150_a$Mud), method=c("spearman"))
-cor.test(as.numeric(Sum150_a$k), as.numeric(Sum150_a$OC), method=c("spearman"))
-cor.test(as.numeric(Sum150_a$k), as.numeric(Sum150_a$d13C), method=c("spearman"))
-cor.test(as.numeric(Sum150_a$k), as.numeric(Sum150_a$SAR), method=c("spearman"))
+#writte a function to estimate correlation between function and k for especific time frames
 
 
 
-ggplot(Sum150_a, aes(k, OC))+
+ estimate_sum_var <-function (df, df2) {
+   
+   x<-split(df, df$Core)
+   
+   temp<-df2
+   temp$OC<-"NA"
+   temp$Mud<-"NA"
+   temp$d13C<-"NA"
+   temp$SAR<-"NA"
+   
+   
+   for (i in 1:nrow(temp)) {
+     
+     data<-as.data.frame(x[temp[i,"ID"]])
+     colnames(data)<-colnames(df)
+     data_a<-subset(data, data$FAge<=temp[i, "Max.Age"])
+     temp[i, "OC"]<-mean(data_a$Corg, na.rm=TRUE)
+     temp[i, "Mud"]<-mean(data_a$Mud, na.rm=TRUE)
+     temp[i, "d13C"]<-mean(data_a$d13C, na.rm=TRUE)
+     temp[i, "SAR"]<-max(data_a$Max.Depth)/max(data_a$FAge)}
+   
+   temp$Mud<-as.numeric(temp$Mud)
+   temp$OC<-as.numeric(temp$OC)
+   temp$d13C<-as.numeric(temp$d13C)
+   temp$SAR<-as.numeric(temp$SAR)
+   
+   return(temp)
+   
+   
+ }
+
+  var_100<-estimate_sum_var (TPb, fit_100Pb)
+  var_150<-estimate_sum_var (TPb, fit_150Pb)
+  var_1000<-estimate_sum_var (TC, fit_1000C)
+
+
+
+plot(var_100$k, var_100$Mud)
+
+cor.test(as.numeric(var_100$k), as.numeric(var_100$Mud), method=c("spearman"))
+cor.test(as.numeric(var_100$k), as.numeric(var_100$OC), method=c("spearman"))
+cor.test(as.numeric(var_100$k), as.numeric(var_100$d13C), method=c("spearman"))
+cor.test(as.numeric(var_100$k), as.numeric(var_100$SAR), method=c("spearman"))
+
+cor.test(as.numeric(var_150$k), as.numeric(var_150$Mud), method=c("spearman"))
+cor.test(as.numeric(var_150$k), as.numeric(var_150$OC), method=c("spearman"))
+cor.test(as.numeric(var_150$k), as.numeric(var_150$d13C), method=c("spearman"))
+cor.test(as.numeric(var_150$k), as.numeric(var_150$SAR), method=c("spearman"))
+
+cor.test(as.numeric(var_1000$k), as.numeric(var_1000$Mud), method=c("spearman"))
+cor.test(as.numeric(var_1000$k), as.numeric(var_1000$OC), method=c("spearman"))
+cor.test(as.numeric(var_1000$k), as.numeric(var_1000$d13C), method=c("spearman"))
+cor.test(as.numeric(var_1000$k), as.numeric(var_1000$SAR), method=c("spearman"))
+
+
+
+ggplot(var_150, aes(k, OC))+
   geom_point(aes(color=Ecosystem))+
   scale_color_manual(values=c('blue', 'green4', "orange"))
 
-ggplot(Sum150_a, aes(k, d13C))+
+ggplot(var_150, aes(k, d13C))+
   geom_point(aes(color=Ecosystem))+
   scale_color_manual(values=c('blue', 'green4', "orange"))
 
-ggplot(Sum150_a, aes(k, SAR))+
+ggplot(var_150, aes(k, SAR))+
   geom_point(aes(color=Ecosystem))+
   scale_color_manual(values=c('blue', 'green4', "orange"))
 
 
 
-shapiro.test(Sum1000_a$k) #normal if pvalue > than 0.05
-shapiro.test(as.numeric(Sum1000_a$Mud))
-shapiro.test(as.numeric(Sum1000_a$d13C))
-shapiro.test(as.numeric(Sum1000_a$SAR))
-cor.test(as.numeric(Sum1000_a$k), as.numeric(Sum1000_a$Mud), method=c("spearman"))
-cor.test(as.numeric(Sum1000_a$k), as.numeric(Sum1000_a$OC), method=c("spearman"))
-cor.test(as.numeric(Sum1000_a$k), as.numeric(Sum1000_a$d13C), method=c("spearman"))
-cor.test(as.numeric(Sum1000_a$k), as.numeric(Sum1000_a$SAR), method=c("spearman"))
-
-ltm<-ggplot(Sum1000_a, aes(k, Mud))+ ylab("Mud % (<0.063 mm)") +
-  geom_point(aes(color=Ecosystem))+
-  scale_color_manual(values=c( 'green4', "orange"))
-
-ggplot(Sum1000_a, aes(k, OC))+
-  geom_point(aes(color=Ecosystem))+
-  scale_color_manual(values=c( 'green4', "orange"))
-
-ggplot(Sum1000_a, aes(k, d13C))+
-  geom_point(aes(color=Ecosystem))+
-  scale_color_manual(values=c( 'green4', "orange"))
-
-ggplot(Sum1000_a, aes(k, SAR))+
-  geom_point(aes(color=Ecosystem))+
-  scale_color_manual(values=c('green4', "orange"))
 
 # figure 3
-stm<-ggplot(Sum150_a, aes(k, Mud))+ ylab("Mud % (<0.063 mm)") + xlab("100-150 yr") +
+stm<-ggplot(var_150, aes(k, Mud))+ ylab("Mud % (<0.063 mm)") + xlab("100-150 yr") +
   geom_point(aes(color=Ecosystem))+
   xlim(0, 0.04)+ ylim (0,100)+
   scale_color_manual(values=c('blue', 'green4', "orange"))
 
-ltm<-ggplot(Sum1000_a, aes(k, Mud))+ ylab("Mud % (<0.063 mm)") + xlab("500-1000 yr") +
+ltm<-ggplot(var_1000, aes(k, Mud))+ ylab("Mud % (<0.063 mm)") + xlab("500-1000 yr") +
   geom_point(aes(color=Ecosystem))+
   xlim(0, 0.04)+ ylim (0,100)+
   scale_color_manual(values=c( 'green4', "orange"))
