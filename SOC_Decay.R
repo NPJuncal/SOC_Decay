@@ -35,6 +35,7 @@ is.numeric(Cores$Mud)
 Cores$Max.Depth<-as.numeric(Cores$Max.Depth)
 
 #clean the rows without DBD and OC data
+Cores$DBD <- as.numeric(Cores$DBD)
 Cores <- Cores[!is.na(Cores$DBD),]
 Cores$Corg <- as.numeric(Cores$Corg)
 Cores <- Cores[!is.na(Cores$Corg),]
@@ -315,6 +316,8 @@ pairwise.wilcox.test(SAR$SAR, SAR$Ecosystem,
 ADT <- B[, c("Core", "Ecosystem", "Max.Depth", "Corg")]
 
 
+### PETAAAAAA ###
+
 X <- split(ADT, ADT$Core)
 
 DT <- data.frame(
@@ -462,7 +465,7 @@ DT2$C_Gr <- recode(DT2$C_Gr, DEC = 'DEC',
                    INC  = 'N',
                    NT = 'N')
 
-ggplot(CM, aes(DT2$C_Gr, CM$Av_C_25)) +
+ggplot(CM, aes(DT2$C_Gr, CM$Av_C)) +
   geom_boxplot()+
   geom_jitter()
 
@@ -493,7 +496,7 @@ plot(DT2Sg$Av_C_25, DT2Sg$Av_13C_25)
 SC<-ggplot(DT2Sg, aes(C_Gr, Av_C_25)) + ggtitle("Seagrass")+
   geom_boxplot()+
   geom_jitter(color="green4", alpha = 0.1)+
-  ylim(-5,50)+
+  ylim(-5,40)+
   annotate("text",
            x = 1:length(table(DT2Sg$C_Gr)),
            y = -5,
@@ -504,8 +507,7 @@ SC<-ggplot(DT2Sg, aes(C_Gr, Av_C_25)) + ggtitle("Seagrass")+
         axis.title.y = element_blank())
 
 
-pairwise.wilcox.test(DT2Sg$Av_C_25, DT2Sg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
 #mud  
 SM<-ggplot(DT2Sg, aes(C_Gr, Av_Mud_25)) + 
   geom_boxplot()+
@@ -520,8 +522,6 @@ SM<-ggplot(DT2Sg, aes(C_Gr, Av_Mud_25)) +
         axis.title.y = element_blank())
 
 
-pairwise.wilcox.test(DT2Sg$Av_Mud_25, DT2Sg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
 
 #SAR
 
@@ -538,8 +538,6 @@ SS<-ggplot(DT2Sg, aes(C_Gr, SAR)) +
         axis.title.y = element_blank())
 
 
-pairwise.wilcox.test(DT2Sg$SAR, DT2Sg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
 
 #d13C
 
@@ -555,9 +553,7 @@ d13S<-ggplot(DT2Sg, aes(C_Gr, Av_13C_25)) +
   theme(axis.title.x = element_blank(), 
         axis.title.y = element_blank())
 
-
-pairwise.wilcox.test(DT2Sg$Av_13C_25, DT2Sg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
+ 
 
 
 #Tidal marshes  
@@ -567,7 +563,7 @@ DT2Sm<-subset(DT2, Ecosystem=="Tidal Marsh")
 TMC<-ggplot(DT2Sm, aes(C_Gr, Av_C_25)) + ggtitle("Tidal Marsh")+
   geom_boxplot()+
   geom_jitter(color="orange", alpha = 0.1)+
-  ylim(-5,50)+
+  ylim(-5,40)+
   annotate("text",
            x = 1:length(table(DT2Sm$C_Gr)),
            y = -5,
@@ -577,8 +573,7 @@ TMC<-ggplot(DT2Sm, aes(C_Gr, Av_C_25)) + ggtitle("Tidal Marsh")+
         axis.title.x = element_blank(), 
         axis.title.y = element_blank())
 
-pairwise.wilcox.test(DT2Sm$Av_C_25, DT2Sm$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
 #mud  
 TMM<-ggplot(DT2Sm, aes(C_Gr, Av_Mud_25)) +
   geom_boxplot()+
@@ -592,8 +587,7 @@ TMM<-ggplot(DT2Sm, aes(C_Gr, Av_Mud_25)) +
   theme(axis.title.x = element_blank(), 
         axis.title.y = element_blank())
 
-pairwise.wilcox.test(DT2Sm$Av_Mud_25, DT2Sm$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
+
 
 #SAR 
 TMS<-ggplot(DT2Sm, aes(C_Gr, SAR)) +
@@ -608,8 +602,7 @@ TMS<-ggplot(DT2Sm, aes(C_Gr, SAR)) +
   theme(axis.title.x = element_blank(), 
         axis.title.y = element_blank())
 
-pairwise.wilcox.test(DT2Sm$SAR, DT2Sm$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05) 
+
 
 #d13C
 
@@ -626,8 +619,6 @@ d13T<-ggplot(DT2Sm, aes(C_Gr, Av_13C_25)) +
         axis.title.y = element_blank())
 
 
-pairwise.wilcox.test(DT2Sm$Av_13C_25, DT2Sm$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 
 #Mangroves        
@@ -636,7 +627,7 @@ DT2Mg<-subset(DT2, Ecosystem=="Mangrove")
 MGC<-ggplot(DT2Mg, aes(C_Gr, Av_C_25)) + ylab("OC% (Top 25cm)") + ggtitle("Mangrove")+
   geom_boxplot()+
   geom_jitter(color="blue", alpha = 0.5)+
-  ylim(-5,50)+
+  ylim(-5,40)+
   annotate("text",
            x = 1:length(table(DT2Mg$C_Gr)),
            y = -5,
@@ -645,8 +636,7 @@ MGC<-ggplot(DT2Mg, aes(C_Gr, Av_C_25)) + ylab("OC% (Top 25cm)") + ggtitle("Mangr
   theme(plot.title = element_text(hjust = 0.5),
         axis.title.x = element_blank())
 
-pairwise.wilcox.test(DT2Mg$Av_C_25, DT2Mg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
 #mud  
 TGM<-ggplot(DT2Mg, aes(C_Gr, Av_Mud_25)) + ylab("Mud% (Top 25cm)") +
   geom_boxplot()+
@@ -659,8 +649,7 @@ TGM<-ggplot(DT2Mg, aes(C_Gr, Av_Mud_25)) + ylab("Mud% (Top 25cm)") +
            col = "black")+
   theme(axis.title.x = element_blank())
 
-pairwise.wilcox.test(DT2Mg$Av_Mud_25, DT2Mg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05) 
+
 
 #SAR 
 TGS<-ggplot(DT2Mg, aes(C_Gr, SAR)) + ylab("Sediment acc. rate (cm)") +
@@ -674,25 +663,24 @@ TGS<-ggplot(DT2Mg, aes(C_Gr, SAR)) + ylab("Sediment acc. rate (cm)") +
            col = "black")+
   theme(axis.title.x = element_blank())
 
-pairwise.wilcox.test(DT2Mg$SAR, DT2Mg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05) 
+
 
 #d13C
 
-d13M<-ggplot(DT2Mg, aes(C_Gr, Av_13C_25)) + ylab("Average d13C") +
+d13M<-ggplot(DT2Mg, aes(C_Gr, Av_13C_25)) + 
   geom_boxplot()+
   geom_jitter(color="blue", alpha = 0.5)+
-  #ylim(-0.15,1.1)+
-  #annotate("text",
-  #        x = 1:length(table(DT2Mg$C_Gr)),
-  #       y = -0.1,
-  #      label = table(subset(DT2Mg, !is.na(Av_13C_25))[,"C_Gr"]),
-  #     col = "black")+
-  theme(axis.title.x = element_blank())
+  ylim(-30,-5)+
+  annotate("text",
+           x = 1:length(table(DT2Mg$C_Gr)),
+           y = -30,
+           label = table(subset(DT2Mg, !is.na(Av_13C_25))[,"C_Gr"]),
+           col = "black")+
+  theme(axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
 
 
-#pairwise.wilcox.test(DT2Mg$Av_13C_25, DT2Mg$C_Gr,
-#                    p.adjust.method = "BH") # are significantly different (p < 0.05)
+
 
 
 todos_CM<-ggpubr::ggarrange(MGC, SC, TMC, TGM, SM, TMM, TGS, SS, TMS,d13M, d13S, d13T,
@@ -708,7 +696,53 @@ ggsave( plot = todos_CM,
         height = 25
 )    
 
+## diff sig 
 
+
+
+pairwise.wilcox.test(DT2Sg$Av_C_25, DT2Sg$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+pairwise.wilcox.test(DT2Sg$Av_Mud_25, DT2Sg$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
+
+pairwise.wilcox.test(DT2Sg$SAR, DT2Sg$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
+
+pairwise.wilcox.test(DT2Sg$Av_13C_25, DT2Sg$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
+
+
+#Tidal marshes  
+
+
+pairwise.wilcox.test(DT2Sm$Av_C_25, DT2Sm$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+pairwise.wilcox.test(DT2Sm$Av_Mud_25, DT2Sm$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
+
+pairwise.wilcox.test(DT2Sm$SAR, DT2Sm$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05) 
+
+pairwise.wilcox.test(DT2Sm$Av_13C_25, DT2Sm$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+
+#Mangroves        
+
+
+pairwise.wilcox.test(DT2Mg$Av_C_25, DT2Mg$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+pairwise.wilcox.test(DT2Mg$Av_Mud_25, DT2Mg$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+
+pairwise.wilcox.test(DT2Mg$SAR, DT2Mg$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05) 
+
+pairwise.wilcox.test(DT2Mg$Av_13C_25, DT2Mg$C_Gr,
+                     p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 
 ###################################################################################
@@ -1175,19 +1209,7 @@ fit_100Pb<-OCModel(DataAM, nwpath="Decay2023_Pb/100")
 
 
 #eliminate some cores after visual check, we eliminate: Sg_241, Sg_323, Sg_333, #Sm_068
-fit_100Pb[c(13, 21, 23, 31), "k"]<-NA
-
-#eliminate empty cores (no model)
-fit_100Pb<-fit_100Pb[!is.na(fit_100Pb$P),]
-
-
-
-ggplot(fit_100Pb, aes( Ecosystem, k))+
-  geom_boxplot()+
-  geom_jitter()
-
-ggplot(fit_100Pb, aes( Max.Age, k))+
-  geom_point()
+fit_100Pb[c(9, 10, 13, 21, 23, 24, 31, 40), "k"]<-NA
 
 
 pairwise.wilcox.test(fit_100Pb$k, fit_100Pb$Ecosystem,
@@ -1260,14 +1282,7 @@ fit_150Pb<-OCModel(DataAM, MA= 100, nwpath="Decay2023_Pb/150")
 
 
 #eliminate some cores after visual check, we eliminate: Mg_023, Sg_011, Sm_004, Sm_049, Sm_615
-fit_150Pb <- fit_150Pb[-c(6, 11, 33, 37, 48), ]
-
-#eliminate empty cores (no model)
-fit_150Pb<-fit_150Pb[!is.na(fit_150Pb$P),]
-
-ggplot(fit_150Pb, aes( Ecosystem, k))+
-  geom_boxplot()+
-  geom_jitter()
+fit_150Pb <- fit_150Pb[-c(6, 11, 27, 28, 33, 35, 37, 54), ]
 
 pairwise.wilcox.test(fit_150Pb$k, fit_150Pb$Ecosystem,
                      p.adjust.method = "BH") # are significantly different (p < 0.05)
@@ -1343,14 +1358,7 @@ ggplot(fit_300Pb, aes(x = k)) +
   geom_histogram()
 
 #eliminate some cores after visual check, we eliminate: Sg_179, Sg_192, Sm_004, Sm_010, Sm_094
-fit_300Pb <- fit_300Pb[-c(21, 35), ]
-
-#eliminate empty cores (no model)
-fit_300Pb<-fit_300Pb[!is.na(fit_300Pb$P),]
-
-ggplot(fit_300Pb, aes( Ecosystem, k))+
-  geom_boxplot()+
-  geom_jitter()
+fit_300Pb <- fit_300Pb[-c(21, 22, 27, 32, 34, 35), ]
 
 
 pairwise.wilcox.test(fit_300Pb$k, fit_300Pb$Ecosystem,
@@ -1421,20 +1429,11 @@ fit_500Pb<-OCModel(DataAM, MA= 300, nwpath="Decay2023_Pb/500")
 
 
 #eliminate some cores after visual check, we eliminate: Sm_004
-fit_500Pb <- fit_500Pb[-c(10, 25, 30, 32 ), ]
+fit_500Pb <- fit_500Pb[-c(5, 7, 8, 10, 25, 27, 28, 30, 32 ), ]
 
-#eliminate empty cores (no model)
-fit_500Pb<-fit_500Pb[!is.na(fit_500Pb$P),]
-
-
-ggplot(fit_500Pb, aes( Ecosystem, k))+
-  geom_boxplot()+
-  geom_jitter()
 
 pairwise.wilcox.test(fit_500Pb$k, fit_500Pb$Ecosystem,
                      p.adjust.method = "BH") # are significantly different (p < 0.05)
-
-
 
 
 
@@ -1524,9 +1523,8 @@ DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")]
 fit_1000C<-OCModel(DataAM, MA= 500, nwpath="Decay2023_C/1000")
 
 #eliminate some cores after visual check, we eliminate: Sg_041, Sg_111, Sg_113, Sg_195, Sg_490, Sm_004, Sm_010
-fit_1000C <- fit_1000C[-c( 8, 16, 18, 28, 36, 46, 50, 51), ]
+fit_1000C <- fit_1000C[-c( 5, 8, 16, 17, 18, 21, 28, 36, 46, 50, 51), ]
 
-fit_1000C<-fit_1000C[!is.na(fit_1000C$P),]
 
 # model 1000-1500 years ---------------------------------------------------
 
@@ -1599,10 +1597,9 @@ ggplot(fit_1500C, aes(x = k)) +
   geom_histogram()
 
 #eliminate some cores after visual check, we eliminate: Sg_041, Sg_097, Sg_121, Sg_195, Sg_490, Sm_004, Sm_022
-fit_1500C <- fit_1500C[-c(3, 10, 13, 19, 20, 21, 23, 31, 32, 39, 43), ]
+fit_1500C <- fit_1500C[-c(3, 10, 13, 19, 20, 21, 23, 30, 31, 32, 39, 43), ]
 
-#eliminate empty cores (no model)
-fit_1500C<-fit_1500C[!is.na(fit_1500C$P),]
+
 
 
 # model 1500-2000 years ---------------------------------------------------
@@ -1675,7 +1672,7 @@ ggplot(fit_2000C, aes(x = k)) +
   geom_histogram()
 
 #eliminate some cores after visual check, we eliminate: Sg_041, Sg_191
-fit_2000C <- fit_2000C[-c( 1, 2, 13, 14, 21, 22), ]
+fit_2000C <- fit_2000C[-c( 2, 13, 14, 21, 22), ]
 
 #eliminate empty cores (no model)
 fit_2000C<-fit_2000C[!is.na(fit_2000C$P),]
@@ -1752,8 +1749,8 @@ ggplot(fit_m2000C, aes(x = k)) +
 #eliminate some cores after visual check, we eliminate: Sg_041, Sg_097
 fit_m2000C <- fit_m2000C[-c(3, 5, 15, 16), ]
 
-#eliminate empty cores (no model)
-fit_m2000C<-fit_m2000C[!is.na(fit_m2000C$P),]
+fit_m2000C <- fit_m2000C[!is.na(fit_m2000C$k),]
+
 
 
 
@@ -1768,6 +1765,15 @@ k_table <-merge(k_table, fit_2000C[,c(1,4)], by = "ID", all = TRUE)
 k_table <-merge(k_table, fit_m2000C[,c(1,4, 5)], by = "ID", all = TRUE)
 
 
+colnames(k_table)<-c("ID", "k_100", "k_150", "k_300", "k_500", "k_1000","k_1500", "k_2000", "k_m2000", "Max_Age")
+#k_table$k_100<-as.numeric(k_table$k_100)
+#k_table$k_300<-as.numeric(k_table$k_300)
+
+names(SingleCore)[names(SingleCore) == 'Core'] <- 'ID'
+
+k_table<-merge(k_table, SingleCore[,c(1, 3, 7, 6, 8, 11, 12)], by = 'ID', all.x=T, all.y=F)
+k_table<-merge(k_table, SAR[,c(1,6)], by = 'ID', all.x=T, all.y=F)
+
 k_table_Mg<-subset(k_table, Ecosystem=='Mangrove')
 k_table_Mg[,c(2:10)]<-sapply(k_table_Mg[,c(2:10)],FUN=as.numeric)
 k_table_Sg<-subset(k_table, Ecosystem=='Seagrass')
@@ -1777,27 +1783,12 @@ k_table_Sm[,c(2:10)]<-sapply(k_table_Sm[,c(2:10)],FUN=as.numeric)
 
 
 
+
 ### Table 1 ###
 
 
 k_tablem<-melt (k_table[, c(1:8, 11)], id=c( "ID", "Ecosystem" ))
 
-
-
-# Final table (Pb <500, 14C >500) -----------------------------------------
-
-table_k$Ecosystem<-"NA"
-
-for (j in 1:nrow(table_k)) {
-  
-  Eco <- substr(table_k[j,"ID"], 1, 2)
-  
-  if (Eco == "Mg") { table_k[j, "Ecosystem"] <- "Mangrove"}
-  if (Eco == "Sg") { table_k[j, "Ecosystem"] <- "Seagrass"}
-  if (Eco == "Sm") { table_k[j, "Ecosystem"] <- "Tidal Marsh"}}
-
-colnames(table_k)<-c("ID", "k100", "k150", "k300", "k500", "k1000", "k1500", "k2000", "m2000", "MaxAge", "Ecosystem")
-table_k<-table_k[!is.na(table_k$ID),]
 
 
 
@@ -1812,7 +1803,7 @@ apply(k_table[,c(2:8)], FUN=shapiro.test, MARGIN = 2)
 
 # differences among species
 
-pairwise.wilcox.test(k_table$k_100, k_table$Ecosystem,
+pairwise.wilcox.test(k_table$k_10, k_table$Ecosystem,
                      p.adjust.method = "BH")
 temp<-subset(k_table, !Ecosystem=="Mangrove")
 pairwise.wilcox.test(temp$k_1000, temp$Ecosystem,
@@ -2101,7 +2092,7 @@ ggsave(
   # we use the max age of each core
   
   
-  #writte a function to estimate correlation between function and k for especific time frames
+  #write a function to estimate correlation between function and k for specific time frames
   
   
   
@@ -2177,7 +2168,7 @@ ggsave(
   
   
   # figure 3
-  stm<-ggplot(var_150, aes(k, Mud))+ ylab("Mud % (<0.063 mm)") + xlab("100-150 yr") +
+  stm<-ggplot(var_100, aes(k, Mud))+ ylab("Mud % (<0.063 mm)") + xlab("80-100 yr") +
     geom_point(aes(color=Ecosystem))+
     xlim(0, 0.04)+ ylim (0,100)+
     scale_color_manual(values=c('blue', 'green4', "orange"))
@@ -2200,5 +2191,71 @@ ggsave(
     height = 10
   )
   
+
+# mapp of fitted cores ----------------------------------------------------
   
   
+  k_table_c<-k_table[rowSums(is.na(k_table[,c(2:9)])) != ncol(k_table[,c(2:9)]), ]
+  
+  
+  fitted_cores<-SingleCore[SingleCore$ID %in% k_table_c$ID,]
+  
+  
+  #load a world map
+  WM <- map_data("world")
+  
+  global<- fitted_cores %>%
+    ggplot() + ggtitle("Sampling sites for OC decay modeled cores") + xlab("Longitude") + ylab("Latitude") +
+    geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
+    #geom_point(aes(x = long, y = lat))+
+    geom_point(aes(x = Long, y = Lat,  fill = Ecosystem), pch = 21, size = 1.8) +
+    coord_sf(xlim = c(-140, 150), ylim = c(-40, 75)) +
+    scale_fill_manual(values = c("blue",  "green","orange")) +
+    theme(plot.title = element_text(hjust = 0.5))
+  
+  
+  nam<-fitted_cores %>%
+    ggplot() + xlab("Longitude") + ylab("Latitude") +
+    geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
+    #geom_point(aes(x = long, y = lat))+
+    geom_point(aes(x = Long, y = Lat,  fill = Ecosystem), pch = 21, size = 1.8) +
+    coord_sf(xlim = c(-150, -50), ylim = c(-20, 80)) +
+    scale_fill_manual(values = c("blue",  "green","orange")) +
+    theme(plot.title = element_text(hjust = 0.5), 
+          legend.position = "none")
+  
+  
+  eu<-fitted_cores %>%
+    ggplot()  + xlab("Longitude") + ylab("Latitude") +
+    geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
+    #geom_point(aes(x = long, y = lat))+
+    geom_point(aes(x = Long, y = Lat,  fill = Ecosystem), pch = 21, size = 1.8) +
+    coord_sf(xlim = c(-10, 50), ylim = c(20, 60)) +
+    scale_fill_manual(values = c("blue",  "green","orange")) +
+    theme(plot.title = element_text(hjust = 0.5), 
+          legend.position = "none")
+  
+  
+  aus<-fitted_cores %>%
+    ggplot()  + xlab("Longitude") + ylab("Latitude") +
+    geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
+    #geom_point(aes(x = long, y = lat))+
+    geom_point(aes(x = Long, y = Lat,  fill = Ecosystem), pch = 21, size = 1.8) +
+    coord_sf(xlim = c(110, 155), ylim = c(-40, -5))  +
+    scale_fill_manual(values = c("blue",  "green","orange")) +
+    theme(plot.title = element_text(hjust = 0.5), 
+          legend.position = "none")
+  
+  ssfc<-grid.arrange(global, nam, eu, aus, 
+                    layout_matrix = rbind(c(1, 1, 1),
+                                          c(2, 3, 4)))
+  
+  
+  ggsave(
+    plot = ssfc,
+    path = Folder,
+    filename =  "Sampling sites fitted cores.jpg",
+    units = "cm",
+    width = 20,
+    height = 15
+  )
