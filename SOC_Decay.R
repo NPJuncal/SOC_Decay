@@ -1,4 +1,10 @@
-#Degradacion anaerobia 1/3
+################################################################################
+# Article: Soil organic carbon decay rates in blue carbon ecosystems
+# 1/2
+# Author: Nerea Piñeiro-Juncal (https://github.com/NPJuncal)
+# V 3.0
+# Year: 2024
+################################################################################
 
 setwd("C:/Users/npjun/Dropbox/Seagrasses/Degradacion anaerobia_OSCAR/SOC_Decay")
 
@@ -14,7 +20,8 @@ library(MASS)
 library(reshape2) 
 library(reshape) 
 
-############## Loading the dataset #####################
+
+# Loading the datset ------------------------------------------------------
 
 File <- "Data/Cores.csv"
 
@@ -76,7 +83,9 @@ B$Corg <- as.numeric(B$Corg)
 B$Mud <- as.numeric(B$Mud)
 B$DBD <- as.numeric(B$DBD)
 
-###### Sampling sites Map #########
+# Sampling sites Map (Figure 4) -------------------------------------------
+
+
 
 #load a world map
 WM <- map_data("world")
@@ -139,7 +148,11 @@ ggsave(
 
 
 
-##### Average and median OC content per core (full length and top 25 cm)##################
+
+
+# Average and median OC content per core (full length and top 25 c --------
+
+
 
 ADT <- B[, c("Core", "Ecosystem", "Max.Depth", "Corg", "Mud", "d13C")]
 
@@ -482,7 +495,8 @@ cor.test(DT2$Av_Mud_25, DT2$Av_13C_25)
 plot(DT2$Av_Mud_25, DT2$Av_13C_25)
 
 
-#### Figure 1 ####
+# Figure 1 ----------------------------------------------------------------
+
 
 #Seagrass meadows
 DT2Sg<-subset(DT2, Ecosystem=="Seagrass")
@@ -745,9 +759,9 @@ pairwise.wilcox.test(DT2Mg$Av_13C_25, DT2Mg$C_Gr,
                      p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 
-###################################################################################
-################ Correlation with time ############################################
-###################################################################################
+# correlation with time ---------------------------------------------------
+
+
 
 ### chronological models estimation
 
@@ -786,13 +800,18 @@ length(unique(C$Core))
 
 
 TAll = filter(C, !is.na(Age) | !is.na(Age.Pb) | !is.na(Age.C))# df with core with any model
-length(unique(TAll$Core))
+  
+  length(unique(TAll$Core))
+  # number of cores with age-depth models per ecosystem
+  table((TAll[!duplicated(TAll$Core),])[,"Ecosystem"]) 
 
 TPb = subset(C, !is.na(Age) | !is.na(Age.Pb) )# df with core with Pb model
-length(unique(TPb$Core))
+
+  length(unique(TPb$Core))
 
 TC = filter(C, !is.na(Age.C))# df with core with C model
-length(unique(TC$Core))
+  
+  length(unique(TC$Core))
 
 
 TPbandC = filter(C, !is.na(Age) | !is.na(Age.Pb))# df with core with C and Pb model
@@ -803,7 +822,7 @@ length(unique(TPbandC$Core))
 #### Homogenize Age
 
 
-# Correlation with time ---------------------------------------------------
+# Decay models ---------------------------------------------------
 
 
 
@@ -1118,7 +1137,44 @@ OCModel<-function (df, MA = 0, nwpath) {
 } #function to estimate production decay models over oc acc mass per core. Needs df with
 # columns: c("Core", "Ecosystem", "FAge", "Corg", "Corg.M") and a path to save outputs
 
+# global tendencies
 
+
+#### Homogenize Age
+
+
+TAll$FAge<-"NA"
+TAll$FAge<-as.numeric(TAll$FAge)
+
+for (i in 1:nrow(TAll)) {
+  
+  if (is.na(TAll[i,"Age"]) == FALSE) {TAll[i,"FAge"]<-TAll[i,"Age"]} 
+  
+  else {
+    
+    if (is.na(TAll[i,"Age.Pb"]) == FALSE) {TAll[i,"FAge"]<-TAll[i,"Age.Pb"]}
+    
+    else {if (is.na(TAll[i,"Age.C"]) == FALSE) {TAll[i,"FAge"]<-TAll[i,"Age.C"]}}}}
+
+
+tendency_age<-as.data.frame(tendency(TAll, pnames="global")[1])
+colnames(tendency_age)<-c("ID", "Ecosystem", "C_rho", "C_p", "C_Gr")
+
+#### Count cores per group and get the percentages
+
+NGr <- tendency_age %>% group_by(C_Gr) %>% count()
+NGr %>% mutate(proc = ((n * 100) / sum(NGr[, 2])))
+
+tendency_age %>% group_by(Ecosystem, C_Gr) %>% count()
+NGrSg <- subset(tendency_age, Ecosystem == "Seagrass") %>% group_by(C_Gr) %>% count()
+NGrSg %>% mutate(proc = ((n * 100) / sum(NGrSg[, 2])))
+
+NGrSm <-
+  subset(tendency_age, Ecosystem == "Tidal Marsh") %>% group_by(C_Gr) %>% count()
+NGrSm %>% mutate(proc = ((n * 100) / sum(NGrSm[, 2])))
+
+NGrMg <- subset(tendency_age, Ecosystem == "Mangrove") %>% group_by(C_Gr) %>% count()
+NGrMg %>% mutate(proc = ((n * 100) / sum(NGrMg[, 2])))
 
 # # TPb until 500 ---------------------------------------------------------
 
@@ -1956,7 +2012,7 @@ kchange <- function(Tframe, A, C)
       
       fitSg <- as.data.frame(c(1:5000))
       fitSg['new_col'] <- NA
-      fitSg[, 2] <- kchange(c(1:5000), 0.0532, -0.004)
+      fitSg[, 2] <- kchange(c(1:5000), 0.044, -0.004)
       colnames(fitSg) <- list("timeframe", "predict")
       
       # tidal marsh model
@@ -2069,7 +2125,7 @@ fit_fig<-
   
   annotate("text", x=1500, y=0.025, color= "blue",  size = 5, label= expression(y == 0.028 * e ** (-0.004 * 
                                                                                                      x)))+
-  annotate("text", x=1500, y=0.02, color= "green4",size = 5,label= expression(y == 0.053 * e ** (-0.004 * 
+  annotate("text", x=1500, y=0.02, color= "green4",size = 5,label= expression(y == 0.044 * e ** (-0.004 * 
                                                                                                    x)))+
   annotate("text", x=1500, y=0.015, color= "orange",size = 5,label= expression(y == 0.022 * e ** (-0.003 * 
                                                                                                     x)))
@@ -2175,7 +2231,8 @@ ggsave(
   
   ltm<-ggplot(var_1000, aes(k, Mud))+ ylab("Mud % (<0.063 mm)") + xlab("500-1000 yr") +
     geom_point(aes(color=Ecosystem))+
-    xlim(0, 0.04)+ ylim (0,100)+
+    #xlim(0, 0.04)+
+    ylim (0,100)+
     scale_color_manual(values=c( 'green4', "orange"))
   
   
@@ -2192,7 +2249,7 @@ ggsave(
   )
   
 
-# mapp of fitted cores ----------------------------------------------------
+# map of fitted cores (Figure 5) ----------------------------------------------------
   
   
   k_table_c<-k_table[rowSums(is.na(k_table[,c(2:9)])) != ncol(k_table[,c(2:9)]), ]
