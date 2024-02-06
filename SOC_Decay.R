@@ -329,8 +329,6 @@ pairwise.wilcox.test(SAR$SAR, SAR$Ecosystem,
 ADT <- B[, c("Core", "Ecosystem", "Max.Depth", "Corg")]
 
 
-### PETAAAAAA ###
-
 X <- split(ADT, ADT$Core)
 
 DT <- data.frame(
@@ -681,7 +679,7 @@ TGS<-ggplot(DT2Mg, aes(C_Gr, SAR)) + ylab("Sediment acc. rate (cm)") +
 
 #d13C
 
-d13M<-ggplot(DT2Mg, aes(C_Gr, Av_13C_25)) + 
+d13M<-ggplot(DT2Mg, aes(C_Gr, Av_13C_25)) + ylab(expression(delta~"13C")) +
   geom_boxplot()+
   geom_jitter(color="blue", alpha = 0.5)+
   ylim(-30,-5)+
@@ -690,8 +688,7 @@ d13M<-ggplot(DT2Mg, aes(C_Gr, Av_13C_25)) +
            y = -30,
            label = table(subset(DT2Mg, !is.na(Av_13C_25))[,"C_Gr"]),
            col = "black")+
-  theme(axis.title.x = element_blank(), 
-        axis.title.y = element_blank())
+  theme(axis.title.x = element_blank())
 
 
 
@@ -710,53 +707,62 @@ ggsave( plot = todos_CM,
         height = 25
 )    
 
-## diff sig 
-
-
-
-pairwise.wilcox.test(DT2Sg$Av_C_25, DT2Sg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-
-pairwise.wilcox.test(DT2Sg$Av_Mud_25, DT2Sg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
-
-pairwise.wilcox.test(DT2Sg$SAR, DT2Sg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
-
-pairwise.wilcox.test(DT2Sg$Av_13C_25, DT2Sg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
-
-
-#Tidal marshes  
-
-
-pairwise.wilcox.test(DT2Sm$Av_C_25, DT2Sm$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-
-pairwise.wilcox.test(DT2Sm$Av_Mud_25, DT2Sm$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)  
-
-pairwise.wilcox.test(DT2Sm$SAR, DT2Sm$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05) 
-
-pairwise.wilcox.test(DT2Sm$Av_13C_25, DT2Sm$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-
-
-#Mangroves        
-
-
-pairwise.wilcox.test(DT2Mg$Av_C_25, DT2Mg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-
-pairwise.wilcox.test(DT2Mg$Av_Mud_25, DT2Mg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-
-pairwise.wilcox.test(DT2Mg$SAR, DT2Mg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05) 
-
-pairwise.wilcox.test(DT2Mg$Av_13C_25, DT2Mg$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
+    ## diff sig 
+    
+    #Seagrass
+    
+    pairwise.wilcox.test(DT2Sg$Av_C_25, DT2Sg$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)
+    
+    pairwise.wilcox.test(DT2Sg$Av_Mud_25, DT2Sg$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)  
+    
+    pairwise.wilcox.test(DT2Sg$SAR, DT2Sg$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)  
+    
+    pairwise.wilcox.test(DT2Sg$Av_13C_25, DT2Sg$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)  
+    
+    
+    #Tidal marshes  
+    
+    
+    pairwise.wilcox.test(DT2Sm$Av_C_25, DT2Sm$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)
+    
+    pairwise.wilcox.test(DT2Sm$Av_Mud_25, DT2Sm$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)  
+    
+    pairwise.wilcox.test(DT2Sm$SAR, DT2Sm$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05) 
+    
+    pairwise.wilcox.test(DT2Sm$Av_13C_25, DT2Sm$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)
+    
+    
+    #Mangroves        
+    
+    
+    pairwise.wilcox.test(DT2Mg$Av_C_25, DT2Mg$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)
+    
+    pairwise.wilcox.test(DT2Mg$Av_Mud_25, DT2Mg$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)
+    
+    pairwise.wilcox.test(DT2Mg$SAR, DT2Mg$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05) 
+    
+    pairwise.wilcox.test(DT2Mg$Av_13C_25, DT2Mg$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)
+    
+    
+    
+    # average per ecosystem
+    
+    std <- function(x) sd(x, na.rm=TRUE)/sqrt(length(x))
+    
+    aggregate(DT2[,c(12, 15, 18, 25)], list(DT2$Ecosystem), FUN=mean, na.rm=T)
+    aggregate(DT2[,c(12, 15, 18, 25)], list(DT2$Ecosystem), FUN=std) 
 
 
 # correlation with time ---------------------------------------------------
@@ -1264,12 +1270,7 @@ fit_100Pb<-OCModel(DataAM, nwpath="Decay2023_Pb/100")
 
 
 
-#eliminate some cores after visual check, we eliminate: Sg_241, Sg_323, Sg_333, #Sm_068
-fit_100Pb[c(9, 10, 13, 21, 23, 24, 31, 40), "k"]<-NA
 
-
-pairwise.wilcox.test(fit_100Pb$k, fit_100Pb$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 
 
@@ -1337,11 +1338,7 @@ DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")]
 fit_150Pb<-OCModel(DataAM, MA= 100, nwpath="Decay2023_Pb/150")
 
 
-#eliminate some cores after visual check, we eliminate: Mg_023, Sg_011, Sm_004, Sm_049, Sm_615
-fit_150Pb <- fit_150Pb[-c(6, 11, 27, 28, 33, 35, 37, 54), ]
 
-pairwise.wilcox.test(fit_150Pb$k, fit_150Pb$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 # model 150-300 years ---------------------------------------------------
 
@@ -1413,12 +1410,7 @@ fit_300Pb<-OCModel(DataAM, MA= 150, nwpath="Decay2023_Pb/300")
 ggplot(fit_300Pb, aes(x = k)) +
   geom_histogram()
 
-#eliminate some cores after visual check, we eliminate: Sg_179, Sg_192, Sm_004, Sm_010, Sm_094
-fit_300Pb <- fit_300Pb[-c(21, 22, 27, 32, 34, 35), ]
 
-
-pairwise.wilcox.test(fit_300Pb$k, fit_300Pb$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 
 # model 300-500 years ---------------------------------------------------
@@ -1485,11 +1477,7 @@ fit_500Pb<-OCModel(DataAM, MA= 300, nwpath="Decay2023_Pb/500")
 
 
 #eliminate some cores after visual check, we eliminate: Sm_004
-fit_500Pb <- fit_500Pb[-c(5, 7, 8, 10, 25, 27, 28, 30, 32 ), ]
 
-
-pairwise.wilcox.test(fit_500Pb$k, fit_500Pb$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 
 
@@ -1578,8 +1566,7 @@ DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")]
 
 fit_1000C<-OCModel(DataAM, MA= 500, nwpath="Decay2023_C/1000")
 
-#eliminate some cores after visual check, we eliminate: Sg_041, Sg_111, Sg_113, Sg_195, Sg_490, Sm_004, Sm_010
-fit_1000C <- fit_1000C[-c( 5, 8, 16, 17, 18, 21, 28, 36, 46, 50, 51), ]
+
 
 
 # model 1000-1500 years ---------------------------------------------------
@@ -1652,8 +1639,7 @@ fit_1500C<-OCModel(DataAM, MA= 1000, nwpath="Decay2023_C/1500")
 ggplot(fit_1500C, aes(x = k)) +
   geom_histogram()
 
-#eliminate some cores after visual check, we eliminate: Sg_041, Sg_097, Sg_121, Sg_195, Sg_490, Sm_004, Sm_022
-fit_1500C <- fit_1500C[-c(3, 10, 13, 19, 20, 21, 23, 30, 31, 32, 39, 43), ]
+
 
 
 
@@ -1727,11 +1713,7 @@ fit_2000C<-OCModel(DataAM, MA= 1500, nwpath="Decay2023_C/2000")
 ggplot(fit_2000C, aes(x = k)) +
   geom_histogram()
 
-#eliminate some cores after visual check, we eliminate: Sg_041, Sg_191
-fit_2000C <- fit_2000C[-c( 2, 13, 14, 21, 22), ]
 
-#eliminate empty cores (no model)
-fit_2000C<-fit_2000C[!is.na(fit_2000C$P),]
 
 
 # model > 2000 years ---------------------------------------------------
@@ -1802,16 +1784,62 @@ fit_m2000C<-OCModel(DataAM, MA= 2000, nwpath="Decay2023_C/more_2000")
 ggplot(fit_m2000C, aes(x = k)) +
   geom_histogram()
 
-#eliminate some cores after visual check, we eliminate: Sg_041, Sg_097
-fit_m2000C <- fit_m2000C[-c(3, 5, 15, 16), ]
-
-fit_m2000C <- fit_m2000C[!is.na(fit_m2000C$k),]
 
 
+
+
+
+
+# eliminate models after visual check -------------------------------------
+
+#eliminate some cores after visual check, we eliminate: Mg_023, Sg_011, Sm_004, Sm_049, Sm_615
+
+    #eliminate some cores after visual check, we eliminate: Sg_241, Sg_323, Sg_333, #Sm_068
+    fit_100Pb[c(9, 10, 13, 21, 23, 24, 31, 40), "k"]<-NA
+    
+    
+    pairwise.wilcox.test(fit_100Pb$k, fit_100Pb$Ecosystem,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)
+    
+    fit_150Pb <- fit_150Pb[-c(6, 11, 27, 28, 33, 35, 37, 54), ]
+    
+    pairwise.wilcox.test(fit_150Pb$k, fit_150Pb$Ecosystem,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)    
+    
+    #eliminate some cores after visual check, we eliminate: Sg_179, Sg_192, Sm_004, Sm_010, Sm_094
+    fit_300Pb <- fit_300Pb[-c(21, 22, 27, 32, 34, 35), ]
+    
+    
+    pairwise.wilcox.test(fit_300Pb$k, fit_300Pb$Ecosystem,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)
+    
+    fit_500Pb <- fit_500Pb[-c(5, 7, 8, 10, 25, 27, 28, 30, 32 ), ]
+    
+    
+    pairwise.wilcox.test(fit_500Pb$k, fit_500Pb$Ecosystem,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)
+    
+    #eliminate some cores after visual check, we eliminate: Sg_041, Sg_111, Sg_113, Sg_195, Sg_490, Sm_004, Sm_010
+    fit_1000C <- fit_1000C[-c( 5, 8, 16, 17, 18, 21, 28, 36, 46, 50, 51), ]
+    
+    #eliminate some cores after visual check, we eliminate: Sg_041, Sg_097, Sg_121, Sg_195, Sg_490, Sm_004, Sm_022
+    fit_1500C <- fit_1500C[-c(3, 10, 13, 19, 20, 21, 23, 30, 31, 32, 39, 43), ]
+    
+    #eliminate some cores after visual check, we eliminate: Sg_041, Sg_191
+    fit_2000C <- fit_2000C[-c( 2, 13, 14, 21, 22), ]
+    
+    
+    #eliminate some cores after visual check, we eliminate: Sg_041, Sg_097
+    fit_m2000C <- fit_m2000C[-c(3, 5, 15, 16), ]
+    
+    fit_m2000C <- fit_m2000C[!is.na(fit_m2000C$k),]
 
 
 # Final table and plots -------------------------------------------------------
 
+Folder = "Decay2023"
+    
+    
 k_table <-merge(fit_100Pb[,c(1,4)], fit_150Pb[,c(1,4)], by = "ID", all = TRUE)
 k_table <-merge(k_table, fit_300Pb[,c(1,4)], by = "ID", all = TRUE)
 k_table <-merge(k_table, fit_500Pb[,c(1,4)], by = "ID", all = TRUE)
@@ -1859,7 +1887,7 @@ apply(k_table[,c(2:8)], FUN=shapiro.test, MARGIN = 2)
 
 # differences among species
 
-pairwise.wilcox.test(k_table$k_10, k_table$Ecosystem,
+pairwise.wilcox.test(k_table$k_100, k_table$Ecosystem,
                      p.adjust.method = "BH")
 temp<-subset(k_table, !Ecosystem=="Mangrove")
 pairwise.wilcox.test(temp$k_1000, temp$Ecosystem,
@@ -2316,3 +2344,60 @@ ggsave(
     width = 20,
     height = 15
   )
+  
+  
+
+# decay rates first meter of the soil -------------------------------------------------------------
+  
+
+  
+  extract_depth_by_age<- function (df, AGE = 100) {
+    
+    core <- df[1,"Core"]
+    c_length <- max(df[,"Max.Depth"])
+    age_depth <- df[which.min(abs(AGE-df$Max.Depth)),"FAge"]
+    
+    output <- data.frame(core = core, Length= c_length, age_depth = age_depth)
+    
+    return(output)
+    
+  }
+  
+  x<-split(TAll, TAll$Core)
+  
+  core_100_age_l <- lapply(X = x,  extract_depth_by_age, AGE = 100) # return a list
+  core_100_age <- as.data.frame(do.call(rbind, core_100_age_l)) # from list to dataframe
+  
+  core_100_age <- subset(core_100_age, core_100_age$Length > 90)
+  
+  mean(core_100_age$age_depth)
+  std(core_100_age$age_depth)
+  
+  
+  
+  # from time to decay rate
+  
+  # degradation of the first meter
+  #seagrass
+  0.044 * exp(-0.003 * 1713.38)
+  
+  0.044 * exp(-0.003 * 1401.71)
+  0.044 * exp(-0.003 * 2025.05)
+  
+  #mangrove
+  0.028 * exp(-0.004 * 1713.38)
+  
+  0.028 * exp(-0.004 * 1401.71)
+  0.028 * exp(-0.004 * 2025.05)
+  
+  #tidal marshes
+  0.025 * exp(-0.003 * 1713.38)
+  
+  0.025 * exp(-0.003 * 1401.71)
+  0.025 * exp(-0.003 * 2025.05)
+  
+  
+
+  
+  
+  
