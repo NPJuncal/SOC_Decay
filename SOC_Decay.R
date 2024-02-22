@@ -1,6 +1,6 @@
 ################################################################################
-# Article: Soil organic carbon decay rates in blue carbon ecosystems
-# 1/2
+# Article: Modelling soil organic carbon decay rates in blue carbon ecosystems
+# 1/1
 # Author: Nerea Piñeiro-Juncal (https://github.com/NPJuncal)
 # V 3.0
 # Year: 2024
@@ -493,6 +493,52 @@ cor.test(DT2$Av_Mud_25, DT2$Av_13C_25)
 plot(DT2$Av_Mud_25, DT2$Av_13C_25)
 
 
+
+# seagrass specie and trend -----------------------------------------------
+
+  Sg_DT<-subset(DT, Ecosystem=="Seagrass")
+  Sg_DT$Life.form<-"NA"
+  
+  for (i in 1:nrow(Sg_DT)) {
+    
+    life_form<- unique(SingleCore[c(which(SingleCore$ID==Sg_DT[i,which(colnames(Sg_DT)=="ID")])),which(colnames(SingleCore)=="Life.form")])
+    Sg_DT[i,which(colnames(Sg_DT)=="Life.form")]<- life_form
+    
+  }
+  
+  
+  # percentage of dec in persistent and another life forms
+  
+  #persistent
+  temp <- subset(Sg_DT, Life.form=="Persistent") %>% group_by(C_Gr) %>% count()
+  temp %>% mutate(proc = ((n * 100) / sum(temp[, 2])))
+
+  #no persistent
+  temp <- subset(Sg_DT, !Life.form=="Persistent") %>% group_by(C_Gr) %>% count()
+  temp %>% mutate(proc = ((n * 100) / sum(temp[, 2])))
+
+  # percentage of life.forms in dec trends
+  
+  temp <- subset(Sg_DT, C_Gr=="DEC") %>% group_by(Life.form) %>% count()
+  temp %>% mutate(proc = ((n * 100) / sum(temp[, 2])))
+  
+  # percentage of life.forms in dec trends
+  
+  temp <- subset(Sg_DT, !C_Gr=="DEC") %>% group_by(Life.form) %>% count()
+  temp %>% mutate(proc = ((n * 100) / sum(temp[, 2])))
+  
+  
+  
+  ##
+  
+  #Seagrass meadows
+  DT2Sg<-subset(DT2, Ecosystem=="Seagrass")
+  
+  pairwise.wilcox.test(DT2Sg$Av_13C, DT2Sg$Life.form,
+                       p.adjust.method = "BH") # are significantly different (p < 0.05)
+  
+  
+
 # Figure 1 ----------------------------------------------------------------
 
 
@@ -765,6 +811,11 @@ ggsave( plot = todos_CM,
     aggregate(DT2[,c(12, 15, 18, 25)], list(DT2$Ecosystem), FUN=std) 
 
 
+
+    
+    
+    
+    
 # correlation with time ---------------------------------------------------
 
 
@@ -1792,9 +1843,9 @@ ggplot(fit_m2000C, aes(x = k)) +
 
 # eliminate models after visual check -------------------------------------
 
-#eliminate some cores after visual check, we eliminate: Mg_023, Sg_011, Sm_004, Sm_049, Sm_615
+#eliminate some cores after visual check, we eliminate:
 
-    #eliminate some cores after visual check, we eliminate: Sg_241, Sg_323, Sg_333, #Sm_068
+    #eliminate some cores after visual check
     fit_100Pb[c(9, 10, 13, 21, 23, 24, 31, 40), "k"]<-NA
     
     
@@ -1806,7 +1857,6 @@ ggplot(fit_m2000C, aes(x = k)) +
     pairwise.wilcox.test(fit_150Pb$k, fit_150Pb$Ecosystem,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)    
     
-    #eliminate some cores after visual check, we eliminate: Sg_179, Sg_192, Sm_004, Sm_010, Sm_094
     fit_300Pb <- fit_300Pb[-c(21, 22, 27, 32, 34, 35), ]
     
     
@@ -1819,17 +1869,17 @@ ggplot(fit_m2000C, aes(x = k)) +
     pairwise.wilcox.test(fit_500Pb$k, fit_500Pb$Ecosystem,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)
     
-    #eliminate some cores after visual check, we eliminate: Sg_041, Sg_111, Sg_113, Sg_195, Sg_490, Sm_004, Sm_010
+ 
     fit_1000C <- fit_1000C[-c( 5, 8, 16, 17, 18, 21, 28, 36, 46, 50, 51), ]
     
-    #eliminate some cores after visual check, we eliminate: Sg_041, Sg_097, Sg_121, Sg_195, Sg_490, Sm_004, Sm_022
+
     fit_1500C <- fit_1500C[-c(3, 10, 13, 19, 20, 21, 23, 30, 31, 32, 39, 43), ]
     
-    #eliminate some cores after visual check, we eliminate: Sg_041, Sg_191
+
     fit_2000C <- fit_2000C[-c( 2, 13, 14, 21, 22), ]
     
     
-    #eliminate some cores after visual check, we eliminate: Sg_041, Sg_097
+
     fit_m2000C <- fit_m2000C[-c(3, 5, 15, 16), ]
     
     fit_m2000C <- fit_m2000C[!is.na(fit_m2000C$k),]
@@ -2263,16 +2313,28 @@ ggsave(
     ylim (0,100)+
     scale_color_manual(values=c( 'green4', "orange"))
   
+  stm_sar<-ggplot(var_100, aes(k, SAR))+ ylab("Sed. Acc. Rate (cm yr-1)") + xlab("80-100 yr") +
+    geom_point(aes(color=Ecosystem))+
+    xlim(0, 0.04)+ ylim (0,1)+
+    scale_color_manual(values=c('blue', 'green4', "orange"))
   
-  mud_decay<-grid.arrange(stm, ltm, top = "Dacay rates (yr-1)")
+  ltm_sar<-ggplot(var_1000, aes(k, SAR))+ ylab("Sed. Acc. Rate (cm yr-1)") + xlab("500-1000 yr") +
+    geom_point(aes(color=Ecosystem))+
+    #xlim(0, 0.04)+
+    ylim (0,1)+
+    scale_color_manual(values=c( 'green4', "orange"))
+  
+  
+  
+  fig3<-grid.arrange(stm, ltm, stm_sar, ltm_sar, top = "Dacay rates (yr-1)")
   
   
   ggsave(
-    plot = mud_decay,
+    plot = fig3,
     path = Folder,
     filename = "mud_decay.jpg",
     units = "cm",
-    width = 9,
+    width = 19,
     height = 10
   )
   
@@ -2397,7 +2459,31 @@ ggsave(
   0.025 * exp(-0.003 * 2025.05)
   
   
-
+  # depth of the first 100 and 1000 years -------------------------------------------------------------
+  
+  
+  
+  extract_age_by_depth<- function (df, DEPTH = 100) {
+    
+    core <- df[1,"Core"]
+    c_age <- max(df[,"FAge"])
+    depth_age <- df[which.min(abs(DEPTH-df$FAge)),"Max.Depth"]
+    
+    output <- data.frame(core = core, Age= c_age, depth_age = depth_age)
+    
+    return(output)
+    
+  }
+  
+  x<-split(TAll, TAll$Core)
+  
+  core_100_depth_l <- lapply(X = x,  extract_age_by_depth, DEPTH = 100) # return a list
+  core_100_depth <- as.data.frame(do.call(rbind, core_100_depth_l)) # from list to dataframe
+  
+  mean(core_100_depth$depth_age)
+  std(core_100_depth$depth_age)
+  
+  
   
   
   
