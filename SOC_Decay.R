@@ -1,8 +1,8 @@
 ################################################################################
-# Article: Modelling soil organic carbon decay rates in blue carbon ecosystems
+# Article: Modelling decay rates of soil organic carbon in blue carbon ecosystems 
 # 1/1
 # Author: Nerea Piñeiro-Juncal (https://github.com/NPJuncal)
-# V 3.0
+# V 3.3
 # Year: 2024
 ################################################################################
 
@@ -73,15 +73,37 @@ unique(Cores[, 5])
 B <- subset(Cores, Cores$V.vs.B == "Vegetated" | Cores$V.vs.B == "vegetated")
 unique(B[, 5])
 
-length(unique(B$Core))
-SingleCore<-B[!duplicated(B$Core),]
-
-table(SingleCore$Ecosystem)
-
 
 B$Corg <- as.numeric(B$Corg)
 B$Mud <- as.numeric(B$Mud)
 B$DBD <- as.numeric(B$DBD)
+
+
+# we only keep cores with more than 4 samples
+
+
+temp <- B[0,]
+
+
+X<-split(B, B$Core.ID)
+
+for (i in 1:length(X)) {
+  
+  data<-X[[i]]
+  
+  if(nrow(data)>4) {
+    
+    temp<-rbind(temp, data)}}
+
+B<-temp
+
+#
+
+
+length(unique(B$Core))
+SingleCore<-B[!duplicated(B$Core),]
+
+table(SingleCore$Ecosystem)
 
 # Sampling sites Map (Figure 4) -------------------------------------------
 
@@ -239,8 +261,8 @@ pairwise.wilcox.test(CM$Av_C_25, CM$Ecosystem,
                      p.adjust.method = "BH") # are significantly different (p < 0.05)
 pairwise.wilcox.test(CM$Av_Mud_25, CM$Ecosystem,
                      p.adjust.method = "BH") # are significantly different (p < 0.05)
-CM_nMg<-subset(CM, !Ecosystem=="Mangrove")
-pairwise.wilcox.test(CM_nMg$Av_13C_25, CM_nMg$Ecosystem,
+
+pairwise.wilcox.test(CM$Av_13C_25, CM$Ecosystem,
                      p.adjust.method = "BH") # are significantly different (p < 0.05)
 
 write.csv(CM,
@@ -256,7 +278,7 @@ File <- "Data/Acc_Mass-Age_F.csv"
 
 Dates <- read.csv(File,
                   header = T,
-                  sep = ",",
+                  sep = ";",
                   dec = ".")
 Dates <- as.data.frame(Dates)
 
@@ -300,6 +322,7 @@ for (i in 1:length(X)) {
   
 }
 
+SAR<-SAR[-1,]
 SAR$SAR<-"NA"
 SAR$SAR<-as.numeric(SAR$SAR)
 
@@ -472,9 +495,9 @@ ggsave(
 
 
 DT2<-DT
-DT2$C_Gr <- recode(DT2$C_Gr, DEC = 'DEC',
-                   INC  = 'N',
-                   NT = 'N')
+DT2$C_Gr <- recode(DT2$C_Gr, DEC = 'Decreasing',
+                   INC  = 'No decreasing',
+                   NT = 'No decreasing')
 
 ggplot(CM, aes(DT2$C_Gr, CM$Av_C)) +
   geom_boxplot()+
@@ -544,6 +567,7 @@ plot(DT2$Av_Mud_25, DT2$Av_13C_25)
 
 #Seagrass meadows
 DT2Sg<-subset(DT2, Ecosystem=="Seagrass")
+
 
 
 cor.test(DT2Sg$Av_C_25, DT2Sg$Av_13C_25, method="spearman")
@@ -684,7 +708,7 @@ DT2Mg<-subset(DT2, Ecosystem=="Mangrove")
 #organic carbon  
 MGC<-ggplot(DT2Mg, aes(C_Gr, Av_C_25)) + ylab("OC% (Top 25cm)") + ggtitle("Mangrove")+
   geom_boxplot()+
-  geom_jitter(color="blue", alpha = 0.5)+
+  geom_jitter(color="blue", alpha = 0.1)+
   ylim(-5,40)+
   annotate("text",
            x = 1:length(table(DT2Mg$C_Gr)),
@@ -826,7 +850,7 @@ File <- "Data/Acc_Mass-Age_F.csv"
 
 Dates <- read.csv(File,
                   header = T,
-                  sep = ",",
+                  sep = ";",
                   dec = ".")
 Dates <- as.data.frame(Dates)
 
@@ -844,7 +868,7 @@ for (i in 1:length(X)) {
   if (Data[1, 1] %in% Dates$Core == TRUE) {
     temp <- subset(Dates, Dates$Core == Data[1, 1])
     temp <- temp[c(1:nrow(Data)), ]
-    Data <- cbind(Data, temp[, c(4:7)])
+    Data <- cbind(Data, temp[, c(3:6)])
     
     C <- rbind(C, Data)
     
@@ -1456,14 +1480,6 @@ DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")]
 fit_300Pb<-OCModel(DataAM, MA= 150, nwpath="Decay2023_Pb/300")
 
 
-#eliminate outlayers: 
-
-ggplot(fit_300Pb, aes(x = k)) +
-  geom_histogram()
-
-
-
-
 # model 300-500 years ---------------------------------------------------
 
 Data_i<-subset(TPb, TPb$FAge < 500)
@@ -1525,11 +1541,6 @@ for (i in 1:length(X)) {
 DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
 
 fit_500Pb<-OCModel(DataAM, MA= 300, nwpath="Decay2023_Pb/500")
-
-
-#eliminate some cores after visual check, we eliminate: Sm_004
-
-
 
 
 # # TC from 1000 to more than 2000 ---------------------------------------------------------
@@ -1685,15 +1696,6 @@ DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")]
 fit_1500C<-OCModel(DataAM, MA= 1000, nwpath="Decay2023_C/1500")
 
 
-#eliminate outlayers: 
-
-ggplot(fit_1500C, aes(x = k)) +
-  geom_histogram()
-
-
-
-
-
 
 # model 1500-2000 years ---------------------------------------------------
 
@@ -1759,14 +1761,6 @@ DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")]
 fit_2000C<-OCModel(DataAM, MA= 1500, nwpath="Decay2023_C/2000")
 
 
-#eliminate outlayers: 
-
-ggplot(fit_2000C, aes(x = k)) +
-  geom_histogram()
-
-
-
-
 # model > 2000 years ---------------------------------------------------
 
 Data_i<-TC
@@ -1828,17 +1822,6 @@ for (i in 1:length(X)) {
 DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
 
 fit_m2000C<-OCModel(DataAM, MA= 2000, nwpath="Decay2023_C/more_2000")
-
-
-#eliminate outlayers: 
-
-ggplot(fit_m2000C, aes(x = k)) +
-  geom_histogram()
-
-
-
-
-
 
 
 # eliminate models after visual check -------------------------------------
