@@ -19,9 +19,11 @@ library(dplyr)
 library(MASS) 
 library(reshape2) 
 library(reshape) 
+library(psych)
 
 
-# Loading the datset ------------------------------------------------------
+
+# Loading the dataset ------------------------------------------------------
 
 File <- "Data/Cores.csv"
 
@@ -85,7 +87,7 @@ B$DBD <- as.numeric(B$DBD)
 temp <- B[0,]
 
 
-X<-split(B, B$Core.ID)
+X<-split(B, B$Core)
 
 for (i in 1:length(X)) {
   
@@ -94,6 +96,8 @@ for (i in 1:length(X)) {
   if(nrow(data)>4) {
     
     temp<-rbind(temp, data)}}
+
+length(unique(temp$Core))
 
 B<-temp
 
@@ -104,6 +108,12 @@ length(unique(B$Core))
 SingleCore<-B[!duplicated(B$Core),]
 
 table(SingleCore$Ecosystem)
+
+write.csv(SingleCore[,c(1,3,9,10)],
+          file.path(Folder, "singlecore.csv"),
+          sep = ";",
+          dec = ".")
+
 
 # Sampling sites Map (Figure 4) -------------------------------------------
 
@@ -168,13 +178,7 @@ ggsave(
   height = 15
 )
 
-
-
-
-
 # Average and median OC content per core (full length and top 25 c --------
-
-
 
 ADT <- B[, c("Core", "Ecosystem", "Max.Depth", "Corg", "Mud", "d13C")]
 
@@ -235,41 +239,10 @@ for (i in 1:length(X)) {
 }
 
 
-ggplot(CM, aes(Ecosystem, Av_Mud_25)) +
-  geom_boxplot() +
-  geom_jitter()
-
-ggplot(CM, aes(Ecosystem, Av_13C_25)) +
-  geom_boxplot() +
-  geom_jitter()
-
-
-ggplot(CM, aes(Av_C, Av_C_25))+
-  geom_point()
-ggplot(CM, aes(Av_Mud, Av_Mud_25))+
-  geom_point()
-
-
-ggplot(CM, aes(Av_Mud, Av_C))+
-  geom_point()
-
-
-CM %>%  group_by(Ecosystem) %>%
-  summarise_at(vars(Av_C_25), list(name = median))
-
-pairwise.wilcox.test(CM$Av_C_25, CM$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-pairwise.wilcox.test(CM$Av_Mud_25, CM$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-
-pairwise.wilcox.test(CM$Av_13C_25, CM$Ecosystem,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-
 write.csv(CM,
           file.path(Folder, "AvMdC.csv"),
           sep = ";",
           dec = ".")
-
 
 
 # Sediment accretion rate -------------------------------------------------
@@ -289,7 +262,8 @@ SAR <- data.frame(
   Ecosystem = character(),
   SAR_Age = numeric(),
   SAR_Pb = numeric(),
-  SAR_C = numeric())
+  SAR_C = numeric(),
+  SAR_25 = numeric())
 
 X<-split(Dates, Dates$Core)
 
@@ -320,6 +294,18 @@ for (i in 1:length(X)) {
   
   if (nrow(DataC)>2) {SAR[i, 5] <- max(DataC$Depth)/max(DataC$Age.C)}
   
+  if (nrow(DataAge)>2) {
+    Data25 <- Data[!is.na(Data$Age),]
+    Data25<- Data25[c(1:(length(which(Data25$Depth <=25)))),]
+    
+    if (nrow(Data25)>2) {SAR[i, 6] <- max(Data25$Depth)/max(Data25$Age)}
+  
+    } else {
+    
+    Data25 <- Data[!is.na(Data$Age.Pb),]
+    Data25<- Data25[c(1:(length(which(Data25$Depth <=25)))),]
+    
+    if (nrow(Data25)>2) {SAR[i, 6] <- max(Data25$Depth)/max(Data25$Age.Pb)}}
 }
 
 SAR<-SAR[-1,]
@@ -410,9 +396,6 @@ write.csv(DT,
           sep = ";",
           dec = ".")
 
-
-
-
 #### Count cores per group and get the percentages
 
 NGr <- DT %>% group_by(C_Gr) %>% count()
@@ -429,63 +412,6 @@ NGrSm %>% mutate(proc = ((n * 100) / sum(NGrSm[, 2])))
 NGrMg <- subset(DT, Ecosystem == "Mangrove") %>% group_by(C_Gr) %>% count()
 NGrMg %>% mutate(proc = ((n * 100) / sum(NGrMg[, 2])))
 
-### plot per grupos. Change size of jpg file when saving!!!!!!
-
-ggplot(NT, aes(Max.Depth, Corg)) + xlab("Depth (cm)") + ylab("Organic carbon (g cm-3)") +
-  geom_point(aes(Max.Depth, Corg)) +
-  geom_line(aes(Max.Depth, Corg)) +
-  facet_wrap( ~ Core, ncol = 5 , scales = "free") +
-  coord_flip() +
-  scale_x_reverse() +
-  theme_light()
-
-ggsave(
-  path = Folder,
-  filename = 'NTpor.jpg',
-  width = 20,
-  height = 200,
-  units = 'cm',
-  limitsize = FALSE
-)
-
-# too many, we have to divide
-
-ggplot(DEC, aes(Max.Depth, Corg)) + xlab("Depth (cm)") + ylab("Organic carbon (g cm-3)") +
-  geom_point(aes(Max.Depth, Corg)) +
-  geom_line(aes(Max.Depth, Corg)) +
-  facet_wrap( ~ Core, ncol = 5, scales = "free") +
-  coord_flip() +
-  scale_x_reverse() +
-  theme_light()
-
-ggsave(
-  path = Folder,
-  filename = 'DECpor.jpg',
-  width = 20,
-  height = 400,
-  units = 'cm',
-  limitsize = FALSE
-)
-
-
-ggplot(INC, aes(Max.Depth, Corg)) + xlab("Depth (cm)") + ylab("Organic carbon (g cm-3)") +
-  geom_point(aes(Max.Depth, Corg)) +
-  geom_line(aes(Max.Depth, Corg)) +
-  facet_wrap( ~ Core, ncol = 5 , scales = "free") +
-  coord_flip() +
-  scale_x_reverse() +
-  theme_light()
-
-ggsave(
-  path = Folder,
-  filename = 'INCpor.jpg',
-  width = 20,
-  height = 300,
-  units = 'cm',
-  limitsize = FALSE
-)
-
-
 
 # Figures and tables tendency with depth ----------------------------------
 
@@ -499,23 +425,28 @@ DT2$C_Gr <- recode(DT2$C_Gr, DEC = 'Decreasing',
                    INC  = 'No decreasing',
                    NT = 'No decreasing')
 
-ggplot(CM, aes(DT2$C_Gr, CM$Av_C)) +
-  geom_boxplot()+
-  geom_jitter()
-
-pairwise.wilcox.test(CM$Av_C_25, DT2$C_Gr,
-                     p.adjust.method = "BH") # are significantly different (p < 0.05)
-
 
 
 DT2<-cbind(CM, DT2)
 DT2<-DT2[,c(1:20, 25)]
-DT2 <-merge(DT2, SAR[,c(1,3:6)], by = "ID", all = TRUE)
+DT2 <-merge(DT2, SAR[,c(1,3:7)], by = "ID", all = TRUE)
 
 cor.test(DT2$Av_Mud_25, DT2$Av_13C_25)
 plot(DT2$Av_Mud_25, DT2$Av_13C_25)
 
+### data from BIO-Oracle ##
 
+File <- "Data/bio_oracle.csv"
+
+oracle <- read.csv(File,
+                   header = T,
+                   sep = ";",
+                   dec = ".")
+oracle <- as.data.frame(oracle)
+
+
+DT3 <-merge(DT2, oracle[c(1,7:12)], by = "ID", all = TRUE)
+DT3<-subset(DT3, !is.na(DT3$C_Gr))
 
 # seagrass specie and trend -----------------------------------------------
 
@@ -524,7 +455,7 @@ plot(DT2$Av_Mud_25, DT2$Av_13C_25)
   
   for (i in 1:nrow(Sg_DT)) {
     
-    life_form<- unique(SingleCore[c(which(SingleCore$ID==Sg_DT[i,which(colnames(Sg_DT)=="ID")])),which(colnames(SingleCore)=="Life.form")])
+    life_form<- unique(SingleCore[c(which(SingleCore$Core==Sg_DT[i,which(colnames(Sg_DT)=="ID")])),which(colnames(SingleCore)=="Life.form")])
     Sg_DT[i,which(colnames(Sg_DT)=="Life.form")]<- life_form
     
   }
@@ -578,15 +509,17 @@ plot(DT2Sg$Av_C_25, DT2Sg$Av_13C_25)
 SC<-ggplot(DT2Sg, aes(C_Gr, Av_C_25)) + ggtitle("Seagrass")+
   geom_boxplot()+
   geom_jitter(color="green4", alpha = 0.1)+
-  ylim(-5,40)+
+  scale_y_log10()+
   annotate("text",
            x = 1:length(table(DT2Sg$C_Gr)),
-           y = -5,
+           y = 0.003,
            label = table(subset(DT2Sg, !is.na(Av_C_25))[,"C_Gr"]),
            col = "black")+
   theme(plot.title = element_text(hjust = 0.5),
         axis.title.x = element_blank(), 
         axis.title.y = element_blank())
+
+
 
 
 
@@ -607,14 +540,14 @@ SM<-ggplot(DT2Sg, aes(C_Gr, Av_Mud_25)) +
 
 #SAR
 
-SS<-ggplot(DT2Sg, aes(C_Gr, SAR)) + 
+SS<-ggplot(DT2Sg, aes(C_Gr, SAR_25)) + 
   geom_boxplot()+
   geom_jitter(color="green4", alpha = 0.5)+
   ylim(-0.15,1.1)+
   annotate("text",
            x = 1:length(table(DT2Sg$C_Gr)),
            y = -0.1,
-           label = table(subset(DT2Sg, !is.na(SAR))[,"C_Gr"]),
+           label = table(subset(DT2Sg, !is.na(SAR_25))[,"C_Gr"]),
            col = "black")+
   theme(axis.title.x = element_blank(), 
         axis.title.y = element_blank())
@@ -623,19 +556,51 @@ SS<-ggplot(DT2Sg, aes(C_Gr, SAR)) +
 
 #d13C
 
-d13S<-ggplot(DT2Sg, aes(C_Gr, Av_13C_25)) + 
+d13S<-ggplot(DT2Sg, aes(C_Gr, Av_13C_25)) + ylab(expression(delta~"13C (‰)")) + ggtitle("Seagrass")+
   geom_boxplot()+
-  geom_jitter(color="green4", alpha = 0.5)+
+  geom_jitter(color="green4", alpha = 0.3)+
   ylim(-30,-5)+
   annotate("text",
            x = 1:length(table(DT2Sg$C_Gr)),
            y = -30,
            label = table(subset(DT2Sg, !is.na(Av_13C_25))[,"C_Gr"]),
            col = "black")+
-  theme(axis.title.x = element_blank(), 
-        axis.title.y = element_blank())
+  theme(axis.title.x = element_blank(),
+        plot.title = element_text(hjust = 0.5),)
 
  
+#temperature  
+
+ST<-ggplot(subset(DT3, Ecosystem=="Seagrass"), aes(C_Gr, Temperature)) +
+  geom_boxplot()+
+  geom_jitter(color="green4", alpha = 0.1)+
+  ylim(2,35)+
+  annotate("text",
+           x = 1:length(table(DT2Sg$C_Gr)),
+           y = 2.5,
+           label = table(subset(DT2Sg, !is.na(Av_C_25))[,"C_Gr"]),
+           col = "black")+
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
+
+
+#current velocity  
+
+SCV<-ggplot(subset(DT3, Ecosystem=="Seagrass"), aes(C_Gr, current.velocity)) + 
+  ylab(expression(paste("Current v. (m ",s^-1,")"))) + ggtitle("Seagrass")+
+  geom_boxplot()+
+  geom_jitter(color="green4", alpha = 0.3)+
+  annotate("text",
+           x = 1:length(table(DT2Sg$C_Gr)),
+           y = -0.05,
+           label = table(subset(DT2Sg, !is.na(Av_C_25))[,"C_Gr"]),
+           col = "black")+
+  theme(plot.title = element_text(hjust = 0.5),
+    axis.title.x = element_blank())
+
+
+
 
 
 #Tidal marshes  
@@ -645,10 +610,10 @@ DT2Sm<-subset(DT2, Ecosystem=="Tidal Marsh")
 TMC<-ggplot(DT2Sm, aes(C_Gr, Av_C_25)) + ggtitle("Tidal Marsh")+
   geom_boxplot()+
   geom_jitter(color="orange", alpha = 0.1)+
-  ylim(-5,40)+
+  scale_y_log10()+
   annotate("text",
            x = 1:length(table(DT2Sm$C_Gr)),
-           y = -5,
+           y = 0.003,
            label = table(subset(DT2Sm, !is.na(Av_C_25))[,"C_Gr"]),
            col = "black")+
   theme(plot.title = element_text(hjust = 0.5),
@@ -672,14 +637,14 @@ TMM<-ggplot(DT2Sm, aes(C_Gr, Av_Mud_25)) +
 
 
 #SAR 
-TMS<-ggplot(DT2Sm, aes(C_Gr, SAR)) +
+TMS<-ggplot(DT2Sm, aes(C_Gr, SAR_25)) +
   geom_boxplot()+
   geom_jitter(color="orange", alpha = 0.5)+
   ylim(-0.15,1.1)+
   annotate("text",
            x = 1:length(table(DT2Sm$C_Gr)),
            y = -0.1,
-           label = table(subset(DT2Sm, !is.na(SAR))[,"C_Gr"]),
+           label = table(subset(DT2Sm, !is.na(SAR_25))[,"C_Gr"]),
            col = "black")+
   theme(axis.title.x = element_blank(), 
         axis.title.y = element_blank())
@@ -691,7 +656,6 @@ TMS<-ggplot(DT2Sm, aes(C_Gr, SAR)) +
 d13T<-ggplot(DT2Sm, aes(C_Gr, Av_13C_25)) + 
   geom_boxplot()+
   geom_jitter(color="orange", alpha = 0.5)+
-  ylim(-30,-5)+
   annotate("text",
            x = 1:length(table(DT2Sm$C_Gr)),
            y = -30,
@@ -701,26 +665,41 @@ d13T<-ggplot(DT2Sm, aes(C_Gr, Av_13C_25)) +
         axis.title.y = element_blank())
 
 
+#temperature  
+
+TT<-ggplot(subset(DT3, Ecosystem=="Tidal Marsh"), aes(C_Gr, Temperature)) +
+  geom_boxplot()+
+  geom_jitter(color="orange", alpha = 0.1)+
+  ylim(2,35)+
+  annotate("text",
+           x = 1:length(table(DT2Sg$C_Gr)),
+           y = 2.5,
+           label = table(subset(DT2Sg, !is.na(Av_C_25))[,"C_Gr"]),
+           col = "black")+
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
+
 
 
 #Mangroves        
 DT2Mg<-subset(DT2, Ecosystem=="Mangrove")
 #organic carbon  
-MGC<-ggplot(DT2Mg, aes(C_Gr, Av_C_25)) + ylab("OC% (Top 25cm)") + ggtitle("Mangrove")+
+MGC<-ggplot(DT2Mg, aes(C_Gr, Av_C_25)) + ylab("log(OC%)") + ggtitle("Mangrove")+
   geom_boxplot()+
   geom_jitter(color="blue", alpha = 0.1)+
-  ylim(-5,40)+
   annotate("text",
            x = 1:length(table(DT2Mg$C_Gr)),
-           y = -5,
+           y = 0.003,
            label = table(subset(DT2Mg, !is.na(Av_C_25))[,"C_Gr"]),
            col = "black")+
+  scale_y_log10()+
   theme(plot.title = element_text(hjust = 0.5),
         axis.title.x = element_blank())
 
 
 #mud  
-TGM<-ggplot(DT2Mg, aes(C_Gr, Av_Mud_25)) + ylab("Mud% (Top 25cm)") +
+TGM<-ggplot(DT2Mg, aes(C_Gr, Av_Mud_25)) + ylab("Mud%") +
   geom_boxplot()+
   geom_jitter(color="blue", alpha = 0.5)+
   ylim(-10,110)+
@@ -734,14 +713,14 @@ TGM<-ggplot(DT2Mg, aes(C_Gr, Av_Mud_25)) + ylab("Mud% (Top 25cm)") +
 
 
 #SAR 
-TGS<-ggplot(DT2Mg, aes(C_Gr, SAR)) + ylab("Sediment acc. rate (cm)") +
+TGS<-ggplot(DT2Mg, aes(C_Gr, SAR_25)) + ylab(expression(paste("Sed. acc. (cm ",yr^-1,")"))) +
   geom_boxplot()+
   geom_jitter(color="blue", alpha = 0.5)+
   ylim(-0.15,1.1)+
   annotate("text",
            x = 1:length(table(DT2Mg$C_Gr)),
            y = -0.1,
-           label = table(subset(DT2Mg, !is.na(SAR))[,"C_Gr"]),
+           label = table(subset(DT2Mg, !is.na(SAR_25))[,"C_Gr"]),
            col = "black")+
   theme(axis.title.x = element_blank())
 
@@ -749,7 +728,7 @@ TGS<-ggplot(DT2Mg, aes(C_Gr, SAR)) + ylab("Sediment acc. rate (cm)") +
 
 #d13C
 
-d13M<-ggplot(DT2Mg, aes(C_Gr, Av_13C_25)) + ylab(expression(delta~"13C")) +
+d13M<-ggplot(DT2Mg, aes(C_Gr, Av_13C_25)) + ylab(expression(delta~"13C (‰)")) +
   geom_boxplot()+
   geom_jitter(color="blue", alpha = 0.5)+
   ylim(-30,-5)+
@@ -761,12 +740,25 @@ d13M<-ggplot(DT2Mg, aes(C_Gr, Av_13C_25)) + ylab(expression(delta~"13C")) +
   theme(axis.title.x = element_blank())
 
 
+#temperature  
+
+MT<-ggplot(subset(DT3, Ecosystem=="Mangrove"), aes(C_Gr, Temperature)) +  ylab("Sea Water Tª (\u00B0C)") +
+  geom_boxplot()+
+  geom_jitter(color="blue", alpha = 0.1)+
+  ylim(2,35)+
+  annotate("text",
+           x = 1:length(table(DT2Sg$C_Gr)),
+           y = 2.5,
+           label = table(subset(DT2Sg, !is.na(Av_C_25))[,"C_Gr"]),
+           col = "black")+
+  theme(axis.title.x = element_blank())
 
 
 
-todos_CM<-ggpubr::ggarrange(MGC, SC, TMC, TGM, SM, TMM, TGS, SS, TMS,d13M, d13S, d13T,
-                            labels = c("A","B", "C","D" , "E","F", "G","H", "I", "J", "K", "L"),
-                            ncol=3, nrow= 4)
+
+todos_CM<-ggpubr::ggarrange(MGC, SC, TMC, TGM, SM, TMM, TGS, SS, TMS, MT, ST, TT, d13S, SCV,
+                            labels = c("A","B", "C","D" , "E","F", "G","H", "I", "J", "K", "L", "M", "N"),
+                            ncol=3, nrow= 5)
 
 
 ggsave( plot = todos_CM,
@@ -774,8 +766,7 @@ ggsave( plot = todos_CM,
         filename =  "C_Mud_Gr.jpg",
         units = "cm",
         width = 20,
-        height = 25
-)    
+        height = 25)    
 
     ## diff sig 
     
@@ -787,10 +778,16 @@ ggsave( plot = todos_CM,
     pairwise.wilcox.test(DT2Sg$Av_Mud_25, DT2Sg$C_Gr,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)  
     
-    pairwise.wilcox.test(DT2Sg$SAR, DT2Sg$C_Gr,
-                         p.adjust.method = "BH") # are significantly different (p < 0.05)  
+    pairwise.wilcox.test(DT2Sg$SAR_25, DT2Sg$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)
+    
+    pairwise.wilcox.test(subset(DT3, Ecosystem=="Seagrass")$Temperature, subset(DT3, Ecosystem=="Seagrass")$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05) 
     
     pairwise.wilcox.test(DT2Sg$Av_13C_25, DT2Sg$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)  
+    
+    pairwise.wilcox.test(subset(DT3, Ecosystem=="Seagrass")$current.velocity, subset(DT3, Ecosystem=="Seagrass")$C_Gr,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)  
     
     
@@ -803,11 +800,12 @@ ggsave( plot = todos_CM,
     pairwise.wilcox.test(DT2Sm$Av_Mud_25, DT2Sm$C_Gr,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)  
     
-    pairwise.wilcox.test(DT2Sm$SAR, DT2Sm$C_Gr,
+    pairwise.wilcox.test(DT2Sm$SAR_25, DT2Sm$C_Gr,
                          p.adjust.method = "BH") # are significantly different (p < 0.05) 
+
     
-    pairwise.wilcox.test(DT2Sm$Av_13C_25, DT2Sm$C_Gr,
-                         p.adjust.method = "BH") # are significantly different (p < 0.05)
+    pairwise.wilcox.test(subset(DT3, Ecosystem=="Tidal Marsh")$Temperature, subset(DT3, Ecosystem=="Tidal Marsh")$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)  
     
     
     #Mangroves        
@@ -819,11 +817,12 @@ ggsave( plot = todos_CM,
     pairwise.wilcox.test(DT2Mg$Av_Mud_25, DT2Mg$C_Gr,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)
     
-    pairwise.wilcox.test(DT2Mg$SAR, DT2Mg$C_Gr,
+    pairwise.wilcox.test(DT2Mg$SAR_25, DT2Mg$C_Gr,
                          p.adjust.method = "BH") # are significantly different (p < 0.05) 
+
     
-    pairwise.wilcox.test(DT2Mg$Av_13C_25, DT2Mg$C_Gr,
-                         p.adjust.method = "BH") # are significantly different (p < 0.05)
+    pairwise.wilcox.test(subset(DT3, Ecosystem=="Mangrove")$Temperature, subset(DT3, Ecosystem=="Mangrove")$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)  
     
     
     
@@ -833,12 +832,10 @@ ggsave( plot = todos_CM,
     
     aggregate(DT2[,c(12, 15, 18, 25)], list(DT2$Ecosystem), FUN=mean, na.rm=T)
     aggregate(DT2[,c(12, 15, 18, 25)], list(DT2$Ecosystem), FUN=std) 
-
-
-
     
     
-    
+    aggregate(DT3[,c(27:32)], list(DT3$Ecosystem), FUN=mean, na.rm=T)
+    aggregate(DT3[,c(6:11)], list(DT3$Ecosystem), FUN=std) 
     
 # correlation with time ---------------------------------------------------
 
@@ -870,7 +867,10 @@ for (i in 1:length(X)) {
     temp <- temp[c(1:nrow(Data)), ]
     Data <- cbind(Data, temp[, c(3:6)])
     
-    C <- rbind(C, Data)
+    #check if there is at least 5 samples with dates
+    if (count(!is.na(Data$Age))>5 | count(!is.na(Data$Age.Pb))>5 | count(!is.na(Data$Age.C))>5) {
+    
+    C <- rbind(C, Data)}
     
   } else
     next
@@ -878,6 +878,12 @@ for (i in 1:length(X)) {
 
 length(unique(C$Core))
 
+single_core_dates<-C[!duplicated(C$Core),]
+
+
+table(single_core_dates$Ecosystem)
+
+table(subset(single_core_dates,Ecosystem=="Seagrass")[,"Specie"])
 
 
 TAll = filter(C, !is.na(Age) | !is.na(Age.Pb) | !is.na(Age.C))# df with core with any model
@@ -971,56 +977,6 @@ tendency<- function (df, pnames) {
   NGr <- TDT %>% group_by(C_Gr) %>% count()
   NGr %>% mutate(proc = ((n * 100) / sum(NGr[, 2])))
   
-  # plot groups for visual check
-  ggplot(TNT, aes(FAge, Corg)) + xlab("Time (years)") + ylab("Organic carbon (g cm-3)") +
-    geom_point(aes(FAge, Corg)) +
-    geom_line(aes(FAge, Corg)) +
-    facet_wrap( ~ Core, ncol = 5 , scales = "free") +
-    coord_flip() +
-    scale_x_reverse() +
-    theme_light()
-  
-  ggsave(
-    path = Folder,
-    filename = paste(pnames,'_TNT.jpg'),
-    width = 20,
-    height = 30,
-    units = 'cm'
-  )
-  
-  ggplot(TDEC, aes(FAge, Corg)) + xlab("Time (years)") + ylab("Organic carbon (g cm-3)") +
-    geom_point(aes(FAge, Corg)) +
-    geom_line(aes(FAge, Corg)) +
-    facet_wrap( ~ Core, ncol = 5, scales = "free") +
-    coord_flip() +
-    scale_x_reverse() +
-    theme_light()
-  
-  ggsave(
-    path = Folder,
-    filename = paste(pnames,'_TDEC.jpg'),
-    width = 20,
-    height = 50,
-    units = 'cm',
-    limitsize = FALSE
-  )
-  
-  
-  ggplot(TINC, aes(FAge, Corg)) + xlab("Time (years)") + ylab("Organic carbon (g cm-3)") +
-    geom_point(aes(FAge, Corg)) +
-    geom_line(aes(FAge, Corg)) +
-    facet_wrap( ~ Core, ncol = 5 , scales = "free") +
-    coord_flip() +
-    scale_x_reverse() +
-    theme_light()
-  
-  ggsave(
-    path = Folder,
-    filename = paste(pnames,'_TINC.jpg'),
-    width = 20,
-    height = 30,
-    units = 'cm'
-  )
   
   df_list<-list(TDT, TDEC, TINC, TNT)
   names(df_list)<-c("Sp_TDT", "TDEC", "TINC", "TNT")
@@ -1276,273 +1232,273 @@ for (i in 1:nrow(TPb)) {
   else {TPb[i,"FAge"]<-TPb[i,"Age.Pb"]}}
 
 
-# model first 100 years ---------------------------------------------------
-
-
-#cores older than 80 years cut at 100
-
-Data_i<-subset(TPb, TPb$FAge < 100)
-
-X<- split(Data_i, Data_i$Core)
-
-Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
-colnames(Data_i2)<-colnames(Data_i)
-
-for (i in 1:length(X)) {
+  # model first 100 years ---------------------------------------------------
   
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(Data_i)
   
-  if (max(Data$FAge)>80) {
+  #cores older than 80 years cut at 100
+  
+  Data_i<-subset(TPb, TPb$FAge < 100)
+  
+  X<- split(Data_i, Data_i$Core)
+  
+  Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+  colnames(Data_i2)<-colnames(Data_i)
+  
+  for (i in 1:length(X)) {
     
-    Data_i2<-rbind(Data_i2, Data)
-  }}
-
-
-# estimation of tendencies
-
-Data_t<-tendency(Data_i2, pnames="100")
-
-TDEC<-Data_t[[2]]
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-#carbon stock estimation por sample
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
-  
-  Data <- cbind(Data, Corg.M=NA)
-  
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
-  
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
-  
-  DataAM<-rbind(DataAM,Data)}
-
-#model
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
-
-fit_100Pb<-OCModel(DataAM, nwpath="Decay2023_Pb/100")
-
-
-
-
-
-
-
-# model 100-150 years ---------------------------------------------------
-
-Data_i<-subset(TPb, TPb$FAge < 150)
-
-X<- split(Data_i, Data_i$Core)
-
-Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
-colnames(Data_i2)<-colnames(Data_i)
-
-for (i in 1:length(X)) {
-  
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(Data_i)
-  
-  if (max(Data$FAge)>100) {
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(Data_i)
     
-    Data_i2<-rbind(Data_i2, Data)
-  }}
-
-
-
-Data_t<-tendency(Data_i2, pnames="100_150")
-
-TDEC<-Data_t[[2]]
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-#carbon stock estimation por sample
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
+    if (max(Data$FAge)>80) {
+      
+      Data_i2<-rbind(Data_i2, Data)
+    }}
   
-  Data <- cbind(Data, Corg.M=NA)
   
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
+  # estimation of tendencies
   
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
+  Data_t<-tendency(Data_i2, pnames="100")
   
-  DataAM<-rbind(DataAM,Data)}
-
-#model
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
-
-fit_150Pb<-OCModel(DataAM, MA= 100, nwpath="Decay2023_Pb/150")
-
-
-
-
-# model 150-300 years ---------------------------------------------------
-
-
-Data_i<-subset(TPb, TPb$FAge < 300)
-
-X<- split(Data_i, Data_i$Core)
-
-Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
-colnames(Data_i2)<-colnames(Data_i)
-
-for (i in 1:length(X)) {
+  TDEC<-Data_t[[2]]
   
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(Data_i)
+  DataA <-
+    as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
   
-  if (max(Data$FAge)>150) {
+  #carbon stock estimation por sample
+  DataA<-estimate_h(DataA,
+                    core = "Core",
+                    mind = "Min.Depth",
+                    maxd = "Max.Depth")
+  DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+  
+  #Acc organic matter
+  
+  DataAM<- DataA[0,]
+  DataAM[1,]=NA  # ad a temporary new row of NA values
+  DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+  DataAM = DataAM[0,]
+  
+  X<- split(DataA, DataA$Core)
+  
+  for (i in 1:length(X)) {
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(DataA)
     
-    Data_i2<-rbind(Data_i2, Data)
-  }}
-
-
-
-Data_t<-tendency(Data_i2, pnames="150_300")
-
-TDEC<-Data_t[[2]]
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-#carbon stock estimation por sample
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
-  
-  Data <- cbind(Data, Corg.M=NA)
-  
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
-  
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
-  
-  DataAM<-rbind(DataAM,Data)}
-
-#model
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
-
-fit_300Pb<-OCModel(DataAM, MA= 150, nwpath="Decay2023_Pb/300")
-
-
-# model 300-500 years ---------------------------------------------------
-
-Data_i<-subset(TPb, TPb$FAge < 500)
-
-X<- split(Data_i, Data_i$Core)
-
-Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
-colnames(Data_i2)<-colnames(Data_i)
-
-for (i in 1:length(X)) {
-  
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(Data_i)
-  
-  if (max(Data$FAge)>300) {
+    Data <- cbind(Data, Corg.M=NA)
     
-    Data_i2<-rbind(Data_i2, Data)
-  }}
-
-
-Data_t<-tendency(Data_i2, pnames="300_500")
-
-TDEC<-Data_t[[2]]
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-#carbon stock estimation por sample
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
+    Data[1,"Corg.M"]<-Data[1,"OCg"]
+    
+    for (j in 2:nrow(Data)){
+      Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+    }
+    
+    DataAM<-rbind(DataAM,Data)}
   
-  Data <- cbind(Data, Corg.M=NA)
+  #model
+  DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
   
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
+  fit_100Pb<-OCModel(DataAM, nwpath="Decay2023_Pb/100")
   
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
   
-  DataAM<-rbind(DataAM,Data)}
-
-#model
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
-
-fit_500Pb<-OCModel(DataAM, MA= 300, nwpath="Decay2023_Pb/500")
-
-
+  
+  
+  
+  
+  
+  # model 100-150 years ---------------------------------------------------
+  
+  Data_i<-subset(TPb, TPb$FAge < 150)
+  
+  X<- split(Data_i, Data_i$Core)
+  
+  Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+  colnames(Data_i2)<-colnames(Data_i)
+  
+  for (i in 1:length(X)) {
+    
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(Data_i)
+    
+    if (max(Data$FAge)>100) {
+      
+      Data_i2<-rbind(Data_i2, Data)
+    }}
+  
+  
+  
+  Data_t<-tendency(Data_i2, pnames="100_150")
+  
+  TDEC<-Data_t[[2]]
+  
+  DataA <-
+    as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+  
+  #carbon stock estimation por sample
+  DataA<-estimate_h(DataA,
+                    core = "Core",
+                    mind = "Min.Depth",
+                    maxd = "Max.Depth")
+  DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+  
+  #Acc organic matter
+  
+  DataAM<- DataA[0,]
+  DataAM[1,]=NA  # ad a temporary new row of NA values
+  DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+  DataAM = DataAM[0,]
+  
+  X<- split(DataA, DataA$Core)
+  
+  for (i in 1:length(X)) {
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(DataA)
+    
+    Data <- cbind(Data, Corg.M=NA)
+    
+    Data[1,"Corg.M"]<-Data[1,"OCg"]
+    
+    for (j in 2:nrow(Data)){
+      Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+    }
+    
+    DataAM<-rbind(DataAM,Data)}
+  
+  #model
+  DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+  
+  fit_150Pb<-OCModel(DataAM, MA= 100, nwpath="Decay2023_Pb/150")
+  
+  
+  
+  
+  # model 150-300 years ---------------------------------------------------
+  
+  
+  Data_i<-subset(TPb, TPb$FAge < 300)
+  
+  X<- split(Data_i, Data_i$Core)
+  
+  Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+  colnames(Data_i2)<-colnames(Data_i)
+  
+  for (i in 1:length(X)) {
+    
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(Data_i)
+    
+    if (max(Data$FAge)>150) {
+      
+      Data_i2<-rbind(Data_i2, Data)
+    }}
+  
+  
+  
+  Data_t<-tendency(Data_i2, pnames="150_300")
+  
+  TDEC<-Data_t[[2]]
+  
+  DataA <-
+    as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+  
+  #carbon stock estimation por sample
+  DataA<-estimate_h(DataA,
+                    core = "Core",
+                    mind = "Min.Depth",
+                    maxd = "Max.Depth")
+  DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+  
+  #Acc organic matter
+  
+  DataAM<- DataA[0,]
+  DataAM[1,]=NA  # ad a temporary new row of NA values
+  DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+  DataAM = DataAM[0,]
+  
+  X<- split(DataA, DataA$Core)
+  
+  for (i in 1:length(X)) {
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(DataA)
+    
+    Data <- cbind(Data, Corg.M=NA)
+    
+    Data[1,"Corg.M"]<-Data[1,"OCg"]
+    
+    for (j in 2:nrow(Data)){
+      Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+    }
+    
+    DataAM<-rbind(DataAM,Data)}
+  
+  #model
+  DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+  
+  fit_300Pb<-OCModel(DataAM, MA= 150, nwpath="Decay2023_Pb/300")
+  
+  
+  # model 300-500 years ---------------------------------------------------
+  
+  Data_i<-subset(TPb, TPb$FAge < 500)
+  
+  X<- split(Data_i, Data_i$Core)
+  
+  Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+  colnames(Data_i2)<-colnames(Data_i)
+  
+  for (i in 1:length(X)) {
+    
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(Data_i)
+    
+    if (max(Data$FAge)>300) {
+      
+      Data_i2<-rbind(Data_i2, Data)
+    }}
+  
+  
+  Data_t<-tendency(Data_i2, pnames="300_500")
+  
+  TDEC<-Data_t[[2]]
+  
+  DataA <-
+    as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+  
+  #carbon stock estimation por sample
+  DataA<-estimate_h(DataA,
+                    core = "Core",
+                    mind = "Min.Depth",
+                    maxd = "Max.Depth")
+  DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+  
+  #Acc organic matter
+  
+  DataAM<- DataA[0,]
+  DataAM[1,]=NA  # ad a temporary new row of NA values
+  DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+  DataAM = DataAM[0,]
+  
+  X<- split(DataA, DataA$Core)
+  
+  for (i in 1:length(X)) {
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(DataA)
+    
+    Data <- cbind(Data, Corg.M=NA)
+    
+    Data[1,"Corg.M"]<-Data[1,"OCg"]
+    
+    for (j in 2:nrow(Data)){
+      Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+    }
+    
+    DataAM<-rbind(DataAM,Data)}
+  
+  #model
+  DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+  
+  fit_500Pb<-OCModel(DataAM, MA= 300, nwpath="Decay2023_Pb/500")
+  
+  
 # # TC from 1000 to more than 2000 ---------------------------------------------------------
 
 
@@ -1565,308 +1521,599 @@ for (i in 1:nrow(TC)) {
 
 
 
-# model 500-1000 years ---------------------------------------------------
-
-
-Data_i<-subset(TC, TC$FAge < 1000)
-
-X<- split(Data_i, Data_i$Core)
-
-Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
-colnames(Data_i2)<-colnames(Data_i)
-
-for (i in 1:length(X)) {
+  # model 500-1000 years ---------------------------------------------------
   
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(Data_i)
   
-  if (max(Data$FAge)>500) {
+  Data_i<-subset(TC, TC$FAge < 1000)
+  
+  X<- split(Data_i, Data_i$Core)
+  
+  Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+  colnames(Data_i2)<-colnames(Data_i)
+  
+  for (i in 1:length(X)) {
     
-    Data_i2<-rbind(Data_i2, Data)
-  }}
-
-
-Data_t<-tendency(Data_i2, pnames="500_1000")
-
-TDEC<-Data_t[[2]]
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-#carbon stock estimation por sample
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
-  
-  Data <- cbind(Data, Corg.M=NA)
-  
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
-  
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
-  
-  DataAM<-rbind(DataAM,Data)}
-
-#model
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
-
-fit_1000C<-OCModel(DataAM, MA= 500, nwpath="Decay2023_C/1000")
-
-
-
-
-# model 1000-1500 years ---------------------------------------------------
-
-
-Data_i<-subset(TC, TC$FAge < 1500)
-
-X<- split(Data_i, Data_i$Core)
-
-Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
-colnames(Data_i2)<-colnames(Data_i)
-
-for (i in 1:length(X)) {
-  
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(Data_i)
-  
-  if (max(Data$FAge)>1000) {
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(Data_i)
     
-    Data_i2<-rbind(Data_i2, Data)
-  }}
-
-
-
-Data_t<-tendency(Data_i2, pnames="1000_1500")
-
-TDEC<-Data_t[[2]]
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-#carbon stock estimation por sample
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
+    if (max(Data$FAge)>500) {
+      
+      Data_i2<-rbind(Data_i2, Data)
+    }}
   
-  Data <- cbind(Data, Corg.M=NA)
   
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
+  Data_t<-tendency(Data_i2, pnames="500_1000")
   
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
+  TDEC<-Data_t[[2]]
   
-  DataAM<-rbind(DataAM,Data)}
-
-#model
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
-
-fit_1500C<-OCModel(DataAM, MA= 1000, nwpath="Decay2023_C/1500")
-
-
-
-# model 1500-2000 years ---------------------------------------------------
-
-
-Data_i<-subset(TC, TC$FAge < 2000)
-
-X<- split(Data_i, Data_i$Core)
-
-Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
-colnames(Data_i2)<-colnames(Data_i)
-
-for (i in 1:length(X)) {
+  DataA <-
+    as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
   
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(Data_i)
+  #carbon stock estimation por sample
+  DataA<-estimate_h(DataA,
+                    core = "Core",
+                    mind = "Min.Depth",
+                    maxd = "Max.Depth")
+  DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
   
-  if (max(Data$FAge)>1500) {
+  #Acc organic matter
+  
+  DataAM<- DataA[0,]
+  DataAM[1,]=NA  # ad a temporary new row of NA values
+  DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+  DataAM = DataAM[0,]
+  
+  X<- split(DataA, DataA$Core)
+  
+  for (i in 1:length(X)) {
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(DataA)
     
-    Data_i2<-rbind(Data_i2, Data)
-  }}
-
-
-Data_t<-tendency(Data_i2, pnames="1500_2000")
-
-TDEC<-Data_t[[2]]
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-#carbon stock estimation por sample
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
-  
-  Data <- cbind(Data, Corg.M=NA)
-  
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
-  
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
-  
-  DataAM<-rbind(DataAM,Data)}
-
-#model
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
-
-fit_2000C<-OCModel(DataAM, MA= 1500, nwpath="Decay2023_C/2000")
-
-
-# model > 2000 years ---------------------------------------------------
-
-Data_i<-TC
-
-X<- split(Data_i, Data_i$Core)
-
-Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
-colnames(Data_i2)<-colnames(Data_i)
-
-for (i in 1:length(X)) {
-  
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(Data_i)
-  
-  if (max(Data$FAge)>2000) {
+    Data <- cbind(Data, Corg.M=NA)
     
-    Data_i2<-rbind(Data_i2, Data)
-  }}
-
-
-Data_t<-tendency(Data_i2, pnames=">2000_C")
-
-TDEC<-Data_t[[2]]
-
-DataA <-
-  as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
-
-#carbon stock estimation por sample
-DataA<-estimate_h(DataA,
-                  core = "Core",
-                  mind = "Min.Depth",
-                  maxd = "Max.Depth")
-DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
-
-#Acc organic matter
-
-DataAM<- DataA[0,]
-DataAM[1,]=NA  # ad a temporary new row of NA values
-DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
-DataAM = DataAM[0,]
-
-X<- split(DataA, DataA$Core)
-
-for (i in 1:length(X)) {
-  Data <- as.data.frame(X[i])
-  colnames(Data)<-colnames(DataA)
+    Data[1,"Corg.M"]<-Data[1,"OCg"]
+    
+    for (j in 2:nrow(Data)){
+      Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+    }
+    
+    DataAM<-rbind(DataAM,Data)}
   
-  Data <- cbind(Data, Corg.M=NA)
+  #model
+  DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
   
-  Data[1,"Corg.M"]<-Data[1,"OCg"]
+  fit_1000C<-OCModel(DataAM, MA= 500, nwpath="Decay2023_C/1000")
   
-  for (j in 2:nrow(Data)){
-    Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
-  }
   
-  DataAM<-rbind(DataAM,Data)}
+  
+  
+  # model 1000-1500 years ---------------------------------------------------
+  
+  
+  Data_i<-subset(TC, TC$FAge < 1500)
+  
+  X<- split(Data_i, Data_i$Core)
+  
+  Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+  colnames(Data_i2)<-colnames(Data_i)
+  
+  for (i in 1:length(X)) {
+    
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(Data_i)
+    
+    if (max(Data$FAge)>1000) {
+      
+      Data_i2<-rbind(Data_i2, Data)
+    }}
+  
+  
+  
+  Data_t<-tendency(Data_i2, pnames="1000_1500")
+  
+  TDEC<-Data_t[[2]]
+  
+  DataA <-
+    as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+  
+  #carbon stock estimation por sample
+  DataA<-estimate_h(DataA,
+                    core = "Core",
+                    mind = "Min.Depth",
+                    maxd = "Max.Depth")
+  DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+  
+  #Acc organic matter
+  
+  DataAM<- DataA[0,]
+  DataAM[1,]=NA  # ad a temporary new row of NA values
+  DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+  DataAM = DataAM[0,]
+  
+  X<- split(DataA, DataA$Core)
+  
+  for (i in 1:length(X)) {
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(DataA)
+    
+    Data <- cbind(Data, Corg.M=NA)
+    
+    Data[1,"Corg.M"]<-Data[1,"OCg"]
+    
+    for (j in 2:nrow(Data)){
+      Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+    }
+    
+    DataAM<-rbind(DataAM,Data)}
+  
+  #model
+  DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+  
+  fit_1500C<-OCModel(DataAM, MA= 1000, nwpath="Decay2023_C/1500")
+  
+  
+  
+  # model 1500-2000 years ---------------------------------------------------
+  
+  
+  Data_i<-subset(TC, TC$FAge < 2000)
+  
+  X<- split(Data_i, Data_i$Core)
+  
+  Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+  colnames(Data_i2)<-colnames(Data_i)
+  
+  for (i in 1:length(X)) {
+    
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(Data_i)
+    
+    if (max(Data$FAge)>1500) {
+      
+      Data_i2<-rbind(Data_i2, Data)
+    }}
+  
+  
+  Data_t<-tendency(Data_i2, pnames="1500_2000")
+  
+  TDEC<-Data_t[[2]]
+  
+  DataA <-
+    as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+  
+  #carbon stock estimation por sample
+  DataA<-estimate_h(DataA,
+                    core = "Core",
+                    mind = "Min.Depth",
+                    maxd = "Max.Depth")
+  DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+  
+  #Acc organic matter
+  
+  DataAM<- DataA[0,]
+  DataAM[1,]=NA  # ad a temporary new row of NA values
+  DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+  DataAM = DataAM[0,]
+  
+  X<- split(DataA, DataA$Core)
+  
+  for (i in 1:length(X)) {
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(DataA)
+    
+    Data <- cbind(Data, Corg.M=NA)
+    
+    Data[1,"Corg.M"]<-Data[1,"OCg"]
+    
+    for (j in 2:nrow(Data)){
+      Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+    }
+    
+    DataAM<-rbind(DataAM,Data)}
+  
+  #model
+  DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+  
+  fit_2000C<-OCModel(DataAM, MA= 1500, nwpath="Decay2023_C/2000")
+  
+  
+  # model > 2000 years ---------------------------------------------------
+  
+  Data_i<-TC
+  
+  X<- split(Data_i, Data_i$Core)
+  
+  Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+  colnames(Data_i2)<-colnames(Data_i)
+  
+  for (i in 1:length(X)) {
+    
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(Data_i)
+    
+    if (max(Data$FAge)>2000) {
+      
+      Data_i2<-rbind(Data_i2, Data)
+    }}
+  
+  
+  Data_t<-tendency(Data_i2, pnames=">2000_C")
+  
+  TDEC<-Data_t[[2]]
+  
+  DataA <-
+    as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+  
+  #carbon stock estimation por sample
+  DataA<-estimate_h(DataA,
+                    core = "Core",
+                    mind = "Min.Depth",
+                    maxd = "Max.Depth")
+  DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+  
+  #Acc organic matter
+  
+  DataAM<- DataA[0,]
+  DataAM[1,]=NA  # ad a temporary new row of NA values
+  DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+  DataAM = DataAM[0,]
+  
+  X<- split(DataA, DataA$Core)
+  
+  for (i in 1:length(X)) {
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(DataA)
+    
+    Data <- cbind(Data, Corg.M=NA)
+    
+    Data[1,"Corg.M"]<-Data[1,"OCg"]
+    
+    for (j in 2:nrow(Data)){
+      Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+    }
+    
+    DataAM<-rbind(DataAM,Data)}
+  
+  #model
+  DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+  
+  fit_m2000C<-OCModel(DataAM, MA= 2000, nwpath="Decay2023_C/more_2000")
+  
+  
+# # TC and Pb from 1000 to more than 2000 ---------------------------------------------------------
 
-#model
-DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
 
-fit_m2000C<-OCModel(DataAM, MA= 2000, nwpath="Decay2023_C/more_2000")
+Folder = "Decay2023_CPb"
+dir.create(Folder)
+
+#### Homogenize Age
 
 
+TPbandC$FAge<-"NA"
+TPbandC$FAge<-as.numeric(TPbandC$FAge)
+
+for (i in 1:nrow(TPbandC)) {
+  
+  if (is.na(TPbandC[i,"Age"]) == FALSE) {TPbandC[i,"FAge"]<-TPbandC[i,"Age"]} }
+
+
+
+  # model 500-1000 years ---------------------------------------------------
+  
+  
+  Data_i<-subset(TPbandC, TPbandC$FAge < 1000)
+  
+  X<- split(Data_i, Data_i$Core)
+  
+  Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+  colnames(Data_i2)<-colnames(Data_i)
+  
+  for (i in 1:length(X)) {
+    
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(Data_i)
+    
+    if (max(Data$FAge)>500) {
+      
+      Data_i2<-rbind(Data_i2, Data)
+    }}
+  
+  
+  Data_t<-tendency(Data_i2, pnames="500_1000")
+  
+  TDEC<-Data_t[[2]]
+  
+  DataA <-
+    as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+  
+  #carbon stock estimation por sample
+  DataA<-estimate_h(DataA,
+                    core = "Core",
+                    mind = "Min.Depth",
+                    maxd = "Max.Depth")
+  DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+  
+  #Acc organic matter
+  
+  DataAM<- DataA[0,]
+  DataAM[1,]=NA  # ad a temporary new row of NA values
+  DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+  DataAM = DataAM[0,]
+  
+  X<- split(DataA, DataA$Core)
+  
+  for (i in 1:length(X)) {
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(DataA)
+    
+    Data <- cbind(Data, Corg.M=NA)
+    
+    Data[1,"Corg.M"]<-Data[1,"OCg"]
+    
+    for (j in 2:nrow(Data)){
+      Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+    }
+    
+    DataAM<-rbind(DataAM,Data)}
+  
+  #model
+  DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+  
+  fit_1000CPb<-OCModel(DataAM, MA= 500, nwpath="Decay2023_CPb/1000")
+  
+  
+  
+  
+  # model 1000-1500 years ---------------------------------------------------
+  
+  
+  Data_i<-subset(TPbandC, TPbandC$FAge < 1500)
+  
+  X<- split(Data_i, Data_i$Core)
+  
+  Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+  colnames(Data_i2)<-colnames(Data_i)
+  
+  for (i in 1:length(X)) {
+    
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(Data_i)
+    
+    if (max(Data$FAge)>1000) {
+      
+      Data_i2<-rbind(Data_i2, Data)
+    }}
+  
+  
+  
+  Data_t<-tendency(Data_i2, pnames="1000_1500")
+  
+  TDEC<-Data_t[[2]]
+  
+  DataA <-
+    as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+  
+  #carbon stock estimation por sample
+  DataA<-estimate_h(DataA,
+                    core = "Core",
+                    mind = "Min.Depth",
+                    maxd = "Max.Depth")
+  DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+  
+  #Acc organic matter
+  
+  DataAM<- DataA[0,]
+  DataAM[1,]=NA  # ad a temporary new row of NA values
+  DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+  DataAM = DataAM[0,]
+  
+  X<- split(DataA, DataA$Core)
+  
+  for (i in 1:length(X)) {
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(DataA)
+    
+    Data <- cbind(Data, Corg.M=NA)
+    
+    Data[1,"Corg.M"]<-Data[1,"OCg"]
+    
+    for (j in 2:nrow(Data)){
+      Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+    }
+    
+    DataAM<-rbind(DataAM,Data)}
+  
+  #model
+  DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+  
+  fit_1500CPb<-OCModel(DataAM, MA= 1000, nwpath="Decay2023_CPb/1500")
+  
+  
+  
+  # model 1500-2000 years ---------------------------------------------------
+  
+  
+  Data_i<-subset(TPbandC, TPbandC$FAge < 2000)
+  
+  X<- split(Data_i, Data_i$Core)
+  
+  Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+  colnames(Data_i2)<-colnames(Data_i)
+  
+  for (i in 1:length(X)) {
+    
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(Data_i)
+    
+    if (max(Data$FAge)>1500) {
+      
+      Data_i2<-rbind(Data_i2, Data)
+    }}
+  
+  
+  Data_t<-tendency(Data_i2, pnames="1500_2000")
+  
+  TDEC<-Data_t[[2]]
+  
+  DataA <-
+    as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+  
+  #carbon stock estimation por sample
+  DataA<-estimate_h(DataA,
+                    core = "Core",
+                    mind = "Min.Depth",
+                    maxd = "Max.Depth")
+  DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+  
+  #Acc organic matter
+  
+  DataAM<- DataA[0,]
+  DataAM[1,]=NA  # ad a temporary new row of NA values
+  DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+  DataAM = DataAM[0,]
+  
+  X<- split(DataA, DataA$Core)
+  
+  for (i in 1:length(X)) {
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(DataA)
+    
+    Data <- cbind(Data, Corg.M=NA)
+    
+    Data[1,"Corg.M"]<-Data[1,"OCg"]
+    
+    for (j in 2:nrow(Data)){
+      Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+    }
+    
+    DataAM<-rbind(DataAM,Data)}
+  
+  #model
+  DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+  
+  fit_2000CPb<-OCModel(DataAM, MA= 1500, nwpath="Decay2023_CPb/2000")
+  
+  
+  # model > 2000 years ---------------------------------------------------
+  
+  Data_i<-TPbandC
+  
+  X<- split(Data_i, Data_i$Core)
+  
+  Data_i2<-data.frame(matrix(ncol = length(Data_i), nrow = 0))
+  colnames(Data_i2)<-colnames(Data_i)
+  
+  for (i in 1:length(X)) {
+    
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(Data_i)
+    
+    if (max(Data$FAge)>2000) {
+      
+      Data_i2<-rbind(Data_i2, Data)
+    }}
+  
+  
+  Data_t<-tendency(Data_i2, pnames=">2000_C")
+  
+  TDEC<-Data_t[[2]]
+  
+  DataA <-
+    as.data.frame(TDEC[, c("Core", "Ecosystem", "DBD","Min.Depth","Max.Depth","FAge", "Corg")])
+  
+  #carbon stock estimation por sample
+  DataA<-estimate_h(DataA,
+                    core = "Core",
+                    mind = "Min.Depth",
+                    maxd = "Max.Depth")
+  DataA<- DataA %>% mutate (OCg = DBD*(Corg/100)*h)
+  
+  #Acc organic matter
+  
+  DataAM<- DataA[0,]
+  DataAM[1,]=NA  # ad a temporary new row of NA values
+  DataAM[,'Corg.M'] = NA # adding new column, called for example 'new_column'
+  DataAM = DataAM[0,]
+  
+  X<- split(DataA, DataA$Core)
+  
+  for (i in 1:length(X)) {
+    Data <- as.data.frame(X[i])
+    colnames(Data)<-colnames(DataA)
+    
+    Data <- cbind(Data, Corg.M=NA)
+    
+    Data[1,"Corg.M"]<-Data[1,"OCg"]
+    
+    for (j in 2:nrow(Data)){
+      Data[j,"Corg.M"]<-Data[j,"OCg"]+Data[j-1,"Corg.M"]
+    }
+    
+    DataAM<-rbind(DataAM,Data)}
+  
+  #model
+  DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
+  
+  fit_m2000CPb<-OCModel(DataAM, MA= 2000, nwpath="Decay2023_CPb/more_2000")
+  
+  
+  
+  
+  
 # eliminate models after visual check -------------------------------------
 
 #eliminate some cores after visual check, we eliminate:
 
     #eliminate some cores after visual check
-    fit_100Pb[c(9, 10, 13, 21, 23, 24, 31, 40), "k"]<-NA
+    fit_100Pb[c( 9, 10, 21, 23, 31), "k"]<-NA
     
     
     pairwise.wilcox.test(fit_100Pb$k, fit_100Pb$Ecosystem,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)
     
-    fit_150Pb <- fit_150Pb[-c(6, 11, 27, 28, 33, 35, 37, 54), ]
+    fit_150Pb <- fit_150Pb[-c(6, 27, 33, 53), ]
     
     pairwise.wilcox.test(fit_150Pb$k, fit_150Pb$Ecosystem,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)    
     
-    fit_300Pb <- fit_300Pb[-c(21, 22, 27, 32, 34, 35), ]
+    fit_300Pb <- fit_300Pb[-c(22, 23, 36), ]
     
     
     pairwise.wilcox.test(fit_300Pb$k, fit_300Pb$Ecosystem,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)
     
-    fit_500Pb <- fit_500Pb[-c(5, 7, 8, 10, 25, 27, 28, 30, 32 ), ]
+    fit_500Pb <- fit_500Pb[-c(20, 21, 32), ]
     
     
     pairwise.wilcox.test(fit_500Pb$k, fit_500Pb$Ecosystem,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)
     
  
-    fit_1000C <- fit_1000C[-c( 5, 8, 16, 17, 18, 21, 28, 36, 46, 50, 51), ]
+    #fit_1000C <- fit_1000C[-c( 5, 8, 16, 17, 18, 21, 28, 36, 46, 50, 51), ]
     
+    #fit_1500C <- fit_1500C[-c(3, 10, 13, 19, 20, 21, 23, 30, 31, 32, 39, 43), ]
+  
+    #fit_2000C <- fit_2000C[-c( 2, 13, 14, 21, 22), ]
 
-    fit_1500C <- fit_1500C[-c(3, 10, 13, 19, 20, 21, 23, 30, 31, 32, 39, 43), ]
+    #fit_m2000C <- fit_m2000C[-c(3, 5, 15, 16), ]
+    #fit_m2000C <- fit_m2000C[!is.na(fit_m2000C$k),]
     
+    # with C and Pb
 
-    fit_2000C <- fit_2000C[-c( 2, 13, 14, 21, 22), ]
+    
+    fit_1000CPb <- fit_1000CPb[-c( 5, 6, 10, 15, 21, 22, 23, 24), ]
     
     
-
-    fit_m2000C <- fit_m2000C[-c(3, 5, 15, 16), ]
+    fit_1500CPb <- fit_1500CPb[-c(1, 2, 4, 5, 7, 9, 15, 16, 17), ]
     
-    fit_m2000C <- fit_m2000C[!is.na(fit_m2000C$k),]
-
+    
+    fit_2000CPb <- fit_2000CPb[-c( 1, 2, 6, 7), ]
+    
+    
+    fit_m2000CPb <- fit_m2000C[-c(3), ]
+    
+    fit_m2000CPb <- fit_m2000CPb[!is.na(fit_m2000CPb$k),]  
+    
 
 # Final table and plots -------------------------------------------------------
 
@@ -1876,10 +2123,10 @@ Folder = "Decay2023"
 k_table <-merge(fit_100Pb[,c(1,4)], fit_150Pb[,c(1,4)], by = "ID", all = TRUE)
 k_table <-merge(k_table, fit_300Pb[,c(1,4)], by = "ID", all = TRUE)
 k_table <-merge(k_table, fit_500Pb[,c(1,4)], by = "ID", all = TRUE)
-k_table <-merge(k_table, fit_1000C[,c(1,4)], by = "ID", all = TRUE)
-k_table <-merge(k_table, fit_1500C[,c(1,4)], by = "ID", all = TRUE)
-k_table <-merge(k_table, fit_2000C[,c(1,4)], by = "ID", all = TRUE)
-k_table <-merge(k_table, fit_m2000C[,c(1,4, 5)], by = "ID", all = TRUE)
+k_table <-merge(k_table, fit_1000CPb[,c(1,4)], by = "ID", all = TRUE)
+k_table <-merge(k_table, fit_1500CPb[,c(1,4)], by = "ID", all = TRUE)
+k_table <-merge(k_table, fit_2000CPb[,c(1,4)], by = "ID", all = TRUE)
+k_table <-merge(k_table, fit_m2000CPb[,c(1,4, 5)], by = "ID", all = TRUE)
 
 
 colnames(k_table)<-c("ID", "k_100", "k_150", "k_300", "k_500", "k_1000","k_1500", "k_2000", "k_m2000", "Max_Age")
@@ -1889,7 +2136,7 @@ colnames(k_table)<-c("ID", "k_100", "k_150", "k_300", "k_500", "k_1000","k_1500"
 names(SingleCore)[names(SingleCore) == 'Core'] <- 'ID'
 
 k_table<-merge(k_table, SingleCore[,c(1, 3, 7, 6, 8, 11, 12)], by = 'ID', all.x=T, all.y=F)
-k_table<-merge(k_table, SAR[,c(1,6)], by = 'ID', all.x=T, all.y=F)
+k_table<-merge(k_table, SAR[,c(1,7)], by = 'ID', all.x=T, all.y=F)
 
 k_table_Mg<-subset(k_table, Ecosystem=='Mangrove')
 k_table_Mg[,c(2:10)]<-sapply(k_table_Mg[,c(2:10)],FUN=as.numeric)
@@ -2038,9 +2285,9 @@ k_revM<- k_rev [c(8,9),]
 
 f_table_Sg<-as.data.frame(colMeans(subset(k_table, Ecosystem=="Seagrass")[,c(2:8)], na.rm = TRUE))
 f_table_Sg[,2]<-c(90, 125, 225, 400, 750, 1250, 1750)
-f_table_Sg[c(8:11),1]<-na.omit(k_table[,9])
-f_table_Sg[c(8:11),2]<-na.omit(k_table[,10])
-f_table_Sg[c(11:15), c(1,2)]<-k_revS[,c(2:3)]
+f_table_Sg[c(8:13),1]<-na.omit(k_table[,9])
+f_table_Sg[c(8:13),2]<-na.omit(k_table[,10])
+f_table_Sg[c(14:18), c(1,2)]<-k_revS[,c(2:3)]
 
 #f_table_Sg<-f_table[-9,]
 colnames(f_table_Sg)<-c("k","timeframe")
@@ -2073,7 +2320,7 @@ kchange <- function(Tframe, A, C)
       
       fitSg <- as.data.frame(c(1:5000))
       fitSg['new_col'] <- NA
-      fitSg[, 2] <- kchange(c(1:5000), 0.044, -0.004)
+      fitSg[, 2] <- kchange(c(1:5000), 0.04, -0.003)
       colnames(fitSg) <- list("timeframe", "predict")
       
       # tidal marsh model
@@ -2088,7 +2335,7 @@ kchange <- function(Tframe, A, C)
       
       fitTm <- as.data.frame(c(1:5000))
       fitTm['new_col'] <- NA
-      fitTm[, 2] <- kchange(c(1:5000), 0.022, -0.003)
+      fitTm[, 2] <- kchange(c(1:5000), 0.02, -0.003)
       colnames(fitTm) <- list("timeframe", "predict")
       
       # Mangrove model
@@ -2103,7 +2350,7 @@ kchange <- function(Tframe, A, C)
       
       fitMg <- as.data.frame(c(1:5000))
       fitMg['new_col'] <- NA
-      fitMg[, 2] <- kchange(c(1:5000), 0.0282, -0.0043)
+      fitMg[, 2] <- kchange(c(1:5000), 0.023, -0.0025)
       colnames(fitMg) <- list("timeframe", "predict")
 
 
@@ -2184,11 +2431,11 @@ fit_fig<-
   
   xlim(0,4000)+
   
-  annotate("text", x=1500, y=0.025, color= "blue",  size = 5, label= expression(y == 0.028 * e ** (-0.004 * 
+  annotate("text", x=1500, y=0.025, color= "blue",  size = 5, label= expression(y == 0.03 * e ** (-0.0025 * 
                                                                                                      x)))+
-  annotate("text", x=1500, y=0.02, color= "green4",size = 5,label= expression(y == 0.044 * e ** (-0.004 * 
+  annotate("text", x=1500, y=0.02, color= "green4",size = 5,label= expression(y == 0.04 * e ** (-0.003 * 
                                                                                                    x)))+
-  annotate("text", x=1500, y=0.015, color= "orange",size = 5,label= expression(y == 0.022 * e ** (-0.003 * 
+  annotate("text", x=1500, y=0.015, color= "orange",size = 5,label= expression(y == 0.02 * e ** (-0.003 * 
                                                                                                     x)))
 
 
@@ -2244,82 +2491,108 @@ ggsave(
     
   }
   
+
+
+
   var_100<-estimate_sum_var (TPb, fit_100Pb)
-  var_150<-estimate_sum_var (TPb, fit_150Pb)
-  var_1000<-estimate_sum_var (TC, fit_1000C)
+  var_100 <-merge(var_100, oracle[,c(1,3,4,7:12)], by = "ID", all = T)
+  var_100 <- var_100[!is.na(var_100$k), ]
+  
+  write.csv(var_100,file.path(Folder,"var_100.csv"),sep=";", dec=",")
+  
+  
+  var_1000<-estimate_sum_var (TPbandC, fit_1000CPb)
+  var_1000 <-merge(var_1000, oracle[,c(1,3,4,7:12)], by = "ID", all = T)
+  var_1000 <- var_1000[!is.na(var_1000$k), ]
+  
+  write.csv(var_1000,file.path(Folder,"var_1000.csv"),sep=";", dec=",")
+  
+
+# PCA decay ---------------------------------------------------------------
+
+  temp<-var_1000[,c(2,6,8,9,11:17)]
+  
+  temp<-na.omit(temp)
   
   
   
-  plot(var_100$k, var_100$Mud)
-  
-  cor.test(as.numeric(var_100$k), as.numeric(var_100$Mud), method=c("spearman"))
-  cor.test(as.numeric(var_100$k), as.numeric(var_100$OC), method=c("spearman"))
-  cor.test(as.numeric(var_100$k), as.numeric(var_100$d13C), method=c("spearman"))
-  cor.test(as.numeric(var_100$k), as.numeric(var_100$SAR), method=c("spearman"))
-  
-  cor.test(as.numeric(var_150$k), as.numeric(var_150$Mud), method=c("spearman"))
-  cor.test(as.numeric(var_150$k), as.numeric(var_150$OC), method=c("spearman"))
-  cor.test(as.numeric(var_150$k), as.numeric(var_150$d13C), method=c("spearman"))
-  cor.test(as.numeric(var_150$k), as.numeric(var_150$SAR), method=c("spearman"))
-  
-  cor.test(as.numeric(var_1000$k), as.numeric(var_1000$Mud), method=c("spearman"))
-  cor.test(as.numeric(var_1000$k), as.numeric(var_1000$OC), method=c("spearman"))
-  cor.test(as.numeric(var_1000$k), as.numeric(var_1000$d13C), method=c("spearman"))
-  cor.test(as.numeric(var_1000$k), as.numeric(var_1000$SAR), method=c("spearman"))
+  pca<-as.data.frame(scale(temp[,-1]))
   
   
+  # PCA with varimax rotation #
+  PCA<-principal(pca, nfactors=1, residual=T, rotate="varimax", covar=F) #Modify number of factor until you have the maximun number of components with more than 1 explained variance
+  AutVal<-sum(PCA$values>1)
+  PCA<-principal(pca, nfactors=AutVal, residual=T, rotate="varimax", covar=F)
+  print(PCA)
   
-  ggplot(var_150, aes(k, OC))+
-    geom_point(aes(color=Ecosystem))+
-    scale_color_manual(values=c('blue', 'green4', "orange"))
+  fa.parallel(pca)
   
-  ggplot(var_150, aes(k, d13C))+
-    geom_point(aes(color=Ecosystem))+
-    scale_color_manual(values=c('blue', 'green4', "orange"))
   
-  ggplot(var_150, aes(k, SAR))+
-    geom_point(aes(color=Ecosystem))+
-    scale_color_manual(values=c('blue', 'green4', "orange"))
+  # loading #
+  loa <-loadings(PCA)
+  loa <-as.data.frame(loa[,1:ncol(loa)])
+  
+  # comunality #
+  
+  loa2 <- loa^2 #Cuadrados de los loadings
+  Com <-t(loa2) # Transpuesta
+  
+  barplot(Com, col=c("skyblue1","tan1","springgreen2","lightgoldenrod2","violetred3","aquamarine", "chartreuse4"),
+          ylim=c(0,1), axisnames = T, las=2, cex.names=0.8,xaxt="s",main="Fraccionamiento comunalidad")# barplot
+  
+  write.csv(loa,file.path(Folder,"1000_short_loa.csv"),sep=";", dec=",")
   
   
   
-  
-  # figure 3
-  stm<-ggplot(var_100, aes(k, Mud))+ ylab("Mud % (<0.063 mm)") + xlab("80-100 yr") +
-    geom_point(aes(color=Ecosystem))+
-    xlim(0, 0.04)+ ylim (0,100)+
-    scale_color_manual(values=c('blue', 'green4', "orange"))
-  
-  ltm<-ggplot(var_1000, aes(k, Mud))+ ylab("Mud % (<0.063 mm)") + xlab("500-1000 yr") +
-    geom_point(aes(color=Ecosystem))+
-    #xlim(0, 0.04)+
-    ylim (0,100)+
-    scale_color_manual(values=c( 'green4', "orange"))
-  
-  stm_sar<-ggplot(var_100, aes(k, SAR))+ ylab("Sed. Acc. Rate (cm yr-1)") + xlab("80-100 yr") +
-    geom_point(aes(color=Ecosystem))+
-    xlim(0, 0.04)+ ylim (0,1)+
-    scale_color_manual(values=c('blue', 'green4', "orange"))
-  
-  ltm_sar<-ggplot(var_1000, aes(k, SAR))+ ylab("Sed. Acc. Rate (cm yr-1)") + xlab("500-1000 yr") +
-    geom_point(aes(color=Ecosystem))+
-    #xlim(0, 0.04)+
-    ylim (0,1)+
-    scale_color_manual(values=c( 'green4', "orange"))
+  # scores #
+  sco<-PCA$scores
+  sco<-as.data.frame(sco)
+  write.csv(sco,file.path(Folder,"1000_short_sco.csv"), sep=";", dec=".")
   
   
+  ########### biplot carmen towapoh pa clr #################
   
-  fig3<-grid.arrange(stm, ltm, stm_sar, ltm_sar, top = "Dacay rates (yr-1)")
+  colnames(sco)<-c("PC1","PC2","PC3","PC4") ###"Depth"
+  colnames(loa)<-c("PC1","PC2","PC3", "PC4")
+  fit<- as.data.frame(sco)
+  Eco<-temp[,1]
   
   
-  ggsave(
-    plot = fig3,
-    path = Folder,
-    filename = "mud_decay.jpg",
-    units = "cm",
-    width = 19,
-    height = 10
-  )
+  col_vector <- c("blue","orange", "green4")
+  
+  ggplot(data=loa, aes(x=PC1,y=PC3)) +geom_point(data=fit,aes(x=PC1,y=PC3,colour=Eco), size=2)+ coord_fixed(ratio=1)+ theme_bw() +
+    annotate("text", x=(loa$PC1*5.8), y=(loa$PC3*5.8), label=row.names(loa), col="red3", size= 5)+
+    xlab("PC1 (22%)")+ylab("PC2 (16%)")+ #theme(legend.position = "none")+
+    #xlim(c(-4.8,4.8))+
+    # ylim(c(-3,5))+
+    scale_color_manual(values = col_vector)+
+    scale_shape_manual(values=c(15,17,19))+
+    #scale_shape_manual(values=c(20))+
+    theme(legend.title = element_text(colour = "white"),
+          legend.position = "bottom")+
+    geom_segment(data=loa, aes(x =0 , y = 0, xend = PC1*5, yend = PC3*5), arrow = arrow(length = unit(1/2, 'picas')), color = "black", linetype='solid', size=0.5)
+  
+  #ggsave("_Gr3_1-5.jpg", units="cm", width = 20, height = 20)
+  
+  
+  # map of long_100 and short_1000 decays
+  
+  ggplot() + xlab("Longitude") + ylab("Latitude") +
+    geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
+    #geom_point(aes(x = long, y = lat))+
+    geom_point(data= var_100,aes(x = Long, y = Lat,  fill = Ecosystem), pch = 21, size = 1.8) +
+    coord_sf(xlim = c(-140, 150), ylim = c(-40, 75)) +
+    scale_fill_manual(values = c("blue",  "green","orange")) +
+    theme(plot.title = element_text(hjust = 0.5))
+  
+  ggplot() + xlab("Longitude") + ylab("Latitude") +
+    geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
+    #geom_point(aes(x = long, y = lat))+
+    geom_point(data= var_1000,aes(x = Long, y = Lat,  fill = Ecosystem), pch = 21, size = 1.8) +
+    coord_sf(xlim = c(-140, 150), ylim = c(-40, 75)) +
+    scale_fill_manual(values = c(  "green","orange")) +
+    theme(plot.title = element_text(hjust = 0.5))
+  
   
 
 # map of fitted cores (Figure 5) ----------------------------------------------------
@@ -2424,10 +2697,10 @@ ggsave(
   
   # degradation of the first meter
   #seagrass
-  0.044 * exp(-0.003 * 1713.38)
+  0.04 * exp(-0.003 * 1713.38)
   
-  0.044 * exp(-0.003 * 1401.71)
-  0.044 * exp(-0.003 * 2025.05)
+  0.04 * exp(-0.003 * 1401.71)
+  0.04 * exp(-0.003 * 2025.05)
   
   #mangrove
   0.028 * exp(-0.004 * 1713.38)
@@ -2436,10 +2709,10 @@ ggsave(
   0.028 * exp(-0.004 * 2025.05)
   
   #tidal marshes
-  0.025 * exp(-0.003 * 1713.38)
+  0.026 * exp(-0.0025 * 1713.38)
   
-  0.025 * exp(-0.003 * 1401.71)
-  0.025 * exp(-0.003 * 2025.05)
+  0.026 * exp(-0.0025 * 1401.71)
+  0.026 * exp(-0.0025 * 2025.05)
   
   
   # depth of the first 100 and 1000 years -------------------------------------------------------------
@@ -2470,3 +2743,6 @@ ggsave(
   
   
   
+
+  
+
