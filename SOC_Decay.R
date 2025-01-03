@@ -1,12 +1,11 @@
 ################################################################################
-# Article: Modelling decay rates of soil organic carbon in blue carbon ecosystems 
+# Article: Soil organic carbon preservation and decay trends in tidal marsh, mangrove and seagrass blue carbon ecosystems 
 # 1/1
 # Author: Nerea Piñeiro-Juncal (https://github.com/NPJuncal)
-# V 3.3
-# Year: 2024
+# V 4.3
+# Year: 2025
 ################################################################################
 
-setwd("C:/Users/npjun/Dropbox/Seagrasses/Degradacion anaerobia_OSCAR/SOC_Decay")
 
 library(ggplot2)
 library(maps)
@@ -113,6 +112,7 @@ write.csv(SingleCore[,c(1,3,9,10)],
           file.path(Folder, "singlecore.csv"),
           sep = ";",
           dec = ".")
+
 
 
 # Sampling sites Map (Figure 4) -------------------------------------------
@@ -243,6 +243,10 @@ write.csv(CM,
           file.path(Folder, "AvMdC.csv"),
           sep = ";",
           dec = ".")
+
+
+tapply(CM$Av_C_25, CM$Ecosystem, summary)
+tapply(CM$Av_C_25, CM$Ecosystem, sd, na.rm=T)
 
 
 # Sediment accretion rate -------------------------------------------------
@@ -434,6 +438,25 @@ DT2 <-merge(DT2, SAR[,c(1,3:7)], by = "ID", all = TRUE)
 cor.test(DT2$Av_Mud_25, DT2$Av_13C_25)
 plot(DT2$Av_Mud_25, DT2$Av_13C_25)
 
+DT2[, c(2,12,21)] %>% 
+  group_by(Ecosystem, C_Gr) %>%
+  summarise_all("mean", na.rm=TRUE)
+
+DT2[, c(2,12,21)] %>% 
+  group_by(Ecosystem, C_Gr) %>%
+  summarise_all("median", na.rm=TRUE)
+
+DT2 [, c(2,12,21)]%>% 
+  group_by(Ecosystem, C_Gr) %>%
+  summarise_all("sd", na.rm=TRUE)
+
+
+temp<-subset(DT2, !is.na(DT2 [, c(2,12,21)]$Av_C_25))
+temp [, c(2,12,21)]%>% 
+  group_by(Ecosystem, C_Gr) %>%
+  summarise_all("std")
+
+
 ### data from BIO-Oracle ##
 
 File <- "Data/bio_oracle.csv"
@@ -571,7 +594,7 @@ d13S<-ggplot(DT2Sg, aes(C_Gr, Av_13C_25)) + ylab(expression(delta~"13C (‰)")) 
  
 #temperature  
 
-ST<-ggplot(subset(DT3, Ecosystem=="Seagrass"), aes(C_Gr, Temperature)) +
+ST<-ggplot(subset(DT3, Ecosystem=="Seagrass"), aes(C_Gr, temperature)) +
   geom_boxplot()+
   geom_jitter(color="green4", alpha = 0.1)+
   ylim(2,35)+
@@ -587,7 +610,7 @@ ST<-ggplot(subset(DT3, Ecosystem=="Seagrass"), aes(C_Gr, Temperature)) +
 
 #current velocity  
 
-SCV<-ggplot(subset(DT3, Ecosystem=="Seagrass"), aes(C_Gr, current.velocity)) + 
+SCV<-ggplot(subset(DT3, Ecosystem=="Seagrass"), aes(C_Gr, water.velocity)) + 
   ylab(expression(paste("Current v. (m ",s^-1,")"))) + ggtitle("Seagrass")+
   geom_boxplot()+
   geom_jitter(color="green4", alpha = 0.3)+
@@ -607,7 +630,7 @@ SCV<-ggplot(subset(DT3, Ecosystem=="Seagrass"), aes(C_Gr, current.velocity)) +
 DT2Sm<-subset(DT2, Ecosystem=="Tidal Marsh")
 
 #organic carbon  
-TMC<-ggplot(DT2Sm, aes(C_Gr, Av_C_25)) + ggtitle("Tidal Marsh")+
+TMC<-ggplot(DT2Sm, aes(C_Gr, Av_C_25)) + ylab("log(OC%)") + ggtitle("Tidal Marsh")+
   geom_boxplot()+
   geom_jitter(color="orange", alpha = 0.1)+
   scale_y_log10()+
@@ -617,12 +640,11 @@ TMC<-ggplot(DT2Sm, aes(C_Gr, Av_C_25)) + ggtitle("Tidal Marsh")+
            label = table(subset(DT2Sm, !is.na(Av_C_25))[,"C_Gr"]),
            col = "black")+
   theme(plot.title = element_text(hjust = 0.5),
-        axis.title.x = element_blank(), 
-        axis.title.y = element_blank())
+        axis.title.x = element_blank())
 
 
 #mud  
-TMM<-ggplot(DT2Sm, aes(C_Gr, Av_Mud_25)) +
+TMM<-ggplot(DT2Sm, aes(C_Gr, Av_Mud_25)) + ylab("Mud%") +
   geom_boxplot()+
   geom_jitter(color="orange", alpha = 0.5)+
   ylim(-10,110)+
@@ -631,13 +653,12 @@ TMM<-ggplot(DT2Sm, aes(C_Gr, Av_Mud_25)) +
            y = -7,
            label = table(subset(DT2Sm, !is.na(Av_Mud_25))[,"C_Gr"]),
            col = "black")+
-  theme(axis.title.x = element_blank(), 
-        axis.title.y = element_blank())
+  theme(axis.title.x = element_blank())
 
 
 
 #SAR 
-TMS<-ggplot(DT2Sm, aes(C_Gr, SAR_25)) +
+TMS<-ggplot(DT2Sm, aes(C_Gr, SAR_25)) + ylab(expression(paste("Sed. acc. (cm ",yr^-1,")"))) +
   geom_boxplot()+
   geom_jitter(color="orange", alpha = 0.5)+
   ylim(-0.15,1.1)+
@@ -646,14 +667,13 @@ TMS<-ggplot(DT2Sm, aes(C_Gr, SAR_25)) +
            y = -0.1,
            label = table(subset(DT2Sm, !is.na(SAR_25))[,"C_Gr"]),
            col = "black")+
-  theme(axis.title.x = element_blank(), 
-        axis.title.y = element_blank())
+  theme(axis.title.x = element_blank())
 
 
 
 #d13C
 
-d13T<-ggplot(DT2Sm, aes(C_Gr, Av_13C_25)) + 
+d13T<-ggplot(DT2Sm, aes(C_Gr, Av_13C_25)) + ylab(expression(delta~"13C (‰)")) +
   geom_boxplot()+
   geom_jitter(color="orange", alpha = 0.5)+
   annotate("text",
@@ -661,31 +681,29 @@ d13T<-ggplot(DT2Sm, aes(C_Gr, Av_13C_25)) +
            y = -30,
            label = table(subset(DT2Sm, !is.na(Av_13C_25))[,"C_Gr"]),
            col = "black")+
-  theme(axis.title.x = element_blank(), 
-        axis.title.y = element_blank())
+  theme(axis.title.x = element_blank())
 
 
 #temperature  
 
-TT<-ggplot(subset(DT3, Ecosystem=="Tidal Marsh"), aes(C_Gr, Temperature)) +
+TT<-ggplot(subset(DT3, Ecosystem=="Tidal Marsh"), aes(C_Gr, temperature)) + ylab("Sea Water Tª (\u00B0C)") +
   geom_boxplot()+
   geom_jitter(color="orange", alpha = 0.1)+
   ylim(2,35)+
   annotate("text",
-           x = 1:length(table(DT2Sg$C_Gr)),
+           x = 1:length(table(DT2Sm$C_Gr)),
            y = 2.5,
-           label = table(subset(DT2Sg, !is.na(Av_C_25))[,"C_Gr"]),
+           label = table(subset(DT2Sm, !is.na(Av_C_25))[,"C_Gr"]),
            col = "black")+
   theme(plot.title = element_text(hjust = 0.5),
-        axis.title.x = element_blank(), 
-        axis.title.y = element_blank())
+        axis.title.x = element_blank())
 
 
 
 #Mangroves        
 DT2Mg<-subset(DT2, Ecosystem=="Mangrove")
 #organic carbon  
-MGC<-ggplot(DT2Mg, aes(C_Gr, Av_C_25)) + ylab("log(OC%)") + ggtitle("Mangrove")+
+MGC<-ggplot(DT2Mg, aes(C_Gr, Av_C_25))  + ggtitle("Mangrove")+
   geom_boxplot()+
   geom_jitter(color="blue", alpha = 0.1)+
   annotate("text",
@@ -695,11 +713,12 @@ MGC<-ggplot(DT2Mg, aes(C_Gr, Av_C_25)) + ylab("log(OC%)") + ggtitle("Mangrove")+
            col = "black")+
   scale_y_log10()+
   theme(plot.title = element_text(hjust = 0.5),
-        axis.title.x = element_blank())
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
 
 
 #mud  
-TGM<-ggplot(DT2Mg, aes(C_Gr, Av_Mud_25)) + ylab("Mud%") +
+TGM<-ggplot(DT2Mg, aes(C_Gr, Av_Mud_25)) + 
   geom_boxplot()+
   geom_jitter(color="blue", alpha = 0.5)+
   ylim(-10,110)+
@@ -708,12 +727,13 @@ TGM<-ggplot(DT2Mg, aes(C_Gr, Av_Mud_25)) + ylab("Mud%") +
            y = -7,
            label = table(subset(DT2Mg, !is.na(Av_Mud_25))[,"C_Gr"]),
            col = "black")+
-  theme(axis.title.x = element_blank())
+  theme(axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
 
 
 
 #SAR 
-TGS<-ggplot(DT2Mg, aes(C_Gr, SAR_25)) + ylab(expression(paste("Sed. acc. (cm ",yr^-1,")"))) +
+TGS<-ggplot(DT2Mg, aes(C_Gr, SAR_25)) + 
   geom_boxplot()+
   geom_jitter(color="blue", alpha = 0.5)+
   ylim(-0.15,1.1)+
@@ -722,13 +742,14 @@ TGS<-ggplot(DT2Mg, aes(C_Gr, SAR_25)) + ylab(expression(paste("Sed. acc. (cm ",y
            y = -0.1,
            label = table(subset(DT2Mg, !is.na(SAR_25))[,"C_Gr"]),
            col = "black")+
-  theme(axis.title.x = element_blank())
+  theme(axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
 
 
 
 #d13C
 
-d13M<-ggplot(DT2Mg, aes(C_Gr, Av_13C_25)) + ylab(expression(delta~"13C (‰)")) +
+d13M<-ggplot(DT2Mg, aes(C_Gr, Av_13C_25)) + 
   geom_boxplot()+
   geom_jitter(color="blue", alpha = 0.5)+
   ylim(-30,-5)+
@@ -737,26 +758,28 @@ d13M<-ggplot(DT2Mg, aes(C_Gr, Av_13C_25)) + ylab(expression(delta~"13C (‰)")) 
            y = -30,
            label = table(subset(DT2Mg, !is.na(Av_13C_25))[,"C_Gr"]),
            col = "black")+
-  theme(axis.title.x = element_blank())
+  theme(axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
 
 
 #temperature  
 
-MT<-ggplot(subset(DT3, Ecosystem=="Mangrove"), aes(C_Gr, Temperature)) +  ylab("Sea Water Tª (\u00B0C)") +
+MT<-ggplot(subset(DT3, Ecosystem=="Mangrove"), aes(C_Gr, temperature)) +  
   geom_boxplot()+
   geom_jitter(color="blue", alpha = 0.1)+
   ylim(2,35)+
   annotate("text",
-           x = 1:length(table(DT2Sg$C_Gr)),
+           x = 1:length(table(DT2Mg$C_Gr)),
            y = 2.5,
-           label = table(subset(DT2Sg, !is.na(Av_C_25))[,"C_Gr"]),
+           label = table(subset(DT2Mg, !is.na(Av_C_25))[,"C_Gr"]),
            col = "black")+
-  theme(axis.title.x = element_blank())
+  theme(axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
 
 
 
 
-todos_CM<-ggpubr::ggarrange(MGC, SC, TMC, TGM, SM, TMM, TGS, SS, TMS, MT, ST, TT, d13S, SCV,
+todos_CM<-ggpubr::ggarrange( TMC, MGC, SC,  TMM, TGM, SM,  TMS, TGS, SS, TT, MT, ST, d13S, SCV,
                             labels = c("A","B", "C","D" , "E","F", "G","H", "I", "J", "K", "L", "M", "N"),
                             ncol=3, nrow= 5)
 
@@ -781,13 +804,13 @@ ggsave( plot = todos_CM,
     pairwise.wilcox.test(DT2Sg$SAR_25, DT2Sg$C_Gr,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)
     
-    pairwise.wilcox.test(subset(DT3, Ecosystem=="Seagrass")$Temperature, subset(DT3, Ecosystem=="Seagrass")$C_Gr,
+    pairwise.wilcox.test(subset(DT3, Ecosystem=="Seagrass")$temperature, subset(DT3, Ecosystem=="Seagrass")$C_Gr,
                          p.adjust.method = "BH") # are significantly different (p < 0.05) 
     
     pairwise.wilcox.test(DT2Sg$Av_13C_25, DT2Sg$C_Gr,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)  
     
-    pairwise.wilcox.test(subset(DT3, Ecosystem=="Seagrass")$current.velocity, subset(DT3, Ecosystem=="Seagrass")$C_Gr,
+    pairwise.wilcox.test(subset(DT3, Ecosystem=="Seagrass")$water.velocity, subset(DT3, Ecosystem=="Seagrass")$C_Gr,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)  
     
     
@@ -804,7 +827,7 @@ ggsave( plot = todos_CM,
                          p.adjust.method = "BH") # are significantly different (p < 0.05) 
 
     
-    pairwise.wilcox.test(subset(DT3, Ecosystem=="Tidal Marsh")$Temperature, subset(DT3, Ecosystem=="Tidal Marsh")$C_Gr,
+    pairwise.wilcox.test(subset(DT3, Ecosystem=="Tidal Marsh")$temperature, subset(DT3, Ecosystem=="Tidal Marsh")$C_Gr,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)  
     
     
@@ -821,7 +844,7 @@ ggsave( plot = todos_CM,
                          p.adjust.method = "BH") # are significantly different (p < 0.05) 
 
     
-    pairwise.wilcox.test(subset(DT3, Ecosystem=="Mangrove")$Temperature, subset(DT3, Ecosystem=="Mangrove")$C_Gr,
+    pairwise.wilcox.test(subset(DT3, Ecosystem=="Mangrove")$temperature, subset(DT3, Ecosystem=="Mangrove")$C_Gr,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)  
     
     
@@ -2257,10 +2280,10 @@ box_100_1000<-  ggplot(transform(k_tablem2,
 ggsave(
   plot = box_100_1000,
   path = Folder,
-  filename = "box_150_1000.jpg",
+  filename = "box_150_1000_l.jpg",
   units = "cm",
   width = 12,
-  height = 7
+  height = 10
 )
 
 
@@ -2431,26 +2454,25 @@ fit_fig<-
   
   xlim(0,4000)+
   
-  annotate("text", x=1500, y=0.025, color= "blue",  size = 5, label= expression(y == 0.03 * e ** (-0.0025 * 
-                                                                                                     x)))+
-  annotate("text", x=1500, y=0.02, color= "green4",size = 5,label= expression(y == 0.04 * e ** (-0.003 * 
-                                                                                                   x)))+
-  annotate("text", x=1500, y=0.015, color= "orange",size = 5,label= expression(y == 0.02 * e ** (-0.003 * 
-                                                                                                    x)))
+  scale_y_continuous(breaks=scales::pretty_breaks(10))
+  
+  #annotate("text", x=1500, y=0.025, color= "blue",  size = 5, label= expression(y == 0.03 * e ** (-0.0025 * x)))+
+  #annotate("text", x=1500, y=0.02, color= "green4",size = 5,label= expression(y == 0.04 * e ** (-0.003 * x)))+
+  #annotate("text", x=1500, y=0.015, color= "orange",size = 5,label= expression(y == 0.02 * e ** (-0.003 * x)))
 
 
 ggsave(
   plot = fit_fig,
   path = Folder,
-  filename = "fit_plot.jpg",
+  filename = "fit_plot_l.jpg",
   units = "cm",
   width = 12,
-  height = 7
+  height = 10
 )
 
 
 
-# correlation decay rate, OC, Mud and d13C (Figure 3) ------------------------------------
+# correlation decay rate, OC, Mud and d13C------------------------------------
 
   # first we estimate the average OC, mud, d13C and SAR content for the studied time frame
   # we use the max age of each core
@@ -2508,94 +2530,7 @@ ggsave(
   write.csv(var_1000,file.path(Folder,"var_1000.csv"),sep=";", dec=",")
   
 
-# PCA decay ---------------------------------------------------------------
-
-  temp<-var_1000[,c(2,6,8,9,11:17)]
-  
-  temp<-na.omit(temp)
-  
-  
-  
-  pca<-as.data.frame(scale(temp[,-1]))
-  
-  
-  # PCA with varimax rotation #
-  PCA<-principal(pca, nfactors=1, residual=T, rotate="varimax", covar=F) #Modify number of factor until you have the maximun number of components with more than 1 explained variance
-  AutVal<-sum(PCA$values>1)
-  PCA<-principal(pca, nfactors=AutVal, residual=T, rotate="varimax", covar=F)
-  print(PCA)
-  
-  fa.parallel(pca)
-  
-  
-  # loading #
-  loa <-loadings(PCA)
-  loa <-as.data.frame(loa[,1:ncol(loa)])
-  
-  # comunality #
-  
-  loa2 <- loa^2 #Cuadrados de los loadings
-  Com <-t(loa2) # Transpuesta
-  
-  barplot(Com, col=c("skyblue1","tan1","springgreen2","lightgoldenrod2","violetred3","aquamarine", "chartreuse4"),
-          ylim=c(0,1), axisnames = T, las=2, cex.names=0.8,xaxt="s",main="Fraccionamiento comunalidad")# barplot
-  
-  write.csv(loa,file.path(Folder,"1000_short_loa.csv"),sep=";", dec=",")
-  
-  
-  
-  # scores #
-  sco<-PCA$scores
-  sco<-as.data.frame(sco)
-  write.csv(sco,file.path(Folder,"1000_short_sco.csv"), sep=";", dec=".")
-  
-  
-  ########### biplot carmen towapoh pa clr #################
-  
-  colnames(sco)<-c("PC1","PC2","PC3","PC4") ###"Depth"
-  colnames(loa)<-c("PC1","PC2","PC3", "PC4")
-  fit<- as.data.frame(sco)
-  Eco<-temp[,1]
-  
-  
-  col_vector <- c("blue","orange", "green4")
-  
-  ggplot(data=loa, aes(x=PC1,y=PC3)) +geom_point(data=fit,aes(x=PC1,y=PC3,colour=Eco), size=2)+ coord_fixed(ratio=1)+ theme_bw() +
-    annotate("text", x=(loa$PC1*5.8), y=(loa$PC3*5.8), label=row.names(loa), col="red3", size= 5)+
-    xlab("PC1 (22%)")+ylab("PC2 (16%)")+ #theme(legend.position = "none")+
-    #xlim(c(-4.8,4.8))+
-    # ylim(c(-3,5))+
-    scale_color_manual(values = col_vector)+
-    scale_shape_manual(values=c(15,17,19))+
-    #scale_shape_manual(values=c(20))+
-    theme(legend.title = element_text(colour = "white"),
-          legend.position = "bottom")+
-    geom_segment(data=loa, aes(x =0 , y = 0, xend = PC1*5, yend = PC3*5), arrow = arrow(length = unit(1/2, 'picas')), color = "black", linetype='solid', size=0.5)
-  
-  #ggsave("_Gr3_1-5.jpg", units="cm", width = 20, height = 20)
-  
-  
-  # map of long_100 and short_1000 decays
-  
-  ggplot() + xlab("Longitude") + ylab("Latitude") +
-    geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
-    #geom_point(aes(x = long, y = lat))+
-    geom_point(data= var_100,aes(x = Long, y = Lat,  fill = Ecosystem), pch = 21, size = 1.8) +
-    coord_sf(xlim = c(-140, 150), ylim = c(-40, 75)) +
-    scale_fill_manual(values = c("blue",  "green","orange")) +
-    theme(plot.title = element_text(hjust = 0.5))
-  
-  ggplot() + xlab("Longitude") + ylab("Latitude") +
-    geom_polygon(data = WM, aes(x = long, y = lat, group = group)) +
-    #geom_point(aes(x = long, y = lat))+
-    geom_point(data= var_1000,aes(x = Long, y = Lat,  fill = Ecosystem), pch = 21, size = 1.8) +
-    coord_sf(xlim = c(-140, 150), ylim = c(-40, 75)) +
-    scale_fill_manual(values = c(  "green","orange")) +
-    theme(plot.title = element_text(hjust = 0.5))
-  
-  
-
-# map of fitted cores (Figure 5) ----------------------------------------------------
+# map of fitted cores (Figure 4) ----------------------------------------------------
   
   
   k_table_c<-k_table[rowSums(is.na(k_table[,c(2:9)])) != ncol(k_table[,c(2:9)]), ]
