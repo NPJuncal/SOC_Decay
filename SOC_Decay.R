@@ -19,6 +19,7 @@ library(MASS)
 library(reshape2) 
 library(reshape) 
 library(psych)
+library(Hmisc)
 
 
 
@@ -40,17 +41,22 @@ is.numeric(Cores$Corg_.gcm3)
 is.numeric(Cores$d13C)
 is.numeric(Cores$Mud)
 
+#NAs will be introduced in those places with no value
 Cores$Max.Depth<-as.numeric(Cores$Max.Depth)
+Cores$DBD<-as.numeric(Cores$DBD)
+Cores$Corg<-as.numeric(Cores$Corg)
+Cores$Corg_.gcm3<-as.numeric(Cores$Corg_.gcm3)
+Cores$d13C<-as.numeric(Cores$d13C)
+Cores$Mud<-as.numeric(Cores$Mud)
+
+
 
 #clean the rows without DBD and OC data
-Cores$DBD <- as.numeric(Cores$DBD)
 Cores <- Cores[!is.na(Cores$DBD),]
-Cores$Corg <- as.numeric(Cores$Corg)
 Cores <- Cores[!is.na(Cores$Corg),]
 
 # estimation of carbon density for those samples where there are bulk density and oc percentage available
 
-Cores$Corg_.gcm3 <- as.numeric(Cores$Corg_.gcm3)
 
 for (i in 1:nrow(Cores)) {
   
@@ -63,7 +69,7 @@ for (i in 1:nrow(Cores)) {
 
 ### we create a folder to save the results
 
-Folder = "Decay2023"
+Folder = "Decay2025"
 dir.create(Folder)
 
 
@@ -247,6 +253,9 @@ write.csv(CM,
 
 tapply(CM$Av_C_25, CM$Ecosystem, summary)
 tapply(CM$Av_C_25, CM$Ecosystem, sd, na.rm=T)
+
+tapply(CM$Av_Mud, CM$Ecosystem, summary)
+tapply(CM$Av_Mud, CM$Ecosystem, sd, na.rm=T)
 
 
 # Sediment accretion rate -------------------------------------------------
@@ -471,6 +480,17 @@ oracle <- as.data.frame(oracle)
 DT3 <-merge(DT2, oracle[c(1,7:12)], by = "ID", all = TRUE)
 DT3<-subset(DT3, !is.na(DT3$C_Gr))
 
+
+# correlation among variables
+
+
+corr_var<-rcorr(as.matrix(DT3[,c(12,15,18,26:32)]), type = c("pearson"))
+
+corr_var_Sg<-rcorr(as.matrix(DT3[which(DT3$Ecosystem=="Seagrass"),c(12,15,18,26:32)]), type = c("pearson"))
+corr_var_Tm<-rcorr(as.matrix(DT3[which(DT3$Ecosystem=="Tidal Marsh"),c(12,15,18,26:32)]), type = c("pearson"))
+corr_var_Mg<-rcorr(as.matrix(DT3[which(DT3$Ecosystem=="Mangrove"),c(12,15,18,26:32)]), type = c("pearson"))
+
+
 # seagrass specie and trend -----------------------------------------------
 
   Sg_DT<-subset(DT, Ecosystem=="Seagrass")
@@ -579,7 +599,7 @@ SS<-ggplot(DT2Sg, aes(C_Gr, SAR_25)) +
 
 #d13C
 
-d13S<-ggplot(DT2Sg, aes(C_Gr, Av_13C_25)) + ylab(expression(delta~"13C (‰)")) + ggtitle("Seagrass")+
+d13S<-ggplot(DT2Sg, aes(C_Gr, Av_13C_25)) + 
   geom_boxplot()+
   geom_jitter(color="green4", alpha = 0.3)+
   ylim(-30,-5)+
@@ -588,8 +608,8 @@ d13S<-ggplot(DT2Sg, aes(C_Gr, Av_13C_25)) + ylab(expression(delta~"13C (‰)")) 
            y = -30,
            label = table(subset(DT2Sg, !is.na(Av_13C_25))[,"C_Gr"]),
            col = "black")+
-  theme(axis.title.x = element_blank(),
-        plot.title = element_text(hjust = 0.5),)
+  theme(axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
 
  
 #temperature  
@@ -611,7 +631,7 @@ ST<-ggplot(subset(DT3, Ecosystem=="Seagrass"), aes(C_Gr, temperature)) +
 #current velocity  
 
 SCV<-ggplot(subset(DT3, Ecosystem=="Seagrass"), aes(C_Gr, water.velocity)) + 
-  ylab(expression(paste("Current v. (m ",s^-1,")"))) + ggtitle("Seagrass")+
+  ylab(expression(paste("Current v. (m ",s^-1,")"))) +
   geom_boxplot()+
   geom_jitter(color="green4", alpha = 0.3)+
   annotate("text",
@@ -779,14 +799,14 @@ MT<-ggplot(subset(DT3, Ecosystem=="Mangrove"), aes(C_Gr, temperature)) +
 
 
 
-todos_CM<-ggpubr::ggarrange( TMC, MGC, SC,  TMM, TGM, SM,  TMS, TGS, SS, TT, MT, ST, d13S, SCV,
-                            labels = c("A","B", "C","D" , "E","F", "G","H", "I", "J", "K", "L", "M", "N"),
+todos_CM<-ggpubr::ggarrange( TMC, MGC, SC,  TMM, TGM, SM,  TMS, TGS, SS, TT, MT, ST, d13T, d13M, d13S, 
+                            labels = c("A","B", "C","D" , "E","F", "G","H", "I", "J", "K", "L", "M", "N", "O"),
                             ncol=3, nrow= 5)
 
 
 ggsave( plot = todos_CM,
         path = Folder,
-        filename =  "C_Mud_Gr.jpg",
+        filename =  "Figure 1_R.jpg",
         units = "cm",
         width = 20,
         height = 25)    
@@ -830,6 +850,9 @@ ggsave( plot = todos_CM,
     pairwise.wilcox.test(subset(DT3, Ecosystem=="Tidal Marsh")$temperature, subset(DT3, Ecosystem=="Tidal Marsh")$C_Gr,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)  
     
+    pairwise.wilcox.test(DT2Sm$Av_13C_25, DT2Sg$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)  
+    
     
     #Mangroves        
     
@@ -847,6 +870,8 @@ ggsave( plot = todos_CM,
     pairwise.wilcox.test(subset(DT3, Ecosystem=="Mangrove")$temperature, subset(DT3, Ecosystem=="Mangrove")$C_Gr,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)  
     
+    pairwise.wilcox.test(DT2Mg$Av_13C_25, DT2Sg$C_Gr,
+                         p.adjust.method = "BH") # are significantly different (p < 0.05)      
     
     
     # average per ecosystem
@@ -1239,7 +1264,7 @@ NGrMg %>% mutate(proc = ((n * 100) / sum(NGrMg[, 2])))
 # # TPb until 500 ---------------------------------------------------------
 
 
-Folder = "Decay2023_Pb"
+Folder = "Decay2025_Pb"
 dir.create(Folder)
 
 #### Homogenize Age
@@ -1320,7 +1345,7 @@ for (i in 1:nrow(TPb)) {
   #model
   DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
   
-  fit_100Pb<-OCModel(DataAM, nwpath="Decay2023_Pb/100")
+  fit_100Pb<-OCModel(DataAM, nwpath="Decay2025_Pb/100")
   
   
   
@@ -1389,7 +1414,7 @@ for (i in 1:nrow(TPb)) {
   #model
   DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
   
-  fit_150Pb<-OCModel(DataAM, MA= 100, nwpath="Decay2023_Pb/150")
+  fit_150Pb<-OCModel(DataAM, MA= 100, nwpath="Decay2025_Pb/150")
   
   
   
@@ -1456,7 +1481,7 @@ for (i in 1:nrow(TPb)) {
   #model
   DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
   
-  fit_300Pb<-OCModel(DataAM, MA= 150, nwpath="Decay2023_Pb/300")
+  fit_300Pb<-OCModel(DataAM, MA= 150, nwpath="Decay2025_Pb/300")
   
   
   # model 300-500 years ---------------------------------------------------
@@ -1519,13 +1544,13 @@ for (i in 1:nrow(TPb)) {
   #model
   DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
   
-  fit_500Pb<-OCModel(DataAM, MA= 300, nwpath="Decay2023_Pb/500")
+  fit_500Pb<-OCModel(DataAM, MA= 300, nwpath="Decay2025_Pb/500")
   
   
 # # TC from 1000 to more than 2000 ---------------------------------------------------------
 
 
-Folder = "Decay2023_C"
+Folder = "Decay2025_C"
 dir.create(Folder)
 
 #### Homogenize Age
@@ -1605,7 +1630,7 @@ for (i in 1:nrow(TC)) {
   #model
   DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
   
-  fit_1000C<-OCModel(DataAM, MA= 500, nwpath="Decay2023_C/1000")
+  fit_1000C<-OCModel(DataAM, MA= 500, nwpath="Decay2025_C/1000")
   
   
   
@@ -1672,7 +1697,7 @@ for (i in 1:nrow(TC)) {
   #model
   DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
   
-  fit_1500C<-OCModel(DataAM, MA= 1000, nwpath="Decay2023_C/1500")
+  fit_1500C<-OCModel(DataAM, MA= 1000, nwpath="Decay2025_C/1500")
   
   
   
@@ -1737,7 +1762,7 @@ for (i in 1:nrow(TC)) {
   #model
   DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
   
-  fit_2000C<-OCModel(DataAM, MA= 1500, nwpath="Decay2023_C/2000")
+  fit_2000C<-OCModel(DataAM, MA= 1500, nwpath="Decay2025_C/2000")
   
   
   # model > 2000 years ---------------------------------------------------
@@ -1800,13 +1825,13 @@ for (i in 1:nrow(TC)) {
   #model
   DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
   
-  fit_m2000C<-OCModel(DataAM, MA= 2000, nwpath="Decay2023_C/more_2000")
+  fit_m2000C<-OCModel(DataAM, MA= 2000, nwpath="Decay2025_C/more_2000")
   
   
 # # TC and Pb from 1000 to more than 2000 ---------------------------------------------------------
 
 
-Folder = "Decay2023_CPb"
+Folder = "Decay2025_CPb"
 dir.create(Folder)
 
 #### Homogenize Age
@@ -1882,7 +1907,7 @@ for (i in 1:nrow(TPbandC)) {
   #model
   DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
   
-  fit_1000CPb<-OCModel(DataAM, MA= 500, nwpath="Decay2023_CPb/1000")
+  fit_1000CPb<-OCModel(DataAM, MA= 500, nwpath="Decay2025_CPb/1000")
   
   
   
@@ -1949,7 +1974,7 @@ for (i in 1:nrow(TPbandC)) {
   #model
   DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
   
-  fit_1500CPb<-OCModel(DataAM, MA= 1000, nwpath="Decay2023_CPb/1500")
+  fit_1500CPb<-OCModel(DataAM, MA= 1000, nwpath="Decay2025_CPb/1500")
   
   
   
@@ -2014,7 +2039,7 @@ for (i in 1:nrow(TPbandC)) {
   #model
   DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
   
-  fit_2000CPb<-OCModel(DataAM, MA= 1500, nwpath="Decay2023_CPb/2000")
+  fit_2000CPb<-OCModel(DataAM, MA= 1500, nwpath="Decay2025_CPb/2000")
   
   
   # model > 2000 years ---------------------------------------------------
@@ -2077,7 +2102,7 @@ for (i in 1:nrow(TPbandC)) {
   #model
   DataAM<-as.data.frame(DataAM[, c("Core", "Ecosystem", "FAge", "Corg", "Corg.M")])
   
-  fit_m2000CPb<-OCModel(DataAM, MA= 2000, nwpath="Decay2023_CPb/more_2000")
+  fit_m2000CPb<-OCModel(DataAM, MA= 2000, nwpath="Decay2025_CPb/more_2000")
   
   
   
@@ -2088,24 +2113,24 @@ for (i in 1:nrow(TPbandC)) {
 #eliminate some cores after visual check, we eliminate:
 
     #eliminate some cores after visual check
-    fit_100Pb[c( 9, 10, 21, 23, 31), "k"]<-NA
+    fit_100Pb[c( 14, 15, 18, 26, 28, 36), "k"]<-NA
     
     
     pairwise.wilcox.test(fit_100Pb$k, fit_100Pb$Ecosystem,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)
     
-    fit_150Pb <- fit_150Pb[-c(6, 27, 33, 53), ]
+    fit_150Pb <- fit_150Pb[-c(6, 10, 36, 41), ]
     
     pairwise.wilcox.test(fit_150Pb$k, fit_150Pb$Ecosystem,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)    
     
-    fit_300Pb <- fit_300Pb[-c(22, 23, 36), ]
+    fit_300Pb <- fit_300Pb[-c(6, 28, 42), ]
     
     
     pairwise.wilcox.test(fit_300Pb$k, fit_300Pb$Ecosystem,
                          p.adjust.method = "BH") # are significantly different (p < 0.05)
     
-    fit_500Pb <- fit_500Pb[-c(20, 21, 32), ]
+    fit_500Pb <- fit_500Pb[-c(12, 34, 37), ]
     
     
     pairwise.wilcox.test(fit_500Pb$k, fit_500Pb$Ecosystem,
@@ -2124,23 +2149,26 @@ for (i in 1:nrow(TPbandC)) {
     # with C and Pb
 
     
-    fit_1000CPb <- fit_1000CPb[-c( 5, 6, 10, 15, 21, 22, 23, 24), ]
+    fit_1000CPb <- fit_1000CPb[-c( 6, 15, 16, 23, 24), ]
     
     
-    fit_1500CPb <- fit_1500CPb[-c(1, 2, 4, 5, 7, 9, 15, 16, 17), ]
+    fit_1500CPb <- fit_1500CPb[-c(1, 2, 3, 7, 9, 10, 17), ] # delet 112, 170, 279, 312, 314 as well
     
     
-    fit_2000CPb <- fit_2000CPb[-c( 1, 2, 6, 7), ]
+    fit_2000CPb <- fit_2000CPb[-c(3, 4, 5, 7, 8), ] #from this dataframe only keep Sg_279
     
     
-    fit_m2000CPb <- fit_m2000C[-c(3), ]
+    fit_m2000CPb <- fit_m2000C[-c(3, 4, 5, 6, 7, 8, 9), ] 
     
     fit_m2000CPb <- fit_m2000CPb[!is.na(fit_m2000CPb$k),]  
     
 
-# Final table and plots -------------------------------------------------------
+    
 
-Folder = "Decay2023"
+    
+# Summary table (k_table) -------------------------------------------------------
+
+Folder = "Decay2025"
     
     
 k_table <-merge(fit_100Pb[,c(1,4)], fit_150Pb[,c(1,4)], by = "ID", all = TRUE)
@@ -2160,6 +2188,60 @@ names(SingleCore)[names(SingleCore) == 'Core'] <- 'ID'
 
 k_table<-merge(k_table, SingleCore[,c(1, 3, 7, 6, 8, 11, 12)], by = 'ID', all.x=T, all.y=F)
 k_table<-merge(k_table, SAR[,c(1,7)], by = 'ID', all.x=T, all.y=F)
+
+
+# eliminate models after visual check  of d13C-------------------------------------
+
+list<-k_table$ID
+
+temp <- B[B$Core %in% list,]
+temp<-temp[!is.na(temp$d13C),]
+
+
+X <- split(temp, temp$Core)
+
+
+
+cidr <- getwd()
+dir.create(file.path(cidr, "Decay2025/d13C"), recursive = TRUE)  
+
+for (i in 1:length(X)) {
+  Data <- as.data.frame(X[i])
+  colnames(Data) <- colnames(temp)
+  name<-Data[1,1]
+
+
+  p1 <-
+    ggplot(Data, aes(Max.Depth, d13C)) + xlab("Depth (cm)") + ylab("d13C") +
+    geom_point() +
+    geom_line() +
+    coord_flip() +
+    scale_x_reverse()
+  
+  
+  ggsave(
+    plot = p1,
+    path = "Decay2025/d13C",
+    filename = paste(name, ".jpg"),
+    units = "cm",
+    width = 7,
+    height = 10
+  )}
+
+
+# delete the models built with cores SM_505 and SM_1087 as both show two clear sections in d13C values. 
+
+
+k_table<-k_table[-c(78,84),]
+
+Folder = "Decay2025"
+write.csv(k_table,
+          file.path(Folder, "Core decay.csv"),
+          sep = ";",
+          dec = ".")
+
+
+# Final table and plots -------------------------------------------------------
 
 k_table_Mg<-subset(k_table, Ecosystem=='Mangrove')
 k_table_Mg[,c(2:10)]<-sapply(k_table_Mg[,c(2:10)],FUN=as.numeric)
@@ -2222,7 +2304,7 @@ sum_table[,12]<-as.data.frame(apply(k_table[,c(2:8)], FUN=cnt, MARGIN = 2))
 colnames(sum_table)<-c("Mean Mangrove", "SE Mangrove", "n Mangrove","Mean Seagrass", "SE Seagrass", "n Seagrass",
                        "Mean Tidal Marsh", "SE Tidal Marsh", "n Tidal Marsh", "Mean All", "SE All", "n All")
 
-Folder = "Decay2023"
+Folder = "Decay2025"
 write.csv(sum_table,
           file.path(Folder, "Summar decay.csv"),
           sep = ";",
@@ -2373,7 +2455,7 @@ kchange <- function(Tframe, A, C)
       
       fitMg <- as.data.frame(c(1:5000))
       fitMg['new_col'] <- NA
-      fitMg[, 2] <- kchange(c(1:5000), 0.023, -0.0025)
+      fitMg[, 2] <- kchange(c(1:5000), 0.021, -0.004)
       colnames(fitMg) <- list("timeframe", "predict")
 
 
@@ -2456,7 +2538,7 @@ fit_fig<-
   
   scale_y_continuous(breaks=scales::pretty_breaks(10))
   
-  #annotate("text", x=1500, y=0.025, color= "blue",  size = 5, label= expression(y == 0.03 * e ** (-0.0025 * x)))+
+  #annotate("text", x=1500, y=0.025, color= "blue",  size = 5, label= expression(y == 0.02 * e ** (-0.004 * x)))+
   #annotate("text", x=1500, y=0.02, color= "green4",size = 5,label= expression(y == 0.04 * e ** (-0.003 * x)))+
   #annotate("text", x=1500, y=0.015, color= "orange",size = 5,label= expression(y == 0.02 * e ** (-0.003 * x)))
 
@@ -2515,13 +2597,58 @@ ggsave(
   
 
 
-
+#100 years
   var_100<-estimate_sum_var (TPb, fit_100Pb)
   var_100 <-merge(var_100, oracle[,c(1,3,4,7:12)], by = "ID", all = T)
   var_100 <- var_100[!is.na(var_100$k), ]
   
   write.csv(var_100,file.path(Folder,"var_100.csv"),sep=";", dec=",")
   
+  corr_mat_100<-rcorr(as.matrix(var_100[,c(4:17)]), type = c("pearson"))
+  
+  temp<-which(var_100$Ecosystem=="Seagrass")
+  corr_mat_100_Sg<-rcorr(as.matrix(var_100[c(10:20, 22, 23),c(4:17)]), type = c("pearson"))
+  corr_mat_100_Tm<-rcorr(as.matrix(var_100[which(var_100$Ecosystem=="Tidal Marsh"),c(4:17)]), type = c("pearson"))
+  corr_mat_100_Mg<-rcorr(as.matrix(var_100[which(var_100$Ecosystem=="Mangrove"),c(4:17)]), type = c("pearson"))
+  
+  
+  
+  #Mud
+  m100g<-ggplot(var_100, aes(k, Mud))+ ylim(0, 100)+ ylab("Mud %")+
+    xlab(expression("Decay rate 80-100 years (yr"^"-1"~")"))+
+    geom_point(aes(color=Ecosystem))+
+    scale_color_manual(values=c("blue", "green4", "orange"))+
+    geom_smooth(method = "lm", se = FALSE, color ="black")
+  
+  
+  m100e<-ggplot(var_100, aes(k, Mud, color=Ecosystem))+ ylim(0, 100)+ylab("Mud %")+
+    xlab(expression("Decay rate 80-100 years (yr"^"-1"~")"))+
+    geom_point()+
+    scale_color_manual(values=c("blue", "green4", "orange"))+
+    geom_smooth(method = "lm", se = FALSE)
+  
+  
+  #temperature
+  
+  t100g<-ggplot(var_100, aes(k, temperature))+ ylim(8,35)+ ylab("Sea Water Tª (\u00B0C)") +
+    xlab(expression("Decay rate 80-100 years (yr"^"-1"~")"))+
+    geom_point(aes(color=Ecosystem))+
+    scale_color_manual(values=c("blue", "green4", "orange"))+
+    geom_smooth(method = "lm", se = FALSE, color ="black")
+  
+  t100e<-ggplot(var_100, aes(k, temperature, color=Ecosystem))+ ylim(8,35)+
+    ylab("Sea Water Tª (\u00B0C)") +
+    xlab(expression("Decay rate 80-100 years (yr"^"-1"~")"))+
+    geom_point()+
+    scale_color_manual(values=c("blue", "green4", "orange"))+
+    geom_smooth(method = "lm", se = FALSE)
+  
+  
+  
+
+  
+  
+#1000 years
   
   var_1000<-estimate_sum_var (TPbandC, fit_1000CPb)
   var_1000 <-merge(var_1000, oracle[,c(1,3,4,7:12)], by = "ID", all = T)
@@ -2529,7 +2656,73 @@ ggsave(
   
   write.csv(var_1000,file.path(Folder,"var_1000.csv"),sep=";", dec=",")
   
+  corr_mat_1000<-rcorr(as.matrix(var_1000[,c(4:17)]), type = c("pearson"))
+  
+  corr_mat_1000_Sg<-rcorr(as.matrix(var_1000[which(var_1000$Ecosystem=="Seagrass"),c(4:17)]), type = c("pearson"))
+  corr_mat_1000_Tm<-rcorr(as.matrix(var_1000[which(var_1000$Ecosystem=="Tidal Marsh"),c(4:17)]), type = c("pearson"))
 
+  
+  #Mud
+  m1000g<-ggplot(var_1000, aes(k, Mud))+ ylim(0, 100)+ ylab("Mud %")+
+    xlab(expression("Decay rate 500-1000 years (yr"^"-1"~")"))+
+    geom_point(aes(color=Ecosystem))+
+    scale_color_manual(values=c("green4", "orange"))+
+    geom_smooth(method = "lm", se = FALSE, color ="black")
+  
+  
+  m1000e<-ggplot(var_1000, aes(k, Mud, color=Ecosystem))+ ylim(0, 100)+ylab("Mud %")+
+    xlab(expression("Decay rate 500-1000 years (yr"^"-1"~")"))+
+    geom_point()+
+    scale_color_manual(values=c( "green4", "orange"))+
+    geom_smooth(method = "lm", se = FALSE)
+  
+  
+  #temperature
+  
+  t1000g<-ggplot(var_1000, aes(k, temperature))+ ylim(8,35)+ ylab("Sea Water Tª (\u00B0C)") +
+    xlab(expression("Decay rate 500-1000 years (yr"^"-1"~")"))+
+    geom_point(aes(color=Ecosystem))+
+    scale_color_manual(values=c( "green4", "orange"))+
+    geom_smooth(method = "lm", se = FALSE, color ="black")
+  
+  t1000e<-ggplot(var_1000, aes(k, temperature, color=Ecosystem))+ ylim(8,35)+
+    ylab("Sea Water Tª (\u00B0C)") +
+    xlab(expression("Decay rate 500-1000 years (yr"^"-1"~")"))+
+    geom_point()+
+    scale_color_manual(values=c( "green4", "orange"))+
+    geom_smooth(method = "lm", se = FALSE)
+  
+
+  
+  
+  
+  #Figures supplementary
+  
+  
+  corr_100<-ggpubr::ggarrange(  m100g,  m100e, t100g,  t100e, 
+                               labels = c("A","B", "C","D" ),
+                               ncol=2, nrow= 2)
+  
+  corr_1000<-ggpubr::ggarrange(    m1000g,   m1000e,   t1000g,  t1000e, 
+                              labels = c("A","B", "C","D"),
+                              ncol=2, nrow= 2)
+
+  
+  ggsave( plot = corr_mud,
+          path = Folder,
+          filename =  "k_mud.jpg",
+          units = "cm",
+          width = 22,
+          height = 15)  
+  
+  ggsave( plot = corr_temp,
+          path = Folder,
+          filename =  "k_temp.jpg",
+          units = "cm",
+          width = 22,
+          height = 15) 
+  
+  
 # map of fitted cores (Figure 4) ----------------------------------------------------
   
   
@@ -2632,25 +2825,25 @@ ggsave(
   
   # degradation of the first meter
   #seagrass
-  0.04 * exp(-0.003 * 1713.38)
+  0.04 * exp(-0.003 * 1471.65)
   
-  0.04 * exp(-0.003 * 1401.71)
-  0.04 * exp(-0.003 * 2025.05)
+  0.04 * exp(-0.003 * 1200)
+  0.04 * exp(-0.003 * 1742)
   
   #mangrove
-  0.028 * exp(-0.004 * 1713.38)
+  0.021 * exp(-0.004 * 1471.65)
   
-  0.028 * exp(-0.004 * 1401.71)
-  0.028 * exp(-0.004 * 2025.05)
+  0.021 * exp(-0.004 * 1200)
+  0.021 * exp(-0.004 * 1742)
   
   #tidal marshes
-  0.026 * exp(-0.0025 * 1713.38)
+  0.023 * exp(-0.0032 * 1471.65)
   
-  0.026 * exp(-0.0025 * 1401.71)
-  0.026 * exp(-0.0025 * 2025.05)
+  0.023 * exp(-0.0032 * 1200)
+  0.023 * exp(-0.0032 * 1742)
   
   
-  # depth of the first 100 and 1000 years -------------------------------------------------------------
+# depth of the first 100 and 1000 years -------------------------------------------------------------
   
   
   
@@ -2680,4 +2873,6 @@ ggsave(
   
 
   
+
+
 
