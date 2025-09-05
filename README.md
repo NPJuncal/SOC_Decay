@@ -5,15 +5,15 @@ Piñeiro-Juncal, N., Mateo, M.Á., Leiva-Dueñas, C. et al. Soil organic carbon 
 ## Repository structure
 
 - `data/`: folder containing raw data
-- 
+  
 - `decay2025/`, folders containig results from statistical analysis and figures
-- 
+  
 - `decay2025_C/`: folders containig processed data and model results for cores with 14C chronological models
--  
+  
 - `decay2025_CPb/`: folders containig processed data and model results for cores with 210Pb chronological models
-- 
+  
 - `decay2025_Pb/: folders containig processed data and model results for cores with 14C and 210Pb chronological models
-- 
+  
 - **`SOC_decay.R`**: R script containing the code to process and modelizar organic carbon data decay
 
 ## Citation
