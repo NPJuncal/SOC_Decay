@@ -12,7 +12,7 @@ Piñeiro-Juncal, N., Mateo, M.Á., Leiva-Dueñas, C. et al. Soil organic carbon 
   
 - `decay2025_CPb/`: folders containig processed data and model results for cores with 210Pb chronological models
   
-- `decay2025_Pb/: folders containig processed data and model results for cores with 14C and 210Pb chronological models
+- `decay2025_Pb/`: folders containig processed data and model results for cores with 14C and 210Pb chronological models
   
 - **`SOC_decay.R`**: R script containing the code to process and modelizar organic carbon data decay
 
