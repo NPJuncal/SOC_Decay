@@ -18,7 +18,7 @@ Piñeiro-Juncal, N., Mateo, M.Á., Leiva-Dueñas, C. et al. Soil organic carbon 
 
 ## Citation
 
-If using this data or code, please cite the associated publications:
+If you use these data or code, please cite the associated publications:
 
 Piñeiro-Juncal, N., Mateo, M.Á., Leiva-Dueñas, C. et al. Soil organic carbon depth profiles and centennial and millennial decay rates in tidal marsh, mangrove and seagrass blue carbon ecosystems. Commun Earth Environ 6, 504 (2025). https://doi.org/10.1038/s43247-025-02390-2
 
